@@ -182,10 +182,20 @@ Per discussion 003 — summary of intent:
 
 1. Station orbits: model Titan Station on Titan's actual orbit around Saturn,
    or park it at Saturn-barycenter + offset for v1?
+    - For v1, park it.
 2. Abort semantics: halt-in-place vs. auto-replan to nearest body.
+    - Interesting for v1 especially as if the ship is in it's decel phase, while
+      it can manuever, it may be difficult to reroute to nearest body (it has to
+      dump all of it's velocity).
 3. Fuel/reactor-mass tracking — Honorverse impellers don't burn reaction
    mass, so probably *never*, but bunker/maintenance clocks could gate ops tempo later.
 4. Event push for dashboards (SSE/WebSocket) vs. pure polling for v1.
+    - Pure polling for v1
 5. Compensator failure / accel safety margins as flavor (merchants run at
    less than 100% military power) — could make `max_accel_g` a ceiling with
    a cruise setting.
+    - Let's add the flavor. We'll need to extend the ship data or add a default
+      chance of compensator failure over time. Could not find any "canon" data
+      on this, but got the suggestion: "P(fail_per_hour) = k*( p - 0.8 )^3"
+      where "p: fraction of max compensator load" and "k: tuning constant
+      (suggested starting value 0.02)"
