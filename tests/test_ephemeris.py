@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from hvsim.ephemeris import AU_M, BODIES, heliocentric_position
+from hvsim.ephemeris import AU_M, PLANET_NAMES, heliocentric_position
 
 # JPL Horizons state vectors (AU), heliocentric ecliptic J2000, fetched 2026-06-13.
 # Timescale is TDB; TDB−UTC (~69 s) is ~1e-5 AU, well inside tolerance.
@@ -93,7 +93,7 @@ def test_matches_horizons(body: str, iso: str, ref: tuple[float, float, float]) 
     assert error_au < TOL_AU[body], f"{body} @ {iso}: {error_au:.5f} AU from Horizons"
 
 
-@pytest.mark.parametrize("body", sorted(BODIES))
+@pytest.mark.parametrize("body", sorted(PLANET_NAMES))
 def test_distance_within_orbit_band(body: str) -> None:
     peri, apo = PERI_APO[body]
     r = math.dist(_position_au(body, _at("2026-01-01T00:00:00Z")), (0.0, 0.0, 0.0))

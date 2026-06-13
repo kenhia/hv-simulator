@@ -68,4 +68,4 @@ PLANETS: dict[str, Elements] = {
 }
 # fmt: on
 
-BODIES: frozenset[str] = frozenset(PLANETS)
+PLANET_NAMES: frozenset[str] = frozenset(PLANETS)

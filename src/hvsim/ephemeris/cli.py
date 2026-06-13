@@ -15,7 +15,7 @@ import math
 from datetime import UTC, datetime
 
 from hvsim.clock import SimClock
-from hvsim.ephemeris import AU_M, BODIES, heliocentric_position
+from hvsim.ephemeris import AU_M, BODIES, heliocentric_position, list_bodies
 
 
 def _parse_when(text: str) -> datetime:
@@ -31,10 +31,19 @@ def main(argv: list[str] | None = None) -> int:
         prog="where-is",
         description="Heliocentric ecliptic-J2000 position of a Sol-system body.",
     )
-    parser.add_argument("body", help=f"one of: {bodies}")
+    parser.add_argument("body", nargs="?", help=f"one of: {bodies}")
     parser.add_argument("--at", metavar="ISO8601", help="UTC instant (default: now)")
+    parser.add_argument("--list", action="store_true", help="list known bodies and exit")
     args = parser.parse_args(argv)
 
+    if args.list:
+        for info in list_bodies():
+            parent = f"  (orbits {info['parent']})" if info["parent"] else ""
+            print(f"  {info['name']:<14} {info['kind']}{parent}")
+        return 0
+
+    if not args.body:
+        parser.error("a body is required (or pass --list)")
     body = args.body.lower()
     if body not in BODIES:
         parser.error(f"unknown body {args.body!r}; choose from: {bodies}")

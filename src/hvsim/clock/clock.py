@@ -42,3 +42,21 @@ class SimClock:
         assert self.real_epoch is not None and self.sim_epoch is not None
         elapsed = (_real_now() - self.real_epoch).total_seconds()
         return self.sim_epoch + timedelta(seconds=elapsed * self.rate)
+
+    def _reanchor(self, sim_time: datetime) -> None:
+        """Pin sim time to ``sim_time`` as of the real instant now."""
+        self.sim_epoch = sim_time
+        self.real_epoch = _real_now()
+
+    def set_rate(self, rate: float) -> None:
+        """Change the rate multiplier, keeping the current sim time continuous."""
+        self._reanchor(self.now())
+        self.rate = rate
+
+    def jump_to(self, sim_time: datetime) -> None:
+        """Jump sim time to an absolute instant (dev/test fast-forward)."""
+        self._reanchor(sim_time)
+
+    def advance(self, delta: timedelta) -> None:
+        """Jump sim time forward (or back) by ``delta`` (dev/test fast-forward)."""
+        self._reanchor(self.now() + delta)
