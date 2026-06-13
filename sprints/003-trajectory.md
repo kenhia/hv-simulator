@@ -17,7 +17,7 @@ that consumes the `ephemeris` module.
   brachistochrone (accel, flip, decel) when `d < v_max²/a`, else
   accel–coast–decel. Reports phase durations, total time, and peak velocity.
 - A **3-D trajectory** along the straight chord between two fixed points:
-  apply the 1-D profile along `unit(r₁ − r₀)`, exposing position/velocity/accel
+  apply the 1-D profile along `unit(r₁ - r₀)`, exposing position/velocity/accel
   at any elapsed time `t` (closed form).
 - A **moving-target intercept**: given departure time `t₀`, a start position,
   and a destination body, fixed-point iterate on arrival time — estimate trip
@@ -45,7 +45,7 @@ that consumes the `ephemeris` module.
       phase durations, total time, peak velocity. Pure function.
 - [x] Closed-form state-at-elapsed-time for a 1-D profile (distance, speed,
       accel at any `t` in `[0, total]`).
-- [x] 3-D chord trajectory: wrap the 1-D profile along `unit(r₁ − r₀)`; expose
+- [x] 3-D chord trajectory: wrap the 1-D profile along `unit(r₁ - r₀)`; expose
       `state(t)` returning position/velocity/acceleration vectors (SI).
 - [x] Moving-target intercept via fixed-point iteration on arrival time;
       return the solved trajectory + arrival time. Document convergence

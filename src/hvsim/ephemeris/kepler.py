@@ -7,7 +7,7 @@ orbits and planetocentric moon orbits. ``planet_position_m`` evaluates a planet'
 **heliocentric ecliptic-J2000** position in **SI metres**.
 
 Algorithm per the JPL approximate-positions note (see ``elements.py``). Times are
-treated as UTC; TDB−UTC (~69 s in 2026) is ~1e-5 AU, negligible here.
+treated as UTC; TDB-UTC (~69 s in 2026) is ~1e-5 AU, negligible here.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def centuries_since_j2000(when: datetime) -> float:
 
 
 def _solve_kepler(mean_anomaly: float, e: float) -> float:
-    """Solve M = E − e·sin E for the eccentric anomaly E (radians) via Newton."""
+    """Solve M = E - e·sin E for the eccentric anomaly E (radians) via Newton."""
     e_anom = mean_anomaly if e < 0.8 else math.pi
     for _ in range(64):
         delta = (e_anom - e * math.sin(e_anom) - mean_anomaly) / (1.0 - e * math.cos(e_anom))

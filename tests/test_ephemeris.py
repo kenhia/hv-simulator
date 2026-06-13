@@ -21,7 +21,7 @@ import pytest
 from hvsim.ephemeris import AU_M, PLANET_NAMES, heliocentric_position
 
 # JPL Horizons state vectors (AU), heliocentric ecliptic J2000, fetched 2026-06-13.
-# Timescale is TDB; TDB−UTC (~69 s) is ~1e-5 AU, well inside tolerance.
+# Timescale is TDB; TDB-UTC (~69 s) is ~1e-5 AU, well inside tolerance.
 HORIZONS_AU = {
     ("earth", "2026-01-01T00:00:00Z"): (
         -1.742814809205833e-01,

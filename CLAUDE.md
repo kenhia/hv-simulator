@@ -80,6 +80,10 @@ uv run where-is --list   # CLI: list known bodies (planets, moons, stations)
 The validation gate before shipping a sprint is: `uv run pytest`,
 `uv run ruff check .`, `uv run ruff format --check .` — all clean.
 
+In comments/docstrings/strings, write math with the ASCII hyphen-minus `-`, not
+the Unicode minus `−` (U+2212), which renders confusably. Ruff RUF001/002/003
+enforce this; en/em dashes (`–`/`—`) are allowed for ranges and prose.
+
 Package layout under `src/hvsim/`: `ephemeris/`, `kinematics/`, `flightplan/`,
 `clock/`, `api/`. Kinematics and ephemeris stay **pure functions** — unit-
 testable without the service running.
