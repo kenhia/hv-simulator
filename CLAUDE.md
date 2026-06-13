@@ -9,9 +9,11 @@ Early development, executed sprint by sprint. Done so far: project skeleton
 extended in Sprint 004 with moons/stations and a recursive body resolver);
 `kinematics` (Sprint 003 — `Vec3`, the brachistochrone/coast solver, moving-
 target intercept); and `flightplan` (Sprint 004 — `compile_plan` turns a filed
-plan into absolute-time segments, `state_at` queries them analytically). The
-project's canonical use case (Earth → Titan Station → Earth) runs end-to-end.
-The `api` subpackage and persistence are the next milestone (M4).
+plan into absolute-time segments, `state_at` queries them analytically); and
+`api` (Sprint 005 — FastAPI + SQLite + Docker: file a ship & plan over HTTP,
+query state in real time). **Phase 1 is complete** — the canonical use case
+(Earth → Titan Station → Earth) runs end-to-end as a service. Phase 2 (universe
+builder, hyperspace, wormholes) is the next major milestone.
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
@@ -75,6 +77,9 @@ uv run ruff check .      # lint
 uv run ruff format .     # format (use --check in CI / pre-ship)
 uv run where-is saturn   # CLI: heliocentric position of a body (--at <iso8601>)
 uv run where-is --list   # CLI: list known bodies (planets, moons, stations)
+
+# Run the API (port 4667; HVSIM_DEV_CLOCK=1 enables PUT /clock):
+HVSIM_DEV_CLOCK=1 uv run uvicorn --factory hvsim.api.app:create_app --port 4667
 ```
 
 The validation gate before shipping a sprint is: `uv run pytest`,
