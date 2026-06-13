@@ -83,7 +83,14 @@ HVSIM_DEV_CLOCK=1 uv run uvicorn --factory hvsim.api.app:create_app --port 4667
 ```
 
 The validation gate before shipping a sprint is: `uv run pytest`,
-`uv run ruff check .`, `uv run ruff format --check .` — all clean.
+`uv run ruff check .`, `uv run ruff format --check .` — all clean (or just
+`just check`).
+
+Deployment is driven by the root `justfile` (`just` to list recipes): `just
+deploy` ships the image to the host and brings the stack up, `just health` /
+`just fleet` query it, `just seed` files demo ships. The target host/port come
+from `.env` (`HVSIM_HOST`/`HVSIM_PORT`, default `kubsdb:4667`); `cp .env.example
+.env` to override. The deployed instance runs real time with `PUT /clock` off.
 
 In comments/docstrings/strings, write math with the ASCII hyphen-minus `-`, not
 the Unicode minus `−` (U+2212), which renders confusably. Ruff RUF001/002/003
