@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Honorverse Simulator — Sol Map</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #05060a; color: #cdd6e0;
+      font: 13px/1.4 ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+    #map { display: block; width: 100vw; height: 100vh; }
+    .overlay { position: fixed; padding: 8px 10px; background: rgba(10,14,22,0.72);
+      border: 1px solid #1d2740; border-radius: 6px; pointer-events: none; }
+    #hud { top: 10px; left: 10px; }
+    #hud b { color: #7fb0ff; }
+    #legend { bottom: 10px; left: 10px; }
+    .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+      margin-right: 6px; vertical-align: middle; }
+    #err { top: 10px; right: 10px; color: #ff8080; display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="map"></canvas>
+  <div id="hud" class="overlay">loading…</div>
+  <div id="legend" class="overlay">
+    <div><span class="sw" style="background:#ffcf33"></span>Sun</div>
+    <div><span class="sw" style="background:#6cb8ff"></span>Planet</div>
+    <div><span class="sw" style="background:#9aa6b8"></span>Moon</div>
+    <div><span class="sw" style="background:#ffa033"></span>Station</div>
+    <div><span class="sw" style="background:#5dffb0"></span>Ship</div>
+  </div>
+  <div id="err" class="overlay"></div>
+
+  <script>
+    "use strict";
+    const AU_M = 1.495978707e11;        // metres per AU (matches the backend)
+    const EXTENT_AU = 11;               // radial half-extent: Mercury -> Saturn + Titan
+    const SHIP_POLL_MS = 15000;         // /ships + /clock cadence (display-sized; <= 30s)
+    const BODY_POLL_MS = 300000;        // /bodies cadence (planets ~static at this scale)
+    const COLORS = { planet: "#6cb8ff", moon: "#9aa6b8", station: "#ffa033" };
+
+    const canvas = document.getElementById("map");
+    const ctx = canvas.getContext("2d");
+    const hud = document.getElementById("hud");
+    const errBox = document.getElementById("err");
+
+    let bodies = [];                    // [{name, kind, parent, au:{x,y}, dist}]
+    let ships = [];                     // augmented with _p0 (AU) and _v (AU/sim-sec)
+    let clock = { rate: 1 };
+    let serverNowMs = 0;                // sim time at last /ships poll
+    let lastPollPerf = 0;               // performance.now() at last /ships poll
+    let dpr = 1;
+
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    function showError(msg) {
+      errBox.textContent = msg;
+      errBox.style.display = msg ? "block" : "none";
+    }
+
+    async function getJSON(url) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`${url} -> ${r.status}`);
+      return r.json();
+    }
+
+    async function pollBodies() {
+      try {
+        const data = await getJSON("/bodies");
+        bodies = data.map(b => ({
+          name: b.name, kind: b.kind, parent: b.parent,
+          au: { x: b.position.au.x, y: b.position.au.y },
+          dist: b.position.distance_from_sun_au,
+        }));
+        showError("");
+      } catch (e) { showError("bodies: " + e.message); }
+    }
+
+    async function pollShips() {
+      try {
+        const [s, c] = await Promise.all([getJSON("/ships"), getJSON("/clock")]);
+        clock = c;
+        serverNowMs = Date.parse(c.now);
+        lastPollPerf = performance.now();
+        for (const ship of s) {
+          const p = ship.state.position.au;
+          const v = ship.state.velocity.km_s;        // km/s -> AU per sim-second
+          ship._p0 = { x: p.x, y: p.y };
+          ship._v = { x: v.x * 1e3 / AU_M, y: v.y * 1e3 / AU_M };
+        }
+        ships = s;
+        showError("");
+      } catch (e) { showError("ships: " + e.message); }
+    }
+
+    // Sim-seconds elapsed since the last poll (honours the clock rate; 0 if frozen).
+    function simElapsed() {
+      return (clock.rate || 0) * (performance.now() - lastPollPerf) / 1000;
+    }
+
+    function draw() {
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2;
+      const scale = (Math.min(w, h) / 2 - 40 * dpr) / EXTENT_AU;  // px per AU
+      const X = ax => cx + ax * scale;
+      const Y = ay => cy - ay * scale;                            // +y is up
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Faint orbit circles for planets (reference rings).
+      ctx.strokeStyle = "rgba(120,140,180,0.18)";
+      ctx.lineWidth = 1;
+      for (const b of bodies) {
+        if (b.kind !== "planet") continue;
+        ctx.beginPath();
+        ctx.arc(cx, cy, b.dist * scale, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Sun.
+      ctx.fillStyle = "#ffcf33";
+      ctx.beginPath(); ctx.arc(cx, cy, 5 * dpr, 0, Math.PI * 2); ctx.fill();
+
+      // Bodies.
+      ctx.font = `${11 * dpr}px ui-monospace, monospace`;
+      for (const b of bodies) {
+        ctx.fillStyle = COLORS[b.kind] || "#888";
+        const r = b.kind === "planet" ? 4 : 3;
+        ctx.beginPath(); ctx.arc(X(b.au.x), Y(b.au.y), r * dpr, 0, Math.PI * 2); ctx.fill();
+        if (b.kind !== "station") {                 // station label would overlap its moon
+          ctx.fillStyle = "rgba(205,214,224,0.7)";
+          ctx.fillText(b.name, X(b.au.x) + 6 * dpr, Y(b.au.y) - 6 * dpr);
+        }
+      }
+
+      // Ships (dead-reckoned from the last poll).
+      const dt = simElapsed();
+      for (const ship of ships) {
+        if (!ship._p0) continue;
+        const x = ship._p0.x + ship._v.x * dt;
+        const y = ship._p0.y + ship._v.y * dt;
+        const px = X(x), py = Y(y);
+
+        ctx.fillStyle = "#5dffb0";
+        ctx.beginPath(); ctx.arc(px, py, 4 * dpr, 0, Math.PI * 2); ctx.fill();
+
+        const st = ship.state;
+        const pct = st.percent_complete == null ? "" : ` ${Math.round(st.percent_complete * 100)}%`;
+        const label = `${ship.name} — ${st.phase} ${st.velocity.fraction_c.toFixed(3)}c${pct}`;
+        ctx.fillStyle = "#bdf5d8";
+        ctx.fillText(label, px + 7 * dpr, py + 4 * dpr);
+      }
+
+      // HUD: sim clock + counts.
+      if (serverNowMs) {
+        const simNow = new Date(serverNowMs + (clock.rate || 0) * (performance.now() - lastPollPerf));
+        const inFlight = ships.filter(s => s.state.phase === "transit").length;
+        hud.innerHTML =
+          `<b>SIM</b> ${simNow.toISOString().replace("T", " ").slice(0, 19)}Z` +
+          ` &nbsp; rate ${clock.rate}` +
+          `<br><b>ships</b> ${ships.length} (${inFlight} in flight)` +
+          ` &nbsp; <b>bodies</b> ${bodies.length}`;
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    pollBodies();
+    pollShips();
+    requestAnimationFrame(draw);
+    setInterval(pollShips, SHIP_POLL_MS);
+    setInterval(pollBodies, BODY_POLL_MS);
+  </script>
+</body>
+</html>
