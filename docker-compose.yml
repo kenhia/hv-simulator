@@ -2,7 +2,10 @@ services:
   hvsim:
     build: .
     ports:
-      - "8000:8000"
+      # host:container — 4667 ("HONR") on the host avoids 8000 (taken by triton
+      # on kai). Bound to 0.0.0.0, so reachable from other LAN machines at
+      # http://<host>:4667 (open the host firewall for 4667 if one is enabled).
+      - "4667:8000"
     volumes:
       - hvsim-data:/data
     environment:
