@@ -38,6 +38,40 @@ src/hvsim/
 tests/         pytest suite
 ```
 
+## Running the service
+
+```sh
+# Local (dev): enable the clock controls so you can fast-forward a multi-hour trip.
+HVSIM_DEV_CLOCK=1 uv run uvicorn --factory hvsim.api.app:create_app --reload
+
+# Or in Docker:
+docker compose up --build      # serves on http://localhost:8000
+```
+
+The canonical merchant run over HTTP — Earth → Titan Station (6 h) → Earth:
+
+```sh
+# 1. Create the ship.
+SHIP=$(curl -s -X POST localhost:8000/ships \
+  -H 'content-type: application/json' \
+  -d '{"name":"SS Harrington","max_accel_g":250,"max_velocity_c":0.6}' | jq -r .id)
+
+# 2. File the flight plan (6h layover = 21600s).
+curl -s -X POST localhost:8000/ships/$SHIP/flightplan \
+  -H 'content-type: application/json' \
+  -d '{"waypoints":[{"body":"titan-station","layover_seconds":21600},{"body":"earth"}]}' | jq
+
+# 3. Ask where it is right now.
+curl -s localhost:8000/ships/$SHIP/state | jq
+
+# 4. Where is everything? (dashboard map)
+curl -s localhost:8000/bodies | jq
+```
+
+With `HVSIM_DEV_CLOCK=1` you can fast-forward: `PUT /clock` with
+`{"rate": 3600}` (1 real second = 1 sim hour) or `{"jump_to": "<iso8601>"}`.
+Interactive API docs are at `/docs`.
+
 ## License
 
 [MIT](LICENSE)
