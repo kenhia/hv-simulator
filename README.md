@@ -84,13 +84,15 @@ Interactive API docs are at `/docs`.
 ## Deploying
 
 Deploy is driven by [`just`](https://just.systems) from this machine (`just` to
-list recipes). The default target is `kubsdb` at port 4667, running **real time**
-with the clock locked (no dev controls).
+list recipes). The target host/port come from `.env` (`cp .env.example .env` and
+edit `HVSIM_HOST` / `HVSIM_PORT`); they default to `kubsdb:4667`. The deployed
+instance runs **real time** with the clock locked (no dev controls).
 
 ```sh
-just deploy   # build image -> ship to kubsdb (docker save | ssh load) -> compose up -> health
+just deploy   # build image -> ship to host (docker save | ssh load) -> compose up -> health
 just health   # curl the deployed /health and /clock
 just seed     # file a few experimental "XSS" demo ships (100 g transport .. 700 g courier)
+just fleet    # text roster of ships + current state (stopgap for the map's labels)
 just logs     # tail the deployed logs
 just down     # stop/remove the stack (the SQLite volume is preserved)
 ```

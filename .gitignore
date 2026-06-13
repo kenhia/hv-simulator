@@ -1,5 +1,10 @@
 .scratch/
 
+# Local env (justfile reads .env); keep the committed example.
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]

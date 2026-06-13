@@ -2,9 +2,12 @@
 # `just` is a command runner (https://just.systems). Run `just` to list recipes.
 
 set shell := ["bash", "-cu"]
+set dotenv-load := true   # load .env if present (copy .env.example -> .env)
 
-host := "kubsdb"          # deploy target
-port := "4667"            # published host port ("HONR")
+# Deploy target + port come from .env (HVSIM_HOST / HVSIM_PORT), defaulting to
+# the maintainer's homelab. Override per-machine in .env, not by editing here.
+host := env_var_or_default("HVSIM_HOST", "kubsdb")
+port := env_var_or_default("HVSIM_PORT", "4667")
 image := "hvsim:latest"
 remote_dir := "hvsim"     # ~/hvsim on the host holds the deploy compose
 
@@ -42,6 +45,11 @@ down:
 # File a few experimental (XSS) demo ships on the deployed instance (used by M7).
 seed:
     ./deploy/seed.sh http://{{host}}:{{port}}
+
+# List the fleet as a text roster (ships + current plan state). Stopgap for the
+# map's label crowding (kwi #57); "routes" will join this once kwi #59 lands.
+fleet:
+    ./deploy/fleet.sh http://{{host}}:{{port}}
 
 # Run the local validation gate (tests + lint + format check).
 check:

@@ -124,3 +124,9 @@ and M8 (metrics/Grafana), which need a live target to point at.
   idempotent up); routes deferred (**kwi #59**).
 - Live instance currently carries the 3 seeded XSS ships + an XSS Harrington
   canonical run — fodder for M7 (live shakedown / watch trips complete).
+- Post-draft tweaks (Ken): justfile now loads `.env` (`set dotenv-load`) and
+  takes `HVSIM_HOST`/`HVSIM_PORT` via `env_var_or_default` (defaults kubsdb/4667),
+  with a committed `.env.example` and `.env*` gitignored — keeps the recipes
+  usable by others. Added a `fleet` recipe (`deploy/fleet.sh`) that prints a text
+  roster of ships + state — a stopgap for the map's label crowding (**kwi #57**),
+  and where "routes" will surface once **kwi #59** lands.
