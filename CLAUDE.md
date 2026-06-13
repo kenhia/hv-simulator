@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repository is in the **planning stage** — there is no application code yet,
-only design documents in `planning/`. Read `planning/004-project-plan.md` first;
-it is the authoritative plan and supersedes the earlier exploratory chats
-(`001`–`003`, which are saved M365 Copilot transcripts kept for context).
+Early development, executed sprint by sprint. The project skeleton exists
+(Sprint 001) but the domain logic does not yet — the `src/hvsim/` subpackages
+are stubs filled in by later sprints.
 
-When you write the first code, update this file to replace the "planned" notes
-below with the real commands and layout.
+- `planning/004-project-plan.md` is the authoritative design; read it first.
+  (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
+- `sprints/` holds one short spec + task list per sprint. Check the highest-
+  numbered file for what's in flight; a sprint is done only when every
+  acceptance criterion in it is verified.
 
 ## What this project is
 
@@ -56,13 +58,27 @@ This separation is load-bearing — preserve it:
 Keep `ephemeris` and `kinematics` as **pure functions** so they are testable
 without running the service.
 
-## Planned toolchain (from `planning/004-project-plan.md`, not yet set up)
+## Toolchain & commands
 
-- Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy + SQLite
-- `uv` for env/deps, `ruff` for lint/format, `pytest` for tests
-- Docker + docker-compose (matches the multi-container Phase 2/3 future)
-- Intended package layout: `src/hvsim/` with `ephemeris/`, `kinematics/`,
-  `flightplan/`, `api/`, `clock/`
+Managed with `uv`. Python `>=3.12` (currently resolves to 3.13; either is fine).
+
+```sh
+uv sync                  # create .venv and install dev dependencies
+uv run pytest            # run the full test suite
+uv run pytest tests/test_smoke.py::test_package_imports   # run a single test
+uv run ruff check .      # lint
+uv run ruff format .     # format (use --check in CI / pre-ship)
+```
+
+The validation gate before shipping a sprint is: `uv run pytest`,
+`uv run ruff check .`, `uv run ruff format --check .` — all clean.
+
+Package layout under `src/hvsim/`: `ephemeris/`, `kinematics/`, `flightplan/`,
+`clock/`, `api/`. Kinematics and ephemeris stay **pure functions** — unit-
+testable without the service running.
+
+FastAPI, Pydantic v2, SQLAlchemy + SQLite, and Docker are in the plan but not
+added until the sprint that needs them, to keep the dependency surface honest.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

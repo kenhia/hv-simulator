@@ -25,15 +25,16 @@ on a trivial test and `ruff` is clean, so every later sprint starts from green.
 
 ## Tasks
 
-- [ ] `git init`; add `.gitignore` (Python, `.venv`, `*.db`, `__pycache__`, etc.).
-- [ ] `uv init` / author `pyproject.toml` (project name `hvsim`, requires-python >=3.12).
-- [ ] Add dev deps: `pytest`, `ruff`. Configure `ruff` (line length, rule set) and
+- [x] `git init`; add `.gitignore` (Python, `.venv`, `*.db`, `__pycache__`, etc.).
+      (`git init` was already done; added `.gitignore`.)
+- [x] `uv init` / author `pyproject.toml` (project name `hvsim`, requires-python >=3.12).
+- [x] Add dev deps: `pytest`, `ruff`. Configure `ruff` (line length, rule set) and
       `pytest` (testpaths) in `pyproject.toml`.
-- [ ] Create `src/hvsim/` + the five subpackages, each with `__init__.py`.
-- [ ] Add `tests/test_smoke.py` that imports `hvsim` and asserts a trivial truth.
-- [ ] Write top-level `README.md` (what the project is, link to `planning/004`
+- [x] Create `src/hvsim/` + the five subpackages, each with `__init__.py`.
+- [x] Add `tests/test_smoke.py` that imports `hvsim` and asserts a trivial truth.
+- [x] Write top-level `README.md` (what the project is, link to `planning/004`
       and `sprints/`).
-- [ ] Commit on a branch; verify the acceptance criteria below.
+- [x] Commit on a branch; verify the acceptance criteria below.
 
 ## Acceptance criteria
 
@@ -47,3 +48,11 @@ on a trivial test and `ruff` is clean, so every later sprint starts from green.
 - Toolchain (uv / ruff / pytest, `src/` layout) is fixed in
   `planning/004-project-plan.md`. Once this sprint lands, update `CLAUDE.md` to
   replace the "planned toolchain (not yet set up)" section with the real commands.
+
+## Outcome — DONE
+
+- Shipped on branch `sprint-001-bootstrap`. All acceptance criteria verified:
+  `uv run pytest` (1 passed), `uv run ruff check .` clean, `import hvsim` works.
+- `uv` resolved CPython **3.13.13** (satisfies `>=3.12`); kept as-is.
+- Also added an MIT `LICENSE` (© 2026 Ken Hiatt) and committed `uv.lock`.
+- `CLAUDE.md` toolchain section updated from "planned" to real commands.
