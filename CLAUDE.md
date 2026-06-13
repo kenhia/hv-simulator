@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project status
 
 Early development, executed sprint by sprint. Done so far: project skeleton
-(Sprint 001) and the `ephemeris` module (Sprint 002 — analytic planet positions
-+ a `where-is` CLI). The `kinematics`, `flightplan`, and `api` subpackages are
-still stubs filled in by later sprints.
+(Sprint 001), the `ephemeris` module (Sprint 002 — analytic planet positions
++ a `where-is` CLI), and the `kinematics` module (Sprint 003 — `Vec3`, the
+brachistochrone/coast trajectory solver, and the moving-target intercept). The
+`flightplan` and `api` subpackages are still stubs filled in by later sprints.
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
