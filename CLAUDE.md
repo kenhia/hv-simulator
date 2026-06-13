@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Early development, executed sprint by sprint. The project skeleton exists
-(Sprint 001) but the domain logic does not yet — the `src/hvsim/` subpackages
-are stubs filled in by later sprints.
+Early development, executed sprint by sprint. Done so far: project skeleton
+(Sprint 001) and the `ephemeris` module (Sprint 002 — analytic planet positions
++ a `where-is` CLI). The `kinematics`, `flightplan`, and `api` subpackages are
+still stubs filled in by later sprints.
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
@@ -68,6 +69,7 @@ uv run pytest            # run the full test suite
 uv run pytest tests/test_smoke.py::test_package_imports   # run a single test
 uv run ruff check .      # lint
 uv run ruff format .     # format (use --check in CI / pre-ship)
+uv run where-is saturn   # CLI: heliocentric position of a body (--at <iso8601>)
 ```
 
 The validation gate before shipping a sprint is: `uv run pytest`,
