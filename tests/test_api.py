@@ -177,6 +177,16 @@ def test_put_clock_gated_off_by_default(client: TestClient) -> None:
     assert client.put("/clock", json={"rate": 10.0}).status_code == 403
 
 
+def test_root_serves_sol_map(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    body = r.text
+    assert "<canvas" in body
+    # The page must consume the live endpoints (that's M5's point).
+    assert "/bodies" in body and "/ships" in body and "/clock" in body
+
+
 def test_put_clock_jump_moves_state(make_client) -> None:
     client = make_client(dev_clock=True)
     ship_id = _create_ship(client)

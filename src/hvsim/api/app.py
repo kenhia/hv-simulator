@@ -11,8 +11,10 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -46,6 +48,7 @@ from .serialize import as_utc, load_compiled, segment_to_row
 from .units import human_duration, position_out, velocity_out
 
 DEFAULT_DB_URL = "sqlite:///hvsim.db"
+_MAP_HTML = Path(__file__).parent / "static" / "index.html"
 
 
 def create_app(
@@ -173,6 +176,11 @@ def create_app(
         )
 
     # --- routes -----------------------------------------------------------------
+
+    @app.get("/", include_in_schema=False)
+    def sol_map() -> FileResponse:
+        """The 2D top-down Sol map (polls /bodies + /ships; API docs at /docs)."""
+        return FileResponse(_MAP_HTML, media_type="text/html")
 
     @app.get("/health")
     def health() -> dict[str, str]:

@@ -152,6 +152,93 @@ distance remaining, and `subjective_time_delta`.
 
 ---
 
+## Phase 1.5 — Operate & Observe
+
+*Added 2026-06-13. Phase 1 built the simulator and proved it locally; Phase 1.5
+**runs it for real and makes it observable** before the Phase 2 build-out. These
+are operational/visualization milestones, not new physics.*
+
+**Decisions (this planning session):**
+
+- **Grafana feed = pull.** Prometheus (already on `kubsdb:9090`) scrapes a
+  `/metrics` endpoint on the API. A scrape triggers an analytic state eval —
+  **no background tick**, consistent with the "no game loop" principle. (Push /
+  pushgateway was considered and declined for that reason.)
+- **Two dashboards, both kept:** the standalone in-repo widget (M5) *and* a
+  `kdeskdash` text-first mode (M9). They serve different audiences.
+- **Deployed instance runs real time** (rate 1.0, `HVSIM_DEV_CLOCK` unset) — the
+  whole point is watching real clocks tick. Dev/test keeps the clock controls.
+
+### M6 — Deploy to `kubsdb`
+
+Containerized service running on `kubsdb`, reachable on the LAN at
+`http://kubsdb:4667`, with a `justfile` at the repo root.
+
+- `justfile` recipes: `deploy`, `health`, plus `logs` / `down` / `seed`.
+- Image delivery — **decision at sprint start**: simplest homelab path is
+  `docker save | ssh kubsdb docker load` (no registry); alternative is
+  `ghcr.io/kenhia/hv-simulator`. Lean save/load for v1.
+- Persistent SQLite on a named volume (survives restarts). Real-time clock,
+  dev clock **off**. Open `kubsdb` firewall for 4667 if needed.
+- Done when `just health` (against `kubsdb`) returns ok and the canonical run
+  works over the LAN.
+
+### M7 — Live shakedown (short real-time trips)
+
+File 2-3 ships with flight plans that **complete in 1-4 hours of wall-clock
+time**, so we observe completed trips before committing to multi-day flights.
+
+- A `seed` recipe/script files the ships against the deployed instance.
+- Destinations chosen by *current* geometry to land in the 1-4 h window
+  (inner-planet hops, e.g. Earth↔Venus/Mars depending on the date). **Optional:**
+  add Luna (deferred from Sprint 002) for ~15-minute demo loops.
+- Observe to completion (status `arrived`); record a short results note.
+- Validates real-time pacing, persistence across the trip, and that state stays
+  correct end-to-end on the real deployment.
+
+### M8 — Prometheus `/metrics` + Grafana "Ship Status"
+
+- **`/metrics` endpoint** (pull) via `prometheus_client`. Per-ship gauges
+  labelled by ship id/name/phase/destination: speed (km/s and fraction c),
+  distance-to-destination, percent-complete, ETA (unix ts); plus ship counts by
+  phase. The scrape computes current state — no loop.
+- Prometheus scrape config for the new target; **30 s interval** (positions
+  change over hours; finer is wasteful).
+- Grafana **"Ship Status"** dashboard on the existing deployment
+  (`kubsdb:3000`): a ships-in-flight table (phase, speed, %-complete, ETA) and a
+  couple of time-series (speed, distance remaining). Dashboard JSON lives in the
+  repo (`grafana/`), provisioned via `ansible-k` (or manual import for v1).
+- **Side task — Grafana deployment reference:** extract the key facts (URL,
+  datasource UID/name, how dashboards are provisioned) from
+  `~/src/config-src/ansible-k/` into a durable reference, so future work doesn't
+  re-read the ansible each time.
+
+### M9 — `kdeskdash` handoff
+
+A handoff document enabling a new **text-first** mode in `~/src/tools/kdeskdash`
+(sibling dashboard to `~/src/tools/kpidash`): ships in flight with location,
+speed, phase, ETA.
+
+- Contents: API base URL, the endpoints + JSON shapes a mode needs
+  (`GET /ships`, `GET /ships/{id}/state`, `GET /bodies`), suggested polling
+  cadence, and a sketch of the first text layout.
+- The mode itself is built in the `kdeskdash` repo (separate), guided by this doc.
+
+### M5 (Phase 1) — standalone Sol-map widget
+
+Still wanted (kept per this session). The simplest 2D top-down Sol map polling
+`GET /bodies` + `GET /ships`. Low-dependency; can slot in anytime — a good quick
+win, independent of M6-M9.
+
+### Sequencing
+
+M6 → M7 unblock everything (a live target to point at). M8 needs M6 (deployed)
++ a small code change (`/metrics`). M9 is a doc, doable once the API shape is
+stable (now). M5 is independent. Suggested order: **M6, M7, M8, M9**, with M5
+slotted whenever. Each becomes its own sprint spec under `sprints/` when started.
+
+---
+
 ## Phase 2 — Universe builder, hyperspace, wormholes
 
 Per discussion 002 — summary of intent, design deferred until Phase 1 ships:

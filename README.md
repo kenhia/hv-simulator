@@ -6,6 +6,11 @@ reach their destinations, and the service reports where everything is *right
 now* — evaluated analytically at the queried timestamp, with no game loop and
 no drift. It is deliberately not fast or flashy.
 
+![Live Sol map — ships in flight with phase, speed, and progress](docs/assets/hv-simulator-mvp-detail.png)
+
+*The live Sol map (`GET /`): ships labelled with phase, speed (fraction of c),
+and percent-complete, dead-reckoned smoothly between polls.*
+
 ## Status
 
 Early development. Phase 1 (the in-system Sol ship simulator) is being built
@@ -40,7 +45,9 @@ tests/         pytest suite
 
 ## Running the service
 
-The service listens on port **4667** ("HONR").
+The service listens on port **4667** ("HONR"). Opening the root URL
+(`http://localhost:4667/`) shows a live 2D top-down **Sol map** — bodies and
+ships in real time, polling the API. API docs are at `/docs`.
 
 ```sh
 # Local (dev): enable the clock controls so you can fast-forward a multi-hour trip.
