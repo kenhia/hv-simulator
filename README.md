@@ -6,6 +6,11 @@ reach their destinations, and the service reports where everything is *right
 now* — evaluated analytically at the queried timestamp, with no game loop and
 no drift. It is deliberately not fast or flashy.
 
+![Live Sol map — ships in flight with phase, speed, and progress](docs/assets/hv-simulator-mvp-detail.png)
+
+*The live Sol map (`GET /`): ships labelled with phase, speed (fraction of c),
+and percent-complete, dead-reckoned smoothly between polls.*
+
 ## Status
 
 Early development. Phase 1 (the in-system Sol ship simulator) is being built
