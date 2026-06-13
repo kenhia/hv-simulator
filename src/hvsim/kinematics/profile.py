@@ -41,7 +41,7 @@ class Profile:
         """Return ``(distance_travelled, speed, signed_accel)`` at elapsed ``t``.
 
         ``t`` is clamped to ``[0, t_total]``. ``signed_accel`` is +accel while
-        speeding up, 0 while coasting, −accel while slowing down.
+        speeding up, 0 while coasting, -accel while slowing down.
         """
         t = min(max(t, 0.0), self.t_total)
         a = self.accel

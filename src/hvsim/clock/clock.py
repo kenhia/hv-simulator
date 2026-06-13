@@ -22,7 +22,7 @@ def _real_now() -> datetime:
 
 @dataclass
 class SimClock:
-    """Maps real time to sim time: ``sim_epoch + (real_now − real_epoch) * rate``.
+    """Maps real time to sim time: ``sim_epoch + (real_now - real_epoch) * rate``.
 
     With all defaults this is an ordinary real-time UTC clock.
     """

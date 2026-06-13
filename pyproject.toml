@@ -28,7 +28,12 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 # A pragmatic default set: pyflakes, pycodestyle, isort, pyupgrade, bugbear.
-select = ["E", "F", "I", "UP", "B"]
+# RUF001/002/003 flag ambiguous Unicode confusables (e.g. U+2212 "−" vs ASCII
+# "-") in strings/docstrings/comments — keep source ASCII-confusable-free.
+select = ["E", "F", "I", "UP", "B", "RUF001", "RUF002", "RUF003"]
+# Permit the typographic dashes we use intentionally (en dash in ranges, em dash
+# in prose). U+2212 MINUS stays forbidden — it is confusable with ASCII "-".
+allowed-confusables = ["–", "—"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

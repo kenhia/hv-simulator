@@ -73,7 +73,7 @@ sprints have real, deterministic targets to fly to.
   Jupiter–Saturn perturbation), not a bug. Tolerances are therefore per-body:
   0.005 AU inner/Mars, 0.02 AU giants. The flat "~0.01 AU" target in the
   acceptance criteria was too tight for Saturn; per-body is the honest call.
-- Time handling: input treated as UTC; TDB−UTC (~69 s ≈ 1e-5 AU) ignored.
+- Time handling: input treated as UTC; TDB-UTC (~69 s ≈ 1e-5 AU) ignored.
 - `where-is saturn` and `where-is mars --at 2030-01-01T00:00:00Z` both work and
   the latter is reproducible (acceptance criteria met).
 - **Deferred to a later sprint:** planet velocity vectors, moons/stations.
