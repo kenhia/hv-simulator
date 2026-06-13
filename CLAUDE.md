@@ -5,10 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project status
 
 Early development, executed sprint by sprint. Done so far: project skeleton
-(Sprint 001), the `ephemeris` module (Sprint 002 — analytic planet positions
-+ a `where-is` CLI), and the `kinematics` module (Sprint 003 — `Vec3`, the
-brachistochrone/coast trajectory solver, and the moving-target intercept). The
-`flightplan` and `api` subpackages are still stubs filled in by later sprints.
+(Sprint 001); `ephemeris` (Sprint 002 — analytic positions + `where-is` CLI,
+extended in Sprint 004 with moons/stations and a recursive body resolver);
+`kinematics` (Sprint 003 — `Vec3`, the brachistochrone/coast solver, moving-
+target intercept); and `flightplan` (Sprint 004 — `compile_plan` turns a filed
+plan into absolute-time segments, `state_at` queries them analytically). The
+project's canonical use case (Earth → Titan Station → Earth) runs end-to-end.
+The `api` subpackage and persistence are the next milestone (M4).
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
@@ -71,6 +74,7 @@ uv run pytest tests/test_smoke.py::test_package_imports   # run a single test
 uv run ruff check .      # lint
 uv run ruff format .     # format (use --check in CI / pre-ship)
 uv run where-is saturn   # CLI: heliocentric position of a body (--at <iso8601>)
+uv run where-is --list   # CLI: list known bodies (planets, moons, stations)
 ```
 
 The validation gate before shipping a sprint is: `uv run pytest`,
