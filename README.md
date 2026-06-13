@@ -81,6 +81,26 @@ With `HVSIM_DEV_CLOCK=1` you can fast-forward: `PUT /clock` with
 `{"rate": 3600}` (1 real second = 1 sim hour) or `{"jump_to": "<iso8601>"}`.
 Interactive API docs are at `/docs`.
 
+## Deploying
+
+Deploy is driven by [`just`](https://just.systems) from this machine (`just` to
+list recipes). The target host/port come from `.env` (`cp .env.example .env` and
+edit `HVSIM_HOST` / `HVSIM_PORT`); they default to `kubsdb:4667`. The deployed
+instance runs **real time** with the clock locked (no dev controls).
+
+```sh
+just deploy   # build image -> ship to host (docker save | ssh load) -> compose up -> health
+just health   # curl the deployed /health and /clock
+just seed     # file a few experimental "XSS" demo ships (100 g transport .. 700 g courier)
+just fleet    # text roster of ships + current state (stopgap for the map's labels)
+just logs     # tail the deployed logs
+just down     # stop/remove the stack (the SQLite volume is preserved)
+```
+
+Image delivery is registry-free (`docker save | ssh kubsdb docker load`); a move
+to ghcr is tracked for later. SQLite lives on a named volume and the container
+is `restart: unless-stopped`, so flight plans survive restarts and host reboots.
+
 ## License
 
 [MIT](LICENSE)

@@ -1,0 +1,21 @@
+# Deploy stack for kubsdb. Uses the image transferred by `just deploy`
+# (image:, not build:). Real-time clock — no HVSIM_DEV_CLOCK, so PUT /clock 403s.
+services:
+  hvsim:
+    image: hvsim:latest
+    container_name: hvsim
+    ports:
+      - "4667:8000"            # host 4667 ("HONR") -> container 8000
+    volumes:
+      - hvsim-data:/data       # persistent SQLite across restarts/redeploys
+    environment:
+      - HVSIM_DB=sqlite:////data/hvsim.db
+    restart: unless-stopped    # comes back after a host reboot
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  hvsim-data:
