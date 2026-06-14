@@ -101,6 +101,14 @@ Image delivery is registry-free (`docker save | ssh kubsdb docker load`); a move
 to ghcr is tracked for later. SQLite lives on a named volume and the container
 is `restart: unless-stopped`, so flight plans survive restarts and host reboots.
 
+## Observability
+
+The API exposes Prometheus metrics at `GET /metrics` (per-ship speed, distance,
+percent-complete, ETA, phase, and fleet counts) — computed on each scrape, no
+background loop. On the homelab, Prometheus scrapes it and a Grafana **"Ship
+Status"** dashboard (`grafana/ship-status.json`) visualizes the fleet. Wiring
+details are in [`grafana/DEPLOY.md`](grafana/DEPLOY.md).
+
 ## License
 
 [MIT](LICENSE)

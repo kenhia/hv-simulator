@@ -11,6 +11,8 @@ services:
     environment:
       - HVSIM_DB=sqlite:////data/hvsim.db
     restart: unless-stopped    # comes back after a host reboot
+    networks:
+      - kubsdb-net             # shared bridge: Prometheus scrapes hvsim:8000/metrics by name
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -19,3 +21,7 @@ services:
 
 volumes:
   hvsim-data:
+
+networks:
+  kubsdb-net:
+    external: true            # created by ansible-k; shared with prometheus/grafana

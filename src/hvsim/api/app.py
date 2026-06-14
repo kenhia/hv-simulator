@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -32,6 +32,8 @@ from .db import (
     make_engine,
     make_session_factory,
 )
+from .metrics import CONTENT_TYPE_LATEST
+from .metrics import render as render_metrics
 from .schemas import (
     BodyOut,
     ClockOut,
@@ -185,6 +187,14 @@ def create_app(
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/metrics", include_in_schema=False)
+    def metrics(session: Session = Depends(get_db)) -> Response:
+        when = app.state.clock.now()
+        ships = session.scalars(select(ShipRow)).all()
+        states = [(s.id, s.name, ship_state(session, s, when)) for s in ships]
+        body = render_metrics(states, when, app.state.clock.rate, len(BODIES))
+        return Response(body, media_type=CONTENT_TYPE_LATEST)
 
     @app.post("/ships", response_model=ShipOut, status_code=201)
     def create_ship(body: ShipCreate, session: Session = Depends(get_db)) -> ShipRow:
