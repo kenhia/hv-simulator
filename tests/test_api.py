@@ -187,6 +187,44 @@ def test_root_serves_sol_map(client: TestClient) -> None:
     assert "/bodies" in body and "/ships" in body and "/clock" in body
 
 
+def test_metrics_endpoint_exposes_fleet(client: TestClient) -> None:
+    ship_id = _create_ship(client)
+    _file_canonical(client, ship_id)
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/plain")
+    body = r.text
+    # Core metric families are present.
+    for name in (
+        "hvsim_ship_speed_fraction_c",
+        "hvsim_ship_percent_complete",
+        "hvsim_ship_distance_to_destination_km",
+        "hvsim_ship_eta_seconds",
+        "hvsim_ship_info",
+        "hvsim_ships",
+        "hvsim_bodies_total",
+        "hvsim_clock_rate",
+    ):
+        assert name in body
+    # The seeded ship appears as a labelled series.
+    assert 'name="SS Harrington"' in body
+
+
+def test_metrics_reflects_transit_speed(make_client) -> None:
+    # A frozen clock mid-transit -> the speed gauge is non-zero.
+    clock = SimClock(rate=0.0, sim_epoch=datetime(2026, 1, 1, 6, 45, tzinfo=UTC))
+    client = make_client(clock=clock)
+    ship_id = _create_ship(client)
+    _file_canonical(client, ship_id)
+    lines = [
+        ln
+        for ln in client.get("/metrics").text.splitlines()
+        if ln.startswith("hvsim_ship_speed_fraction_c{")
+    ]
+    assert lines, "no speed series emitted"
+    assert any(float(ln.rsplit(" ", 1)[1]) > 0.1 for ln in lines)
+
+
 def test_put_clock_jump_moves_state(make_client) -> None:
     client = make_client(dev_clock=True)
     ship_id = _create_ship(client)

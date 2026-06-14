@@ -12,8 +12,11 @@ target intercept); and `flightplan` (Sprint 004 — `compile_plan` turns a filed
 plan into absolute-time segments, `state_at` queries them analytically); and
 `api` (Sprint 005 — FastAPI + SQLite + Docker: file a ship & plan over HTTP,
 query state in real time). **Phase 1 is complete** — the canonical use case
-(Earth → Titan Station → Earth) runs end-to-end as a service. Phase 2 (universe
-builder, hyperspace, wormholes) is the next major milestone.
+(Earth → Titan Station → Earth) runs end-to-end as a service. **Phase 1.5
+(Operate & Observe) is in progress**: deployed to `kubsdb` via the `justfile`
+(M6); a Prometheus `/metrics` endpoint + Grafana "Ship Status" dashboard (M8).
+Remaining: M7 live shakedown and M9 (`kdeskdash` handoff). Phase 2 (universe
+builder, hyperspace, wormholes) follows.
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
