@@ -4,6 +4,6 @@ Production runs at rate 1.0; the rate/jump controls exist for dev and tests so a
 multi-hour trip can be fast-forwarded. Domain code never calls now() directly.
 """
 
-from .clock import SimClock
+from .clock import T_YEAR, SimClock
 
-__all__ = ["SimClock"]
+__all__ = ["T_YEAR", "SimClock"]

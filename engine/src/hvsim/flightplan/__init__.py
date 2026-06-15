@@ -1,8 +1,9 @@
 """flightplan — compile filed flight plans into absolute-time Segment rows.
 
 Turns ordered waypoints + layovers into a sequence of closed-form trajectory
-segments so that state(t) is a lookup plus one kinematics evaluation. In-memory
-domain objects for now; persistence arrives with the API sprint (M4).
+segments, then executes them on the discrete-event core (:mod:`hvsim.des`) so
+``state_at`` is an event replay plus one kinematics evaluation. In-memory domain
+objects for now; persistence arrives with the API sprint (M4).
 """
 
 from .plan import (
@@ -12,6 +13,7 @@ from .plan import (
     ShipState,
     Waypoint,
     compile_plan,
+    simulation_for,
     state_at,
 )
 from .ship import Ship
@@ -24,5 +26,6 @@ __all__ = [
     "ShipState",
     "Waypoint",
     "compile_plan",
+    "simulation_for",
     "state_at",
 ]

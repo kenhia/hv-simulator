@@ -145,8 +145,19 @@ the Unicode minus `−` (U+2212), which renders confusably. Ruff RUF001/002/003
 enforce this; en/em dashes (`–`/`—`) are allowed for ranges and prose.
 
 Package layout under `engine/src/hvsim/`: `ephemeris/`, `kinematics/`,
-`flightplan/`, `clock/`, `api/`. Kinematics and ephemeris stay **pure
-functions** — unit-testable without the service running.
+`flightplan/`, `clock/`, `universe/`, `des/`, `api/`. Kinematics and ephemeris
+stay **pure functions** — unit-testable without the service running.
+
+**`des/` is the discrete-event execution core** (Sprint 013, Phase 2b
+re-founding). Filed segments become boundary *events*; `Simulation.state(T)`
+replays events up to `T` then evaluates the active segment analytically —
+preserving the zero-drift, **no-loop** guarantee (events are sparse, one per
+boundary; there is still no per-tick physics loop) while structurally admitting
+the resolver-fixed, open-ended boundaries the Phase 2c wormhole queue needs.
+`flightplan.state_at` delegates to it. The segment kinds are a closed set with
+exhaustive dispatch (`des/model.py`) — the seam new travel modes plug into.
+`SimClock` also carries the **PD calendar** (PD ↔ T-year ↔ epoch, anchored at
+1890 PD); it labels the sim timeline without changing `now()`.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.
