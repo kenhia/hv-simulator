@@ -1,0 +1,198 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "sigma-draconis",
+  "name": "Sigma Draconis System",
+  "aliases": [
+    "Beowulf System"
+  ],
+  "star_nation_id": "solarian-league",
+  "canon": true,
+  "sources": [
+    "HH1",
+    "HH3",
+    "HH13",
+    "HH14",
+    "SI2"
+  ],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Sigma_Draconis_System",
+    "https://honorverse.fandom.com/wiki/Beowulf_(planet)"
+  ],
+  "retrieved": "2026-06-15",
+  "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+  "location": {
+    "canon": true,
+    "reference": "sol",
+    "distance_ly": 40,
+    "direction": "galactic north",
+    "galactic_coordinates": null,
+    "source": "HH1, HH3",
+    "notes": "Canon: 40 ly from Sol and 475 ly from Manticore; ~60 ly from Visigoth. Manticore is 512 ly galactic-north of Sol, so Sigma Draconis sits roughly on the Sol-Manticore line (40 + ~472 = ~512), making galactic-north of Sol a consistent bearing. (Real-world Sigma Draconis is ~18 ly from Sol; the in-universe 40 ly is canon.) Direction along that line is fabricated; absolute coordinates not in canon."
+  },
+  "stars": [
+    {
+      "id": "sigma-draconis-a",
+      "name": "Sigma Draconis",
+      "role": "primary",
+      "spectral_type": "K0",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH1, real-world catalog",
+      "notes": "Star existence is canon; the system is named for the real star Sigma Draconis. Spectral type K0 is taken from the real-world catalog (canon gives none) -- treat as fabricated. Mass not given; filled by orbit-derive from spectral class."
+    }
+  ],
+  "bodies": [
+    {
+      "id": "cassandra",
+      "name": "Cassandra",
+      "designation": null,
+      "parent_star": "sigma-draconis-a",
+      "orbit_index": 2,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "canon": true,
+      "source": "HH1, HH14",
+      "gravity_g": null,
+      "axial_tilt_deg": null,
+      "lore": "The system's second inhabited world. Settled alongside Beowulf as part of the Sigma Draconis polity.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.64,
+        "e": 0.02,
+        "i_deg": 0.8,
+        "L_deg": 192.0,
+        "long_peri_deg": 194.0,
+        "long_node_deg": 106.0,
+        "period_days": 215.938,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.75 M_sun (mass fabricated from spectral class)."
+      }
+    },
+    {
+      "id": "beowulf",
+      "name": "Beowulf",
+      "designation": null,
+      "parent_star": "sigma-draconis-a",
+      "orbit_index": 3,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "canon": true,
+      "source": "HH1, HH14, Companion",
+      "gravity_g": null,
+      "axial_tilt_deg": null,
+      "lore": "The first extrasolar world settled by humanity and the system's capital world. Home of the Beowulf Biosciences community, renowned for medical and genetic science and for its staunch anti-genetic-slavery stance. Seceded from the Solarian League in 1922 PD; target of the Mesan Alignment's Beowulf Strike against its orbital infrastructure.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.024,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 157.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 437.028,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.75 M_sun (mass fabricated from spectral class)."
+      }
+    },
+    {
+      "id": "enlil",
+      "name": "Enlil",
+      "designation": null,
+      "parent_star": "sigma-draconis-a",
+      "orbit_index": 6,
+      "type": "planet",
+      "subtype": "gas_giant",
+      "habitable": false,
+      "canon": true,
+      "source": "HH1, HH14",
+      "gravity_g": null,
+      "axial_tilt_deg": null,
+      "lore": "A gas giant in the outer system.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 4.194304,
+        "e": 0.02,
+        "i_deg": 0.4,
+        "L_deg": 298.0,
+        "long_peri_deg": 222.0,
+        "long_node_deg": 318.0,
+        "period_days": 3622.842,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.75 M_sun (mass fabricated from spectral class)."
+      }
+    }
+  ],
+  "belts": [
+    {
+      "id": "diomedes-belt",
+      "name": "Diomedes Belt",
+      "parent_star": "sigma-draconis-a",
+      "canon": true,
+      "source": "HH14",
+      "lore": "The system's asteroid belt."
+    }
+  ],
+  "places": [
+    {
+      "id": "beowulf-terminus",
+      "name": "Beowulf Terminus",
+      "type": "wormhole_terminus",
+      "parent_star": "sigma-draconis-a",
+      "links_to": "manticore-wormhole-junction",
+      "canon": true,
+      "source": "HH1",
+      "lore": "A terminus of the Manticore Wormhole Junction located near Sigma Draconis, making the system a major traffic junction between Manticore and the Solarian League.",
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "In-system position of the terminus not specified; to be defined."
+      }
+    },
+    {
+      "id": "beowulf-orbital-stations",
+      "name": "Beowulf orbital stations",
+      "type": "commercial_station",
+      "rides_on": "beowulf",
+      "parent_star": "sigma-draconis-a",
+      "canon": true,
+      "source": "HH14",
+      "lore": "Beowulf's major orbital infrastructure -- habitats, shipyards, and biosciences installations in planetary orbit. Aggregate entry; struck by the Mesan Alignment in 1922 PD (the Beowulf Strike).",
+      "position": {
+        "canon": false,
+        "determined": false
+      }
+    }
+  ],
+  "demographics": {
+    "canon": false,
+    "total_population": null,
+    "as_of_pd": null,
+    "source": null,
+    "notes": "Population not captured from canon in this pass."
+  },
+  "lore": {
+    "summary": "A K0 single-star Solarian system 40 ly from Sol on the Sol-Manticore line, named for the real star Sigma Draconis. Its inhabited worlds are Beowulf (humanity's first extrasolar colony, a biosciences powerhouse and the system capital) and Cassandra, plus the gas giant Enlil and the Diomedes Belt. Its value is the Beowulf Terminus of the Manticore Wormhole Junction, which makes it the principal traffic gateway between the Star Kingdom and the Solarian League.",
+    "naming_convention": "System named for the real star Sigma Draconis; the capital world Beowulf and the polity's institutions draw on Anglo-Saxon / mythological naming.",
+    "timeline": [
+      {
+        "pd": 1922,
+        "event": "During the Solarian-Manticoran War, Beowulf voted to secede from the Solarian League; a Solarian League Navy attack failed, but the Mesan Alignment exploited the opening to carry out the Beowulf Strike against Beowulf's orbital stations.",
+        "source": "HH14"
+      }
+    ]
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 0.0,
+    "y_ly": 0.0,
+    "z_ly": 40.0,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to sol; Sol origin, +Z galactic north, +X galactic east."
+  }
+}

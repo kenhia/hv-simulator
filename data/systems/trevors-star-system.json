@@ -1,0 +1,128 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "trevors-star",
+  "name": "Trevor's Star System",
+  "aliases": [],
+  "star_nation_id": "star-kingdom-of-manticore",
+  "canon": true,
+  "sources": [
+    "HH1",
+    "HH2",
+    "HH3",
+    "HH7",
+    "HH10",
+    "SITS"
+  ],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Trevor's_Star_System",
+    "https://honorverse.fandom.com/wiki/San_Martin"
+  ],
+  "retrieved": "2026-06-15",
+  "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 210,
+    "direction": "galactic east",
+    "galactic_coordinates": null,
+    "source": "HH2, HH3",
+    "notes": "Canon places Trevor's Star to the galactic east of Manticore, in former Havenite territory. Distance set to the canon Trevor's Star Terminus span of the Manticore Wormhole Junction (210 ly); the absolute bearing along galactic-east is fabricated. No absolute galactic coordinates in canon."
+  },
+  "stars": [
+    {
+      "id": "trevors-star-a",
+      "name": "Trevor's Star",
+      "role": "primary",
+      "spectral_type": "G2",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH2",
+      "notes": "Star existence is canon. Spectral type not given in canon; G2 (Sol-like) is fabricated to support a habitable San Martin. Mass filled by orbit-derive from spectral class."
+    }
+  ],
+  "bodies": [
+    {
+      "id": "san-martin",
+      "name": "San Martin",
+      "designation": null,
+      "parent_star": "trevors-star-a",
+      "orbit_index": 3,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "canon": true,
+      "source": "HH2, HH3",
+      "gravity_g": 2.7,
+      "axial_tilt_deg": null,
+      "lore": "The system's sole inhabited world and a notably high-gravity planet with a dense atmosphere; its people (the San Martinos, e.g. Tomas Ramirez) are correspondingly powerfully built. Independent until invaded and annexed by the People's Republic of Haven in 1883 PD; liberated by the Manticoran Alliance at the Battle of Trevor's Star (1911 PD) and annexed into the Star Kingdom of Manticore in 1914 PD.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.024,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 14.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 378.478,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
+      }
+    }
+  ],
+  "belts": [],
+  "places": [
+    {
+      "id": "trevors-star-terminus",
+      "name": "Trevor's Star Terminus",
+      "type": "wormhole_terminus",
+      "parent_star": "trevors-star-a",
+      "links_to": "manticore-wormhole-junction",
+      "canon": true,
+      "source": "HH2, HH7",
+      "lore": "A terminus of the Manticore Wormhole Junction. Its discovery made Trevor's Star strategically vital to both Manticore and Haven; the system's capture (Battle of Trevor's Star, 1911 PD) gave Manticore a direct, instantaneous link to a front-line system.",
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "In-system position of the terminus not specified; to be defined."
+      }
+    }
+  ],
+  "demographics": {
+    "canon": false,
+    "total_population": null,
+    "as_of_pd": null,
+    "source": null,
+    "notes": "Population not captured from canon in this pass."
+  },
+  "lore": {
+    "summary": "A G2 system 210 ly galactic-east of Manticore in former Havenite territory, holding a terminus of the Manticore Wormhole Junction. Its sole inhabited world, the high-gravity planet San Martin, was an independent star nation until Haven invaded it in 1883 PD; the Manticoran Alliance retook it at the Battle of Trevor's Star (1911 PD) and annexed it into the Star Kingdom in 1914 PD, giving Manticore an instantaneous junction link to the Havenite front.",
+    "naming_convention": "Star named 'Trevor's Star' for its discoverer; the world San Martin carries a Spanish/Latin-American naming theme.",
+    "timeline": [
+      {
+        "pd": 1883,
+        "event": "San Martin invaded and forcibly annexed by the People's Republic of Haven; refugees escape to Manticore via the junction.",
+        "source": "HH2"
+      },
+      {
+        "pd": 1911,
+        "event": "Manticoran Alliance fleet under Admiral White Haven retakes the system (Battle of Trevor's Star).",
+        "source": "HH7"
+      },
+      {
+        "pd": 1914,
+        "event": "San Martin asks for and is granted annexation by Manticore; Trevor's Star becomes part of the Star Kingdom.",
+        "source": "HH10"
+      }
+    ]
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 210.0,
+    "y_ly": 0.0,
+    "z_ly": 512.0,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
+  }
+}
