@@ -339,15 +339,35 @@ test. The verification *is* useful content.
 
 ### Phase 2b — Inter-system travel (no queue yet)
 
-- **Nav route planner** (graph search over systems + wormhole edges + hyper
-  lanes) → a filed multi-mode route.
-- **Engine executes multi-mode plans on the DES core:** n-space accel/coast/decel
-  (the **coast phase finally fires** on binary/interstellar legs), `hyper_cruise`
-  (band apparent-velocity + hyper-limit, read from data), `wormhole_transit` as
-  instant + fixed safety buffer (no dynamic queue yet).
-- **Deliverable:** end-to-end **Sol → Manticore → Yeltsin's Star** flight plan
-  with realistic multi-day clocks; state queryable across systems. (Manticore↔
-  Yeltsin's is canon-31-ly and flyable without the full frame.)
+Per `006` (decision #3, *DES-core-first*), 2b opens by **re-founding the engine
+on the lazy DES core** — built in 2a only as tools + an analytic-query engine, so
+the core itself doesn't exist yet. Split into two sprints:
+
+- **Sprint 013 — DES core re-founding (parity).** Event queue + lazy
+  `advance-to-T` + an extensible (closed-kind, exhaustively-dispatched)
+  segment/event model that *structurally* admits resolver-fixed open-ended
+  boundaries (the 2c wormhole-queue seam). Port `ephemeris`/`kinematics`/
+  `SimClock` (+ PD ↔ T-year ↔ epoch, anchor **1890 PD**). Re-express today's
+  Earth → Titan → Earth plan on it. **Bar: byte-for-byte parity with the Phase 1
+  analytic `state_at`, zero drift.** No new travel; no resolvers. ✅ **Done
+  (Sprint 013):** `hvsim.des` (event queue + lazy `advance_to(T)` + closed-kind
+  exhaustive segment model with the `OpenEndedSegment` resolver seam);
+  `flightplan.state_at` delegates to it; `SimClock` gained the PD calendar.
+  Parity proven (all 69 prior tests unchanged + a 300-point dense-sweep oracle
+  match); 82 engine tests green.
+- **Sprint 014 — inter-system travel.** Multi-mode plans on the core: n-space
+  accel/coast/decel (the **coast phase finally fires** on binary/interstellar
+  legs), `hyper_cruise` (band apparent-velocity + hyper-limit, read from data),
+  `wormhole_transit` as instant + fixed safety buffer (no dynamic queue yet), and
+  the climb-to-hyper-limit leg (below). Plus the **nav route planner as a
+  separate tool** (`tools/nav-planner/`, its own pyproject) — graph search over
+  systems + wormhole edges + hyper lanes → a filed multi-mode route the engine
+  executes. Per the founding split the planner is **not** physics and stays out
+  of the engine; built **UI-first in intent** so it later backs the flow *select
+  a ship → pick a destination → planner emits a flight plan for user approval*.
+- **Deliverable (end of 2b):** end-to-end **Sol → Manticore → Yeltsin's Star**
+  flight plan with realistic multi-day clocks; state queryable across systems.
+  (Manticore↔Yeltsin's is canon-31-ly and flyable without the full frame.)
 
 **Routing realism — obstacle clearance (noted 2026-06-15).** Two geometry cases:
 
