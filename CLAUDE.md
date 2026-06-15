@@ -145,8 +145,8 @@ the Unicode minus `−` (U+2212), which renders confusably. Ruff RUF001/002/003
 enforce this; en/em dashes (`–`/`—`) are allowed for ranges and prose.
 
 Package layout under `engine/src/hvsim/`: `ephemeris/`, `kinematics/`,
-`flightplan/`, `clock/`, `universe/`, `des/`, `api/`. Kinematics and ephemeris
-stay **pure functions** — unit-testable without the service running.
+`flightplan/`, `route/`, `clock/`, `universe/`, `des/`, `api/`. Kinematics and
+ephemeris stay **pure functions** — unit-testable without the service running.
 
 **`des/` is the discrete-event execution core** (Sprint 013, Phase 2b
 re-founding). Filed segments become boundary *events*; `Simulation.state(T)`
@@ -158,6 +158,19 @@ the resolver-fixed, open-ended boundaries the Phase 2c wormhole queue needs.
 exhaustive dispatch (`des/model.py`) — the seam new travel modes plug into.
 `SimClock` also carries the **PD calendar** (PD ↔ T-year ↔ epoch, anchored at
 1890 PD); it labels the sim timeline without changing `now()`.
+
+**`route/` is multi-mode interstellar travel** (Sprint 014). A filed `Route` of
+mode-tagged legs (`nspace` / `hyper` / `wormhole`) compiles via `compile_route`
+into DES segments: a hyper leg → n-space **climb** past the origin star's hyper
+limit + `hyper_cruise` (distance ÷ band apparent velocity) + **descent**; a
+wormhole leg → `wormhole_transit` (instant + fixed `buffer_normal_s`). Every
+parameter (bands, per-star `hyper_limit_lmin`, distances, buffer) is **read from
+the artifact** via new `Universe` accessors — the engine stays a configurable
+physics box. In-system positions are heliocentric per system; an interstellar
+`hyper_cruise` reports a **galactic-frame** position (`ShipState.frame` /
+`.system` say which). The coast phase finally fires on long n-space legs.
+**Route-finding is Sprint 015's `tools/nav-planner/`** — routes here are
+hand-filed. Demo: `just demo-route` (Sol → Beowulf → Manticore → Grayson).
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

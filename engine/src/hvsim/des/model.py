@@ -1,7 +1,6 @@
 """The segment/event/mode model — closed kinds with exhaustive dispatch.
 
-This is the seam the rest of Phase 2 grows from. Today there are two segment
-kinds, both closed-form (``transit``, ``layover``). The dispatch is intentionally
+This is the seam the rest of Phase 2 grows from. The dispatch is intentionally
 exhaustive: an unrecognised kind raises rather than silently doing nothing — the
 Python stand-in for the compile-time ``match`` exhaustiveness an eventual Rust
 port would give us.
@@ -14,23 +13,31 @@ Two functions define a segment's behaviour:
   arrival. No resolver exists yet, so an open-ended segment raises.
 - :func:`evaluate` answers *where the ship is* within an active segment.
 
-A segment is any object exposing ``seq``, ``kind``, ``t_start``, ``t_end``,
-``trajectory`` (transit), and ``body`` (layover) — `flightplan.Segment` fits,
-and the core stays free of a flightplan import (no cycle).
+Segment kinds (Sprint 014 added the two inter-system kinds):
+
+- ``transit`` — closed-form n-space run (brachistochrone/coast) in a system frame.
+- ``layover`` — holding station at a body (tracks the moving body).
+- ``hyper_cruise`` — straight-line interstellar leg at a band's apparent velocity,
+  expressed in the galactic frame.
+- ``wormhole_transit`` — near-instant junction translation + a fixed buffer;
+  reports arrival in the destination system.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
 from hvsim.ephemeris import heliocentric_position
 from hvsim.kinematics import ZERO, Vec3
 
-# The closed set of segment kinds. Phase 2b/2c extend this (hyper_cruise,
-# wormhole_transit, wormhole_queue); each addition must extend the dispatch
-# below too, or evaluation raises.
-SEGMENT_KINDS = ("transit", "layover")
+# The closed set of segment kinds. Each addition must extend the dispatch below
+# too, or evaluation raises.
+SEGMENT_KINDS = ("transit", "layover", "hyper_cruise", "wormhole_transit")
+
+# A position resolver maps (system_id, body_id, when) -> heliocentric Vec3 (m).
+BodyResolver = Callable[[str, str, datetime], Vec3]
 
 
 class UnknownSegmentKind(Exception):
@@ -46,8 +53,25 @@ class OpenEndedSegment(Exception):
 
 
 def body_position(body: str, when: datetime) -> Vec3:
-    """Heliocentric position of ``body`` at ``when`` (SI metres)."""
+    """Heliocentric (Sol) position of ``body`` at ``when`` (SI metres)."""
     return Vec3(*heliocentric_position(body, when))
+
+
+def _resolve(segment: Any, when: datetime, resolve_body: BodyResolver | None) -> Vec3:
+    """Resolve a body's position, defaulting to the Sol JPL ephemeris."""
+    assert segment.body is not None
+    if resolve_body is not None and segment.system is not None:
+        return resolve_body(segment.system, segment.body, when)
+    return body_position(segment.body, when)
+
+
+def _fraction(segment: Any, when: datetime) -> float:
+    """Elapsed fraction of a closed segment, clamped to [0, 1]."""
+    assert segment.t_end is not None
+    total = (segment.t_end - segment.t_start).total_seconds()
+    if total <= 0.0:
+        return 1.0
+    return min(max((when - segment.t_start).total_seconds() / total, 0.0), 1.0)
 
 
 def segment_end(segment: Any, when: datetime) -> datetime:
@@ -62,13 +86,32 @@ def segment_end(segment: Any, when: datetime) -> datetime:
     raise OpenEndedSegment(segment.kind)
 
 
-def evaluate(segment: Any, when: datetime) -> tuple[Vec3, Vec3, str]:
-    """Return ``(position, velocity, phase)`` for an active segment at ``when``."""
+def evaluate(
+    segment: Any, when: datetime, resolve_body: BodyResolver | None = None
+) -> tuple[Vec3, Vec3, str]:
+    """Return ``(position, velocity, phase)`` for an active segment at ``when``.
+
+    Positions are in the segment's frame: heliocentric (per ``system``) for
+    ``transit``/``layover``/``wormhole_transit`` arrival, galactic for
+    ``hyper_cruise``.
+    """
     if segment.kind == "transit":
         assert segment.trajectory is not None
         st = segment.trajectory.state((when - segment.t_start).total_seconds())
         return st.position, st.velocity, "transit"
     if segment.kind == "layover":
-        assert segment.body is not None
-        return body_position(segment.body, when), ZERO, "layover"
+        return _resolve(segment, when, resolve_body), ZERO, "layover"
+    if segment.kind == "hyper_cruise":
+        assert segment.from_pos is not None and segment.to_pos is not None
+        leg = segment.to_pos - segment.from_pos
+        frac = _fraction(segment, when)
+        position = segment.from_pos + leg * frac
+        total = (segment.t_end - segment.t_start).total_seconds()  # type: ignore[operator]
+        velocity = leg * (1.0 / total) if total > 0.0 else ZERO
+        return position, velocity, "hyper_cruise"
+    if segment.kind == "wormhole_transit":
+        # Near-instant translation + buffer; reported at the destination star
+        # centre (origin of the to_system frame). Position precision during the
+        # short buffer is immaterial.
+        return ZERO, ZERO, "wormhole_transit"
     raise UnknownSegmentKind(segment.kind)

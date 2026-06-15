@@ -14,18 +14,22 @@ from .core import ShipState, Simulation
 from .event import Event, EventQueue
 from .model import (
     SEGMENT_KINDS,
+    BodyResolver,
     OpenEndedSegment,
     UnknownSegmentKind,
     body_position,
     evaluate,
     segment_end,
 )
+from .segment import Segment
 
 __all__ = [
     "SEGMENT_KINDS",
+    "BodyResolver",
     "Event",
     "EventQueue",
     "OpenEndedSegment",
+    "Segment",
     "ShipState",
     "Simulation",
     "UnknownSegmentKind",

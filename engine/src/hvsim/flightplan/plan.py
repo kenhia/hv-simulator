@@ -15,9 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from hvsim.des import ShipState, Simulation
+from hvsim.des import Segment, ShipState, Simulation
 from hvsim.ephemeris import heliocentric_position
-from hvsim.kinematics import Trajectory, Vec3, solve_intercept
+from hvsim.kinematics import Vec3, solve_intercept
 
 from .ship import Ship
 
@@ -42,22 +42,6 @@ class FlightPlan:
     origin: str
     waypoints: list[Waypoint]
     depart_at: datetime
-
-
-@dataclass(frozen=True)
-class Segment:
-    """One contiguous piece of a compiled plan, in absolute time."""
-
-    seq: int
-    kind: str  # "transit" | "layover"
-    t_start: datetime
-    t_end: datetime
-    trajectory: Trajectory | None = None  # transit only
-    body: str | None = None  # layover only
-
-    @property
-    def duration_s(self) -> float:
-        return (self.t_end - self.t_start).total_seconds()
 
 
 @dataclass(frozen=True)
@@ -87,7 +71,14 @@ def compile_plan(plan: FlightPlan) -> CompiledPlan:
     for wp in plan.waypoints:
         intercept = solve_intercept(pos, lambda t, b=wp.body: _pos(b, t), when, accel, v_cap)
         segments.append(
-            Segment(seq, "transit", when, intercept.arrival, trajectory=intercept.trajectory)
+            Segment(
+                seq,
+                "transit",
+                when,
+                intercept.arrival,
+                trajectory=intercept.trajectory,
+                system="sol",
+            )
         )
         seq += 1
         when = intercept.arrival
@@ -95,7 +86,7 @@ def compile_plan(plan: FlightPlan) -> CompiledPlan:
 
         if wp.layover > timedelta(0):
             end = when + wp.layover
-            segments.append(Segment(seq, "layover", when, end, body=wp.body))
+            segments.append(Segment(seq, "layover", when, end, body=wp.body, system="sol"))
             seq += 1
             when = end
             pos = _pos(wp.body, when)
@@ -104,13 +95,19 @@ def compile_plan(plan: FlightPlan) -> CompiledPlan:
 
 
 def simulation_for(compiled: CompiledPlan) -> Simulation:
-    """Build the discrete-event :class:`~hvsim.des.Simulation` for a plan."""
+    """Build the discrete-event :class:`~hvsim.des.Simulation` for a plan.
+
+    Single-system Sol plan: positions resolve via the Sol JPL ephemeris (the
+    default body resolver), so ``system`` is ``"sol"`` throughout.
+    """
     plan = compiled.plan
     final_body = plan.waypoints[-1].body if plan.waypoints else plan.origin
     return Simulation(
         segments=tuple(compiled.segments),
         depart_at=plan.depart_at,
+        origin_system="sol",
         origin_body=plan.origin,
+        final_system="sol",
         final_body=final_body,
     )
 
