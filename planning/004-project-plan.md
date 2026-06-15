@@ -311,6 +311,24 @@ The load-bearing seam. Freeze it before building on it.
   with realistic multi-day clocks; state queryable across systems. (Manticore↔
   Yeltsin's is canon-31-ly and flyable without the full frame.)
 
+**Routing realism — obstacle clearance (noted 2026-06-15).** Two geometry cases:
+
+- *Clearing the hyper limit.* A ship inside the limit flies an n-space leg out
+  past it before translating up, and drops back down at the destination's limit
+  (you translate **only outside** the limit — you don't cross one while in hyper).
+  The tempting "dogleg / curve around the limit ring to aim at the destination"
+  is **not needed**: the limit (~2.6 AU for a G star) is a negligible point at
+  interstellar (ly) scale, so the optimum is simply *clear the nearest limit
+  crossing, then straight-line hyper.* The planner only needs the short
+  climb-to-limit leg — no two-route comparison. **Will implement** (the climb leg).
+- *In-system star avoidance.* The straight-chord solver can route a trip
+  *through the primary* when origin and destination are near-opposite as seen
+  from the star (a "corona flyby"). Real but rare. Fix = detect chord-vs-star
+  within a safety/corona radius and dogleg via an offset waypoint. **Edge case:**
+  implement when it bites; until then a known simplification (chords may clip the
+  star on near-opposition trips). Note this already exists latently in the Phase 1
+  Sol solver.
+
 ### Phase 2c — Wormhole queues (the DES payoff)
 
 - **Wormhole queue resolver:** the dataset's `transit_model`
