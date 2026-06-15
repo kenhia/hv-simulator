@@ -28,11 +28,19 @@ engine loads:
 
 ```sh
 just derive-orbits   # fill first-pass (fabricated, canon:false) orbits into data/
+just frame           # fabricate the Sol-origin galactic coordinate frame into data/
 just compile-data    # data/ JSON -> build/universe.db (the universe artifact)
 
 # Query any system (set HVSIM_UNIVERSE_DB or pass --universe):
 cd engine && uv run where-is --system manticore --universe ../build/universe.db
 ```
+
+The compiled artifact also carries the **wormhole route graph**, the
+**hyperspace bands + hyper-limit** model, and a galactic coordinate frame, so the
+engine can answer inter-system distances (`GET /systems/{a}/distance/{b}` — the
+canon wormhole span when two systems are directly linked, else frame-derived) and
+expose the network (`GET /wormholes`, `GET /junctions`). No *travel* yet — that's
+Phase 2b.
 
 **Sol is special, on purpose.** Canon fixes Honorverse planet *order* but almost
 no *geometry*, so fictional systems use **fabricated** orbits (flagged

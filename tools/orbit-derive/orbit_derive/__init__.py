@@ -97,7 +97,9 @@ def _derive_system(doc: dict) -> int:
             i_deg = round(0.4 * (idx % 5), 3)
             long_node = float((idx * 53) % 360)
             long_peri = float((idx * 97) % 360)
-            seed = hashlib.md5(f"{sys_id}:{p['id']}".encode()).hexdigest()  # stable phase, not security
+            seed = hashlib.md5(
+                f"{sys_id}:{p['id']}".encode()
+            ).hexdigest()  # stable phase, not security
             l_deg = float(int(seed, 16) % 360)
 
             p["orbit"] = {
@@ -112,9 +114,17 @@ def _derive_system(doc: dict) -> int:
                 "period_days": round(_period_days(a_au, mass), 3),
                 "notes": (
                     "Fabricated by orbit-derive (canon:false): "
-                    + ("anchored on canon distance/period; " if p["id"] in anchors else "geometric spacing; ")
+                    + (
+                        "anchored on canon distance/period; "
+                        if p["id"] in anchors
+                        else "geometric spacing; "
+                    )
                     + f"star mass {mass} M_sun"
-                    + ("" if stars.get(star_id, {}).get("mass_solar") else " (mass fabricated from spectral class)")
+                    + (
+                        ""
+                        if stars.get(star_id, {}).get("mass_solar")
+                        else " (mass fabricated from spectral class)"
+                    )
                     + "."
                 ),
             }

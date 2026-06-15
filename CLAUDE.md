@@ -23,11 +23,16 @@ is in `planning/006`; the engine is being re-founded on a lazy discrete-event
 core (DES) for travel/queues in 2b/2c.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
-derive-orbits` (fabricated orbits, canon:false) → `just compile-data` →
-`build/universe.db` (artifact) → engine loads it (`HVSIM_UNIVERSE_DB`). Query via
-`where-is --system <sys> <body>` or `GET /systems`. **Sol is special-case:** it
-keeps the real JPL ephemeris (artistic license — Sol tracks the *actual* current
-planet positions), while Honorverse systems use fabricated orbits.
+derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
+canon:false) → `just compile-data` → `build/universe.db` (artifact, contract
+v0.1.1) → engine loads it (`HVSIM_UNIVERSE_DB`). The artifact carries systems
+(coords, binary, per-star hyper limits), bodies, the wormhole route graph +
+transit model, and the hyperspace bands. Query via `where-is --system <sys>
+<body>`, `GET /systems`, `/wormholes`, `/junctions`, `/systems/{a}/distance/{b}`
+(canon wormhole span if linked, else frame). **Sol is special-case:** it keeps
+the real JPL ephemeris (artistic license — Sol tracks the *actual* current planet
+positions), while Honorverse systems use fabricated orbits. No inter-system
+*travel* until Phase 2b (the DES core).
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)

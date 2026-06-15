@@ -751,5 +751,13 @@
         "source": "HH12, HH14"
       }
     ]
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 0.0,
+    "y_ly": 0.0,
+    "z_ly": 512.0,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to Sol; Sol origin, +Z galactic north, +X galactic east."
   }
 }
