@@ -22,6 +22,7 @@ from hvsim.clock import SimClock
 from hvsim.ephemeris import BODIES, heliocentric_position, list_bodies
 from hvsim.flightplan import FlightPlan, Ship, Waypoint, compile_plan, state_at
 from hvsim.kinematics import ZERO, Vec3
+from hvsim.universe import Universe, body_positions
 
 from .db import (
     FlightPlanRow,
@@ -57,10 +58,12 @@ def create_app(
     database_url: str | None = None,
     clock: SimClock | None = None,
     dev_clock: bool | None = None,
+    universe_db: str | None = None,
 ) -> FastAPI:
     database_url = database_url or os.environ.get("HVSIM_DB", DEFAULT_DB_URL)
     if dev_clock is None:
         dev_clock = bool(os.environ.get("HVSIM_DEV_CLOCK"))
+    universe_db = universe_db or os.environ.get("HVSIM_UNIVERSE_DB")
 
     engine = make_engine(database_url)
     init_db(engine)
@@ -69,6 +72,10 @@ def create_app(
     app = FastAPI(title="Honorverse Ship Simulator", version="0.1.0")
     app.state.clock = clock or SimClock()
     app.state.dev_clock = dev_clock
+    # Optional galaxy artifact (Phase 2a). Absent on the Phase-1 Sol deployment.
+    app.state.universe = (
+        Universe.open(universe_db) if universe_db and Path(universe_db).exists() else None
+    )
 
     def get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -187,6 +194,44 @@ def create_app(
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/systems")
+    def list_systems() -> list[dict]:
+        """Star systems in the loaded universe artifact (empty if none loaded)."""
+        u = app.state.universe
+        if u is None:
+            return []
+        return [
+            {
+                "id": s["id"],
+                "name": s["name"],
+                "star_nation_id": s["star_nation_id"],
+                "is_binary": bool(s["is_binary"]),
+                "distance_ly": s["distance_ly"],
+            }
+            for s in u.systems()
+        ]
+
+    @app.get("/systems/{system_id}/bodies")
+    def system_bodies(system_id: str, at: datetime | None = None) -> list[dict]:
+        """Placeable body positions in a system at a time (km + AU)."""
+        u = app.state.universe
+        if u is None or u.system(system_id) is None:
+            raise HTTPException(404, f"unknown system {system_id!r}")
+        when = resolve_when(at)
+        names = {b["id"]: b for b in u.bodies(system_id)}
+        out = []
+        for bid, vec in sorted(body_positions(u, system_id, when).items()):
+            b = names.get(bid, {})
+            out.append(
+                {
+                    "id": bid,
+                    "name": b.get("name", bid),
+                    "type": b.get("type"),
+                    "position": position_out(vec).model_dump(),
+                }
+            )
+        return out
 
     @app.get("/metrics", include_in_schema=False)
     def metrics(session: Session = Depends(get_db)) -> Response:

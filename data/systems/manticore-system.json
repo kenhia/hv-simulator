@@ -3,16 +3,23 @@
   "kind": "star_system",
   "id": "manticore",
   "name": "Manticore System",
-  "aliases": ["Manticore Binary System", "Manticore-A/B"],
+  "aliases": [
+    "Manticore Binary System",
+    "Manticore-A/B"
+  ],
   "star_nation_id": "star-kingdom-of-manticore",
   "canon": true,
-  "sources": ["HH1", "Companion", "HHA2:WPD", "Jayne's Intelligence Review v1"],
+  "sources": [
+    "HH1",
+    "Companion",
+    "HHA2:WPD",
+    "Jayne's Intelligence Review v1"
+  ],
   "wiki_pages": [
     "https://honorverse.fandom.com/wiki/Manticore_System",
     "https://honorverse.fandom.com/wiki/Star_Kingdom_of_Manticore"
   ],
   "retrieved": "2026-06-13",
-
   "location": {
     "canon": true,
     "reference": "Sol",
@@ -22,11 +29,13 @@
     "source": "HH1, Companion",
     "notes": "Canon gives only distance and bearing from Sol ('512 light-years to the Galactic north of the Sol System and Earth'). No absolute galactic coordinates are established; a coordinate origin/axis convention will have to be defined (non-canon) before this can be placed on a 3D map."
   },
-
   "binary": {
     "canon": true,
     "type": "binary",
-    "components": ["manticore-a", "manticore-b"],
+    "components": [
+      "manticore-a",
+      "manticore-b"
+    ],
     "barycenter_distance_from_a_lmin": 333,
     "barycenter_distance_from_b_lmin": 406,
     "eccentricity": 0.12,
@@ -36,7 +45,6 @@
     "source": "Companion",
     "notes": "Apparent eccentricity 'approaches twelve percent'. Mutual orbital period is not stated in canon and will need to be derived (Kepler's third law from the masses and mean separation) or invented; flagged non-canon when filled. 1 light-minute = 1.798754748e10 m."
   },
-
   "stars": [
     {
       "id": "manticore-a",
@@ -59,7 +67,6 @@
       "notes": "Hosts Gryphon plus the Unicorn Belt, the system's primary ore-extraction operation."
     }
   ],
-
   "bodies": [
     {
       "id": "salamander",
@@ -73,7 +80,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null, "notes": "Only orbital order is canon. Semi-major axis and full Keplerian elements must be invented to place this body."}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.584606,
+        "e": 0.015,
+        "i_deg": 0.4,
+        "L_deg": 183.0,
+        "long_peri_deg": 97.0,
+        "long_node_deg": 53.0,
+        "period_days": 154.268,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "phoenix",
@@ -87,7 +105,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null, "notes": "Order canon; placement invented."}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.93537,
+        "e": 0.02,
+        "i_deg": 0.8,
+        "L_deg": 36.0,
+        "long_peri_deg": 194.0,
+        "long_node_deg": 106.0,
+        "period_days": 312.217,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "manticore",
@@ -103,10 +132,42 @@
       "source": "HH1, Companion",
       "lore": "Capital world of the Star Kingdom; capital city is Landing. Extremely Earth-like, requiring only modest terraforming. Site of the Plague that killed ~60% of the original colonists before a vaccine was developed in 1496 PD.",
       "moons": [
-        {"id": "thorson", "name": "Thorson", "canon": true, "source": "Jayne's Intelligence Review v1", "orbit": {"canon": false, "determined": false}},
-        {"id": "manticore-unnamed-moons", "name": "37 additional unnamed moons", "count": 37, "named": false, "canon": true, "source": "HHA2:WPD", "orbit": {"canon": false, "determined": false}, "notes": "Canon states Manticore has 37 further moons beyond Thorson; none are individually named."}
+        {
+          "id": "thorson",
+          "name": "Thorson",
+          "canon": true,
+          "source": "Jayne's Intelligence Review v1",
+          "orbit": {
+            "canon": false,
+            "determined": false
+          }
+        },
+        {
+          "id": "manticore-unnamed-moons",
+          "name": "37 additional unnamed moons",
+          "count": 37,
+          "named": false,
+          "canon": true,
+          "source": "HHA2:WPD",
+          "orbit": {
+            "canon": false,
+            "determined": false
+          },
+          "notes": "Canon states Manticore has 37 further moons beyond Thorson; none are individually named."
+        }
       ],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null, "notes": "A Manticoran year is canonically stated as 1.73 standard Terran years, which constrains the orbital period; a_au can be derived from that period plus Manticore-A's mass and then refined. Treat derived value as non-canon."}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.496592,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 195.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 631.882,
+        "notes": "Fabricated by orbit-derive (canon:false): anchored on canon distance/period; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "sphinx",
@@ -121,10 +182,39 @@
       "source": "HH1, SK1, Companion",
       "lore": "Homeworld of the treecats, a native nonhuman sentient species discovered in 1518 PD by colonist Stephanie Harrington. Colonized as a quarantine 'citadel' during the Plague. Heavier gravity than Manticore.",
       "moons": [
-        {"id": "perseus", "name": "Perseus", "canon": true, "source": "Jayne's Intelligence Review v1", "orbit": {"canon": false, "determined": false}},
-        {"id": "bellerophon", "name": "Bellerophon", "canon": true, "source": "Jayne's Intelligence Review v1", "orbit": {"canon": false, "determined": false}}
+        {
+          "id": "perseus",
+          "name": "Perseus",
+          "canon": true,
+          "source": "Jayne's Intelligence Review v1",
+          "orbit": {
+            "canon": false,
+            "determined": false
+          }
+        },
+        {
+          "id": "bellerophon",
+          "name": "Bellerophon",
+          "canon": true,
+          "source": "Jayne's Intelligence Review v1",
+          "orbit": {
+            "canon": false,
+            "determined": false
+          }
+        }
       ],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null, "notes": "Order canon; placement invented."}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 2.394547,
+        "e": 0.01,
+        "i_deg": 1.6,
+        "L_deg": 140.0,
+        "long_peri_deg": 28.0,
+        "long_node_deg": 212.0,
+        "period_days": 1278.84,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "draco",
@@ -138,7 +228,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 3.831275,
+        "e": 0.015,
+        "i_deg": 0.0,
+        "L_deg": 161.0,
+        "long_peri_deg": 125.0,
+        "long_node_deg": 265.0,
+        "period_days": 2588.191,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "roc",
@@ -152,7 +253,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 6.130041,
+        "e": 0.02,
+        "i_deg": 0.4,
+        "L_deg": 183.0,
+        "long_peri_deg": 222.0,
+        "long_node_deg": 318.0,
+        "period_days": 5238.13,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
     {
       "id": "wyvern",
@@ -166,9 +278,19 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 9.808065,
+        "e": 0.025,
+        "i_deg": 0.8,
+        "L_deg": 117.0,
+        "long_peri_deg": 319.0,
+        "long_node_deg": 11.0,
+        "period_days": 10601.229,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.12 M_sun."
+      }
     },
-
     {
       "id": "erinye",
       "name": "Erinye",
@@ -181,7 +303,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.4,
+        "e": 0.015,
+        "i_deg": 0.4,
+        "L_deg": 149.0,
+        "long_peri_deg": 97.0,
+        "long_node_deg": 53.0,
+        "period_days": 96.335,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "gorgon",
@@ -195,7 +328,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.64,
+        "e": 0.02,
+        "i_deg": 0.8,
+        "L_deg": 113.0,
+        "long_peri_deg": 194.0,
+        "long_node_deg": 106.0,
+        "period_days": 194.969,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "aphrodite",
@@ -209,7 +353,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.024,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 210.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 394.59,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "damocles",
@@ -223,7 +378,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.6384,
+        "e": 0.01,
+        "i_deg": 1.6,
+        "L_deg": 172.0,
+        "long_peri_deg": 28.0,
+        "long_node_deg": 212.0,
+        "period_days": 798.594,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "gryphon",
@@ -238,9 +404,29 @@
       "source": "HH1, Companion",
       "lore": "Third habitable world, colonized last and the least hospitable. Site of the 1721 PD Gryphon Uprising, the only armed internal conflict in Manticoran history. Hosts a small treecat colony.",
       "moons": [
-        {"id": "egg", "name": "Egg", "canon": true, "source": "Jayne's Intelligence Review v1", "orbit": {"canon": false, "determined": false}}
+        {
+          "id": "egg",
+          "name": "Egg",
+          "canon": true,
+          "source": "Jayne's Intelligence Review v1",
+          "orbit": {
+            "canon": false,
+            "determined": false
+          }
+        }
       ],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 2.62144,
+        "e": 0.015,
+        "i_deg": 0.0,
+        "L_deg": 285.0,
+        "long_peri_deg": 125.0,
+        "long_node_deg": 265.0,
+        "period_days": 1616.241,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "titan",
@@ -254,7 +440,18 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 4.194304,
+        "e": 0.02,
+        "i_deg": 0.4,
+        "L_deg": 99.0,
+        "long_peri_deg": 222.0,
+        "long_node_deg": 318.0,
+        "period_days": 3271.042,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     },
     {
       "id": "fenris",
@@ -268,10 +465,20 @@
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
       "moons": [],
-      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 6.710886,
+        "e": 0.025,
+        "i_deg": 0.8,
+        "L_deg": 271.0,
+        "long_peri_deg": 319.0,
+        "long_node_deg": 11.0,
+        "period_days": 6620.124,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.92 M_sun."
+      }
     }
   ],
-
   "belts": [
     {
       "id": "unicorn-belt",
@@ -282,7 +489,13 @@
       "canon": true,
       "source": "HH12, Jayne's Intelligence Review v1",
       "lore": "The system's principal asteroid belt and ore-extraction operation; produces the majority of Manticore's raw ores despite the B subsystem holding a minority of the population.",
-      "orbit": {"canon": false, "determined": false, "inner_au": null, "outer_au": null, "notes": "Belt extent must be invented."}
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "inner_au": null,
+        "outer_au": null,
+        "notes": "Belt extent must be invented."
+      }
     },
     {
       "id": "nibelung-belt",
@@ -292,7 +505,12 @@
       "type": "asteroid_belt",
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
-      "orbit": {"canon": false, "determined": false, "inner_au": null, "outer_au": null}
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "inner_au": null,
+        "outer_au": null
+      }
     },
     {
       "id": "gorgon-belt",
@@ -302,11 +520,15 @@
       "type": "asteroid_belt",
       "canon": true,
       "source": "Jayne's Intelligence Review v1",
-      "orbit": {"canon": false, "determined": false, "inner_au": null, "outer_au": null},
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "inner_au": null,
+        "outer_au": null
+      },
       "notes": "Listed between Titan (B VI) and Fenris (B VII) in the system chart."
     }
   ],
-
   "places": [
     {
       "id": "manticore-wormhole-junction",
@@ -317,15 +539,58 @@
       "source": "HH1, Companion",
       "lore": "One of the largest and most valuable wormhole junctions known, the foundation of the Star Kingdom's wealth. First transited in 1585 PD by the survey ship Pathfinder. As of 1900 PD the system's Gross System Product was 78% of Sol's, almost entirely because of the Junction.",
       "termini": [
-        {"name": "Beowulf Terminus", "destination_system": "sigma-draconis", "destination_label": "Beowulf (Sigma Draconis)", "discovered_pd": 1585, "canon": true},
-        {"name": "Trevor's Star Terminus", "destination_system": "trevors-star", "destination_label": "Trevor's Star / San Martin", "canon": true},
-        {"name": "Hennesy Terminus", "destination_system": "hennesy", "destination_label": "Hennesy", "canon": true},
-        {"name": "Gregor Terminus", "destination_system": "gregor", "destination_label": "Gregor", "discovered_pd": 1647, "canon": true},
-        {"name": "Basilisk Terminus", "destination_system": "basilisk", "destination_label": "Basilisk / Medusa", "discovered_pd": 1865, "canon": true},
-        {"name": "Matapan Terminus", "destination_system": "matapan", "destination_label": "Matapan", "canon": true},
-        {"name": "Lynx Terminus", "destination_system": "mq-l-1792-46a", "destination_label": "Lynx / Talbott Cluster", "discovered_pd": 1920, "canon": true}
+        {
+          "name": "Beowulf Terminus",
+          "destination_system": "sigma-draconis",
+          "destination_label": "Beowulf (Sigma Draconis)",
+          "discovered_pd": 1585,
+          "canon": true
+        },
+        {
+          "name": "Trevor's Star Terminus",
+          "destination_system": "trevors-star",
+          "destination_label": "Trevor's Star / San Martin",
+          "canon": true
+        },
+        {
+          "name": "Hennesy Terminus",
+          "destination_system": "hennesy",
+          "destination_label": "Hennesy",
+          "canon": true
+        },
+        {
+          "name": "Gregor Terminus",
+          "destination_system": "gregor",
+          "destination_label": "Gregor",
+          "discovered_pd": 1647,
+          "canon": true
+        },
+        {
+          "name": "Basilisk Terminus",
+          "destination_system": "basilisk",
+          "destination_label": "Basilisk / Medusa",
+          "discovered_pd": 1865,
+          "canon": true
+        },
+        {
+          "name": "Matapan Terminus",
+          "destination_system": "matapan",
+          "destination_label": "Matapan",
+          "canon": true
+        },
+        {
+          "name": "Lynx Terminus",
+          "destination_system": "mq-l-1792-46a",
+          "destination_label": "Lynx / Talbott Cluster",
+          "discovered_pd": 1920,
+          "canon": true
+        }
       ],
-      "position": {"canon": false, "determined": false, "notes": "Canon places the Junction roughly 7 light-hours from Manticore-A; exact in-system coordinates and per-terminus positions must be defined (non-canon)."}
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "Canon places the Junction roughly 7 light-hours from Manticore-A; exact in-system coordinates and per-terminus positions must be defined (non-canon)."
+      }
     },
     {
       "id": "hmss-hephaestus",
@@ -337,7 +602,11 @@
       "destroyed_pd": 1922,
       "source": "HH12",
       "lore": "One of the RMN's two main shipyards, in orbit of Manticore. Destroyed in early 1922 PD by the Mesan Alignment's Operation Oyster Bay.",
-      "position": {"canon": false, "determined": false, "notes": "Orbits Manticore; exact orbital offset invented."}
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "Orbits Manticore; exact orbital offset invented."
+      }
     },
     {
       "id": "hmss-vulcan",
@@ -349,7 +618,11 @@
       "destroyed_pd": 1922,
       "source": "HH12",
       "lore": "The RMN's second main shipyard. Destroyed in the 1922 PD Operation Oyster Bay attack.",
-      "position": {"canon": false, "determined": false, "notes": "Parent body not pinned down in this source; commonly associated with Sphinx. Confirm against primary text and adjust 'rides_on' if needed."}
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "Parent body not pinned down in this source; commonly associated with Sphinx. Confirm against primary text and adjust 'rides_on' if needed."
+      }
     },
     {
       "id": "hmss-weyland",
@@ -361,7 +634,11 @@
       "destroyed_pd": 1922,
       "source": "HH12",
       "lore": "The RMN's main naval research station. Destroyed in the 1922 PD Operation Oyster Bay attack.",
-      "position": {"canon": false, "determined": false, "notes": "Often associated with Gryphon/Manticore-B; confirm parent body against primary text."}
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "Often associated with Gryphon/Manticore-B; confirm parent body against primary text."
+      }
     },
     {
       "id": "hmss-hephaestus-alpha",
@@ -373,7 +650,10 @@
       "built_pd": 1922,
       "source": "HH12, HH14",
       "lore": "One of two replacement shipyards built above Manticore after Oyster Bay, with Republic of Beowulf assistance; construction ran ahead of schedule.",
-      "position": {"canon": false, "determined": false}
+      "position": {
+        "canon": false,
+        "determined": false
+      }
     },
     {
       "id": "hmss-hephaestus-beta",
@@ -385,7 +665,10 @@
       "built_pd": 1922,
       "source": "HH12, HH14",
       "lore": "Second replacement shipyard above Manticore (post-Oyster Bay rebuild).",
-      "position": {"canon": false, "determined": false}
+      "position": {
+        "canon": false,
+        "determined": false
+      }
     },
     {
       "id": "manticore-orbital-forts",
@@ -395,10 +678,12 @@
       "canon": true,
       "source": "UHH",
       "lore": "After the Junction's discovery the home system was secured with orbital forts, making it one of the most heavily defended systems in human space. Generic/aggregate entry; individual forts are not separately named in canon.",
-      "position": {"canon": false, "determined": false}
+      "position": {
+        "canon": false,
+        "determined": false
+      }
     }
   ],
-
   "demographics": {
     "canon": true,
     "total_population": 3600000000,
@@ -406,22 +691,65 @@
     "source": "HH12, Companion",
     "notes": "~3.6 billion as of early 1922 PD, spread across the three habitable planets and the main asteroid belt; majority in the Manticore-A subsystem."
   },
-
   "lore": {
     "summary": "The Manticore System is the binary home system of the Star Kingdom of Manticore, 512 light-years galactic-north of Sol. It is unusual for holding three habitable worlds (Manticore, Sphinx, Gryphon) and for hosting the Manticore Wormhole Junction, one of the largest known, which made the small star nation one of the wealthiest in human space.",
     "naming_convention": "All planets are named after creatures from Earth mythology.",
     "timeline": [
-      {"pd": 562, "event": "Sir Frederick Clarke confirms the existence of planets in the system.", "source": "Companion"},
-      {"pd": 753, "event": "Franchot et Fils' survey ship Suffren makes the first voyage to Manticore; three habitable planets and resource-rich asteroid belts confirmed.", "source": "UHH"},
-      {"pd": 775, "event": "Manticore colonial expedition departs Earth aboard the sleeper ship Jason (125,000 colonists).", "source": "UHH"},
-      {"pd": 1416, "event": "Jason arrives; finds a Manticore Colony Trust settlement and four frigates already guarding the system.", "source": "UHH"},
-      {"pd": "1464-1496", "event": "The Plague: native coronavirus-like pathogens kill ~60% of original colonists until a vaccine is developed in 1496 PD.", "source": "SK1, Companion"},
-      {"pd": 1485, "event": "Roger Winton crowned King Roger I; corporate colony becomes the constitutional monarchy of the Star Kingdom of Manticore.", "source": "UHH"},
-      {"pd": 1518, "event": "Treecats discovered on Sphinx by colonist Stephanie Harrington.", "source": "HHA1, SK1"},
-      {"pd": 1585, "event": "First transit of the Manticore Wormhole Junction (survey ship Pathfinder to the Beowulf terminus), transforming the Star Kingdom's economy.", "source": "Companion"},
-      {"pd": 1721, "event": "Gryphon Uprising: the only armed internal conflict in Manticoran history.", "source": "Companion"},
-      {"pd": 1921, "event": "The Battle of Manticore, the largest space battle in human history, is fought in the system.", "source": "HH11"},
-      {"pd": 1922, "event": "Operation Oyster Bay: the Mesan Alignment destroys HMSS Hephaestus, Vulcan, and Weyland. Rebuilding begins with Beowulfan aid.", "source": "HH12, HH14"}
+      {
+        "pd": 562,
+        "event": "Sir Frederick Clarke confirms the existence of planets in the system.",
+        "source": "Companion"
+      },
+      {
+        "pd": 753,
+        "event": "Franchot et Fils' survey ship Suffren makes the first voyage to Manticore; three habitable planets and resource-rich asteroid belts confirmed.",
+        "source": "UHH"
+      },
+      {
+        "pd": 775,
+        "event": "Manticore colonial expedition departs Earth aboard the sleeper ship Jason (125,000 colonists).",
+        "source": "UHH"
+      },
+      {
+        "pd": 1416,
+        "event": "Jason arrives; finds a Manticore Colony Trust settlement and four frigates already guarding the system.",
+        "source": "UHH"
+      },
+      {
+        "pd": "1464-1496",
+        "event": "The Plague: native coronavirus-like pathogens kill ~60% of original colonists until a vaccine is developed in 1496 PD.",
+        "source": "SK1, Companion"
+      },
+      {
+        "pd": 1485,
+        "event": "Roger Winton crowned King Roger I; corporate colony becomes the constitutional monarchy of the Star Kingdom of Manticore.",
+        "source": "UHH"
+      },
+      {
+        "pd": 1518,
+        "event": "Treecats discovered on Sphinx by colonist Stephanie Harrington.",
+        "source": "HHA1, SK1"
+      },
+      {
+        "pd": 1585,
+        "event": "First transit of the Manticore Wormhole Junction (survey ship Pathfinder to the Beowulf terminus), transforming the Star Kingdom's economy.",
+        "source": "Companion"
+      },
+      {
+        "pd": 1721,
+        "event": "Gryphon Uprising: the only armed internal conflict in Manticoran history.",
+        "source": "Companion"
+      },
+      {
+        "pd": 1921,
+        "event": "The Battle of Manticore, the largest space battle in human history, is fought in the system.",
+        "source": "HH11"
+      },
+      {
+        "pd": 1922,
+        "event": "Operation Oyster Bay: the Mesan Alignment destroys HMSS Hephaestus, Vulcan, and Weyland. Rebuilding begins with Beowulfan aid.",
+        "source": "HH12, HH14"
+      }
     ]
   }
 }

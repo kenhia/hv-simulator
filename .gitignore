@@ -1,5 +1,8 @@
 .scratch/
 
+# Compiled universe artifact (build output; data/ JSON is the source of truth)
+build/
+
 # Local env (justfile reads .env); keep the committed example.
 .env
 .env.*

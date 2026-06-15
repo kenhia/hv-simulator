@@ -1,0 +1,130 @@
+"""universe — load the compiled SQLite universe artifact and place bodies.
+
+Read-only access to the artifact (built by the universe-compiler from data/), plus
+binary-aware positions: a system's frame is centred on its barycenter; binary
+stars orbit it (mass-ratio split of a Keplerian relative orbit); planets orbit
+their parent star; moons their parent body. All pure functions over the artifact;
+Sol is handled separately by the JPL ephemeris (see resolve_position).
+"""
+
+from __future__ import annotations
+
+import math
+import sqlite3
+from datetime import datetime
+
+from hvsim.ephemeris import heliocentric_position
+from hvsim.ephemeris.kepler import AU_M, _orbital_to_xyz, days_since_j2000
+from hvsim.kinematics import Vec3
+
+LMIN_M = 1.798754748e10  # 1 light-minute in metres
+
+
+class Universe:
+    """Read-only handle to a compiled universe artifact."""
+
+    def __init__(self, con: sqlite3.Connection) -> None:
+        self.con = con
+        self.con.row_factory = sqlite3.Row
+
+    @classmethod
+    def open(cls, path: str) -> Universe:
+        # check_same_thread=False: read-only, shared across FastAPI's threadpool.
+        return cls(sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False))
+
+    def systems(self) -> list[dict]:
+        return [dict(r) for r in self.con.execute("SELECT * FROM star_systems ORDER BY id")]
+
+    def system(self, system_id: str) -> dict | None:
+        r = self.con.execute("SELECT * FROM star_systems WHERE id=?", (system_id,)).fetchone()
+        return dict(r) if r else None
+
+    def stars(self, system_id: str) -> list[dict]:
+        return [
+            dict(r) for r in self.con.execute("SELECT * FROM stars WHERE system_id=?", (system_id,))
+        ]
+
+    def binary(self, system_id: str) -> dict | None:
+        r = self.con.execute("SELECT * FROM binaries WHERE system_id=?", (system_id,)).fetchone()
+        return dict(r) if r else None
+
+    def bodies(self, system_id: str) -> list[dict]:
+        return [
+            dict(r)
+            for r in self.con.execute("SELECT * FROM bodies WHERE system_id=?", (system_id,))
+        ]
+
+
+def _kepler_offset_m(body: dict, when: datetime) -> Vec3:
+    """Position of a body relative to its primary, from its orbit row (metres)."""
+    period = body["period_days"] or 0.0
+    n = 360.0 / period if period else 0.0
+    mean_long = (body["l_deg"] or 0.0) + n * days_since_j2000(when)
+    long_peri = body["long_peri_deg"] or 0.0
+    mean_anom = math.radians(((mean_long - long_peri + 180.0) % 360.0) - 180.0)
+    node = math.radians(body["long_node_deg"] or 0.0)
+    arg_peri = math.radians(long_peri) - node
+    x, y, z = _orbital_to_xyz(
+        body["a_au"],
+        body["e"] or 0.0,
+        math.radians(body["i_deg"] or 0.0),
+        arg_peri,
+        node,
+        mean_anom,
+    )
+    return Vec3(x * AU_M, y * AU_M, z * AU_M)
+
+
+def star_positions(u: Universe, system_id: str, when: datetime) -> dict[str, Vec3]:
+    """Star positions in the system (barycenter-centred) frame, in metres."""
+    stars = u.stars(system_id)
+    binb = u.binary(system_id)
+    if binb and len(stars) >= 2:
+        primary = next((s for s in stars if s["role"] == "primary"), stars[0])
+        secondary = next((s for s in stars if s["role"] == "secondary"), stars[1])
+        a_sep_m = ((binb["barycenter_a_lmin"] or 0.0) + (binb["barycenter_b_lmin"] or 0.0)) * LMIN_M
+        e = binb["eccentricity"] or 0.0
+        m_a = primary["mass_solar"] or 1.0
+        m_b = secondary["mass_solar"] or 1.0
+        m_tot = m_a + m_b
+        a_sep_au = a_sep_m / AU_M
+        period_days = binb["orbital_period_days"] or (365.25 * math.sqrt(a_sep_au**3 / m_tot))
+        mean_anom = math.radians((360.0 / period_days * days_since_j2000(when)) % 360.0)
+        rx, ry, rz = _orbital_to_xyz(a_sep_m, e, 0.0, 0.0, 0.0, mean_anom)  # A->B vector
+        return {
+            primary["id"]: Vec3(-rx * m_b / m_tot, -ry * m_b / m_tot, -rz * m_b / m_tot),
+            secondary["id"]: Vec3(rx * m_a / m_tot, ry * m_a / m_tot, rz * m_a / m_tot),
+        }
+    return {s["id"]: Vec3(0.0, 0.0, 0.0) for s in stars}
+
+
+def body_positions(u: Universe, system_id: str, when: datetime) -> dict[str, Vec3]:
+    """All placeable bodies' positions (metres) in the system frame at `when`.
+
+    Bodies without a determined orbit (e.g. moons this phase) are skipped.
+    """
+    spos = star_positions(u, system_id, when)
+    out: dict[str, Vec3] = {}
+    for bd in u.bodies(system_id):
+        if not bd["orbit_determined"] or bd["a_au"] is None:
+            continue
+        offset = _kepler_offset_m(bd, when)
+        if bd["parent_body_id"]:
+            base = out.get(bd["parent_body_id"])
+            if base is None:
+                continue
+        else:
+            base = spos.get(bd["parent_star_id"], Vec3(0.0, 0.0, 0.0))
+        out[bd["id"]] = base + offset
+    return out
+
+
+def resolve_position(
+    u: Universe | None, system_id: str, body_id: str, when: datetime
+) -> Vec3 | None:
+    """System-aware position. Sol uses the JPL ephemeris; others the artifact."""
+    if system_id == "sol":
+        return Vec3(*heliocentric_position(body_id, when))
+    if u is None:
+        return None
+    return body_positions(u, system_id, when).get(body_id)

@@ -13,12 +13,34 @@ and percent-complete, dead-reckoned smoothly between polls.*
 
 ## Status
 
-Early development. Phase 1 (the in-system Sol ship simulator) is being built
-sprint by sprint.
+Early development. Phase 1 (the in-system Sol ship simulator) is complete;
+**Phase 2** is expanding it to the galaxy (multi-system, hyperspace, wormholes).
 
 - Design: [`planning/004-project-plan.md`](planning/004-project-plan.md) is the
   authoritative plan. (`001`–`003` are earlier exploratory transcripts.)
 - Execution: [`sprints/`](sprints/) — one short spec + task list per sprint.
+
+## Galaxy data (Phase 2a)
+
+The Honorverse galaxy lives as JSON under [`data/`](data/) (the source of truth,
+CC BY-SA). Tools compile it into a read-only SQLite **universe artifact** the
+engine loads:
+
+```sh
+just derive-orbits   # fill first-pass (fabricated, canon:false) orbits into data/
+just compile-data    # data/ JSON -> build/universe.db (the universe artifact)
+
+# Query any system (set HVSIM_UNIVERSE_DB or pass --universe):
+cd engine && uv run where-is --system manticore --universe ../build/universe.db
+```
+
+**Sol is special, on purpose.** Canon fixes Honorverse planet *order* but almost
+no *geometry*, so fictional systems use **fabricated** orbits (flagged
+`canon:false`). Sol, by contrast, keeps its real JPL ephemeris in the engine —
+we take the artistic license of tying **Sol to the actual current positions of
+the real planets** rather than inventing them. So a query for Earth shows where
+Earth genuinely is today; a query for Manticore shows a plausible-but-invented
+placement.
 
 ## Toolchain
 
