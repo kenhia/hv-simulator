@@ -471,6 +471,42 @@
       },
       "auxiliary_craft": {"canon": true, "source": "HH6", "summary": "at least 3 outsized lifeboats (passenger shuttles)", "derived": []},
       "lore": "Luxury passenger liners built for Hauptman Lines' Silesian Confederacy runs (featured in Honor Among Enemies). Military-grade compensators/impellers, CA-level missiles, BC-level EW, up to ~5,000 passengers and minimal cargo — heavily armed for civilian ships because the Silesian run was pirate-infested."
+    },
+
+    {
+      "id": "nevada",
+      "name": "Nevada class",
+      "ship_type": "battlecruiser",
+      "hull_classification": "BC",
+      "navy": "Solarian League Navy",
+      "affiliation_nation_id": "solarian-league",
+      "date_introduced_pd": 1920,
+      "preceded_by": "indefatigable",
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["SI1", "SI2"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Nevada_class",
+      "retrieved": "2026-06-15",
+      "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+      "dimensions": {"canon": true, "source": "SI infobox", "mass_tons": 911250, "length_m": 721, "beam_m": 92, "draught_m": 81, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "SI infobox",
+        "normal_g": 390.2, "max_g": 487.7, "derived": [],
+        "notes": "Infobox '487.7 G (4.783 kps²) / 80% 390.2 G (3.826 kps²)' (decimal commas in source normalized to points) — primary is the MAX, the 80% figure is the sustained/normal. Use max_g (487.7) for the sim's max_accel_g."
+      },
+      "crew": {"canon": true, "source": "SI infobox", "total": 3000, "derived": [], "notes": "~3,000 including flag bridge personnel."},
+      "armament": {
+        "canon": true, "source": "SI infobox",
+        "summary": "Broadside: 12 graser, 28 missile tubes, 12 CM tubes, 16 PD clusters | Chase: 6 graser, 4 missile tubes, 6 CM tubes, 8 PD clusters",
+        "by_arc": {
+          "broadside": {"G": 12, "M": 28, "CM": 12, "PD": 16},
+          "chase": {"G": 6, "M": 4, "CM": 6, "PD": 8}
+        },
+        "derived": [],
+        "notes": "Modular design for easy refit of newer components; acceleration drops when towing missile pods. Could translate into hyperspace from a Readiness state in 55.7 seconds."
+      },
+      "lore": "A Solarian League Navy battlecruiser introduced circa 1920 PD, successor to the Indefatigable class. Its modular design let the SLN plug in newer components as they matured. Representative of the League's pre-war 'wall of battle adjacent' heavy units before the Manticoran wars exposed the SLN's technological lag."
     }
   ]
 }

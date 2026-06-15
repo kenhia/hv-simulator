@@ -72,6 +72,10 @@ derive-orbits:
 frame:
     cd tools/coordinate-frame && uv run hvsim-frame --data ../../data
 
+# Markdown snapshot of the compiled artifact (seeds galaxy-changelog entries).
+galaxy-summary:
+    python3 tools/galaxy-summary.py build/universe.db
+
 # Compile data/ JSON into the read-only SQLite universe artifact (build/universe.db).
 compile-data:
     cd tools/universe-compiler && uv run hvsim-compile --data ../../data \

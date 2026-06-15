@@ -16,11 +16,14 @@ query state in real time). **Phase 1 is complete** — the canonical use case
 (Operate & Observe) is in progress**: deployed to `kubsdb` via the `justfile`
 (M6); a Prometheus `/metrics` endpoint + Grafana "Ship Status" dashboard (M8).
 Remaining: M7 live shakedown and M9 (`kdeskdash` handoff). **Phase 2 (galaxy) is
-underway**: 2.0 froze the monorepo + boundary contracts; 2a (Sprint 010) added the
-`universe-compiler` + `orbit-derive` tools and made the engine load the compiled
-SQLite **universe artifact** and place bodies (binary-aware) in any system. Design
-is in `planning/006`; the engine is being re-founded on a lazy discrete-event
-core (DES) for travel/queues in 2b/2c.
+underway**: 2.0 froze the monorepo + boundary contracts; 2a (Sprints 010–011) added
+the `universe-compiler` + `orbit-derive` + `coordinate-frame` tools and made the
+engine load the compiled SQLite **universe artifact** — placing bodies (binary-aware)
+in any system, the wormhole route graph + hyperspace model, and a Sol-origin galactic
+frame. 2a.1 (Sprint 012) proved the pipeline on real expansion (Beowulf, Trevor's
+Star, the Solarian Nevada class), stood up `docs/galaxy-changelog.md`, and codified
+the `expand-galaxy` orchestrator skill. Design is in `planning/006`; the engine is
+being re-founded on a lazy discrete-event core (DES) for travel/queues in 2b/2c.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
@@ -33,6 +36,12 @@ transit model, and the hyperspace bands. Query via `where-is --system <sys>
 the real JPL ephemeris (artistic license — Sol tracks the *actual* current planet
 positions), while Honorverse systems use fabricated orbits. No inter-system
 *travel* until Phase 2b (the DES core).
+
+**Growing the dataset:** use the `expand-galaxy` skill — it sequences the
+`honorverse-*-scribe` skills (canon judgment) → the pipeline above → engine verify
+→ a `docs/galaxy-changelog.md` entry. `just galaxy-summary` prints a markdown
+snapshot of the artifact (built-vs-stubbed systems, counts of bodies/classes/ships/
+links) so changelog entries are generated from truth, not memory.
 
 - `planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)

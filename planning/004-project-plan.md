@@ -324,7 +324,18 @@ test. The verification *is* useful content.
   then the deterministic tool pipeline (derive → frame → compile → verify).
   Build it from the proven flow, not a guessed one; the scribes keep the
   canon-vs-fabricated judgment.
+- **Maintain a galaxy changelog:** stand up `docs/galaxy-changelog.md` (a
+  human-readable narrative of dataset growth, baseline first) backed by a
+  `galaxy-summary` helper that reads the artifact so entries stay honest; the
+  `expand-galaxy` skill appends an entry per expansion.
 - *Sprint 012.* Still no travel (that's 2b).
+
+> **Done (Sprint 012).** Added Beowulf (`sigma-draconis`) + Trevor's Star and the
+> Solarian Nevada-class BC; pipeline ran end-to-end and the engine resolves both
+> systems (coords, bodies, wormhole links, inter-system distance). Stood up
+> `docs/galaxy-changelog.md` (baseline + expansion entries) + `just galaxy-summary`,
+> and codified the `.claude/skills/expand-galaxy` orchestrator from the proven run.
+> Built 4 → 6 systems; classes 13 → 14; ships 30 → 33. Contract unchanged (v0.1.1).
 
 ### Phase 2b — Inter-system travel (no queue yet)
 

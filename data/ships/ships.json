@@ -456,6 +456,51 @@
       "fate_pd": null,
       "canon": true,
       "source": "HH6"
+    },
+    {
+      "id": "slns-nevada-bc",
+      "name": "SLNS Nevada",
+      "prefix": "SLNS",
+      "hull_number": null,
+      "class_id": "nevada",
+      "navy": "Solarian League Navy",
+      "affiliation_nation_id": "solarian-league",
+      "role": "lead ship",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "SI1, SI2",
+      "lore": "Lead ship of the Solarian League Navy's Nevada-class battlecruisers."
+    },
+    {
+      "id": "slns-camperdown-bc",
+      "name": "SLNS Camperdown",
+      "prefix": "SLNS",
+      "hull_number": null,
+      "class_id": "nevada",
+      "navy": "Solarian League Navy",
+      "affiliation_nation_id": "solarian-league",
+      "role": "flagship, Task Force 1030",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "SI",
+      "lore": "Nevada-class battlecruiser serving as flagship of Task Force 1030."
+    },
+    {
+      "id": "slns-jean-bart-bc",
+      "name": "SLNS Jean Bart",
+      "prefix": "SLNS",
+      "hull_number": null,
+      "class_id": "nevada",
+      "navy": "Solarian League Navy",
+      "affiliation_nation_id": "solarian-league",
+      "role": "flagship, Task Group 3021",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "SI",
+      "lore": "Nevada-class battlecruiser serving as flagship of Task Group 3021."
     }
   ]
 }
