@@ -158,5 +158,13 @@
         "source": "HH5"
       }
     ]
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 26.87,
+    "y_ly": 0.0,
+    "z_ly": 538.87,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
   }
 }

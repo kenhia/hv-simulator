@@ -18,10 +18,20 @@ def test_manticore_anchor_in_system_doc() -> None:
         "id": "manticore",
         "stars": [{"id": "manticore-a", "spectral_type": "G0", "mass_solar": 1.12}],
         "bodies": [
-            {"id": "manticore", "type": "planet", "parent_star": "manticore-a", "orbit_index": 3,
-             "orbit": {"determined": False}},
-            {"id": "sphinx", "type": "planet", "parent_star": "manticore-a", "orbit_index": 4,
-             "orbit": {"determined": False}},
+            {
+                "id": "manticore",
+                "type": "planet",
+                "parent_star": "manticore-a",
+                "orbit_index": 3,
+                "orbit": {"determined": False},
+            },
+            {
+                "id": "sphinx",
+                "type": "planet",
+                "parent_star": "manticore-a",
+                "orbit_index": 4,
+                "orbit": {"determined": False},
+            },
         ],
     }
     filled = _derive_system(doc)
@@ -40,8 +50,13 @@ def test_fabricates_mass_when_missing() -> None:
         "id": "x",
         "stars": [{"id": "x-a", "spectral_type": "F6", "mass_solar": None}],
         "bodies": [
-            {"id": "p", "type": "planet", "parent_star": "x-a", "orbit_index": 1,
-             "orbit": {"determined": False}},
+            {
+                "id": "p",
+                "type": "planet",
+                "parent_star": "x-a",
+                "orbit_index": 1,
+                "orbit": {"determined": False},
+            },
         ],
     }
     assert _derive_system(doc) == 1

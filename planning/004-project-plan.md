@@ -298,6 +298,33 @@ The load-bearing seam. Freeze it before building on it.
   to **per-system + binary primaries**; report body positions galaxy-wide at T.
 - **Deliverable:** engine loads the compiled multi-system universe and answers
   "where is body X in system Y at T," including binary Manticore-A/B.
+- *Delivered across Sprints 010 (compiler + orbits + binary ephemeris) and 011
+  (coordinate frame + wormhole/hyperspace compiled in + engine exposure).*
+
+### Phase 2a.1 — Expand the galaxy (pipeline integration)
+
+**Lean: grow the galaxy *while* we verify** — prove the data→artifact→engine
+pipeline handles real expansion by adding real systems, not a throwaway smoke
+test. The verification *is* useful content.
+
+- **Add two gateway systems via the scribes:** **Beowulf (`sigma-draconis`)** —
+  the Sol→Manticore on-ramp, the single highest-value system per the data team's
+  `001` — and **Trevor's Star** (San Martin; Manticore member, directly linked).
+  Both currently exist only as stubbed wormhole termini; building them resolves
+  the stubs into real systems.
+- **Add ships + at least one new ship class** (a navy/class not yet in the set).
+- **Run the full pipeline end-to-end:** scribe scrape → `orbit-derive` → `frame`
+  → `compile-data` → engine. The acceptance criteria *are* the integration
+  assertions: each new system places in-frame, its bodies are placeable, its
+  wormhole link to Manticore is present, and the new class + ships compile and
+  appear via `/systems`, `/wormholes`, and the fleet.
+- **Codify the workflow LAST:** after running the expansion once manually
+  (capturing the real sequence + rough edges), write an **`expand-galaxy`
+  orchestrator skill** — a runner/checklist that sequences the scribe step(s)
+  then the deterministic tool pipeline (derive → frame → compile → verify).
+  Build it from the proven flow, not a guessed one; the scribes keep the
+  canon-vs-fabricated judgment.
+- *Sprint 012.* Still no travel (that's 2b).
 
 ### Phase 2b — Inter-system travel (no queue yet)
 

@@ -1,4 +1,5 @@
--- Universe artifact — compiled SQLite schema (CONTRACT v0.1.0)
+-- Universe artifact — compiled SQLite schema (CONTRACT v0.1.1)
+-- v0.1.1: wormhole_links.to_system_id is nullable (canon termini to unidentified systems).
 --
 -- The read-only artifact the engine loads. Produced by the universe-compiler
 -- (Phase 2a) from the authored JSON in data/: validate -> resolve FKs ->
@@ -135,7 +136,7 @@ CREATE TABLE wormhole_links (
     id              TEXT PRIMARY KEY,
     junction_id     TEXT REFERENCES wormhole_junctions(id),
     from_system_id  TEXT NOT NULL REFERENCES star_systems(id),
-    to_system_id    TEXT NOT NULL REFERENCES star_systems(id),
+    to_system_id    TEXT REFERENCES star_systems(id),  -- nullable: terminus to an as-yet-unidentified system
     to_terminus_name TEXT,
     distance_ly     REAL,            -- separation the link spans (lore)
     transit         TEXT,            -- "instant"

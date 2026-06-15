@@ -13,7 +13,15 @@ from datetime import UTC, datetime
 
 import pytest
 
-from hvsim.universe import AU_M, LMIN_M, Universe, body_positions, resolve_position, star_positions
+from hvsim.universe import (
+    AU_M,
+    LMIN_M,
+    Universe,
+    body_positions,
+    inter_system_distance,
+    resolve_position,
+    star_positions,
+)
 
 DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
 WHEN = datetime(2026, 1, 1, tzinfo=UTC)
@@ -62,6 +70,23 @@ def artifact_path(tmp_path) -> str:
     add_star("yeltsin:s", "yeltsin", "primary", 1.3)
     add_planet("yeltsin:grayson", "yeltsin", "yeltsin:s", 1.62, 650)
 
+    # Galactic-frame coordinates + a wormhole junction/link.
+    con.execute(
+        "UPDATE star_systems SET coord_x_ly=0,coord_y_ly=0,coord_z_ly=512 WHERE id='manticore'"
+    )
+    con.execute(
+        "UPDATE star_systems SET coord_x_ly=21.9,coord_y_ly=0,coord_z_ly=533.9 WHERE id='yeltsin'"
+    )
+    con.execute(
+        "INSERT INTO wormhole_junctions (id,name,host_system_id,canon) VALUES (?,?,?,1)",
+        ("mj", "Manticore Junction", "manticore"),
+    )
+    con.execute(
+        "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
+        "transit,canon) VALUES (?,?,?,?,?,?,1)",
+        ("wl", "mj", "manticore", "yeltsin", 99, "instant"),
+    )
+
     con.commit()
     con.close()
     return str(db)
@@ -104,14 +129,30 @@ def test_resolver_and_determinism(universe: Universe) -> None:
     assert resolve_position(universe, "sol", "saturn", WHEN) is not None
 
 
+def test_inter_system_distance(universe: Universe) -> None:
+    # Directly wormhole-linked -> canon span.
+    canon = inter_system_distance(universe, "manticore", "yeltsin")
+    assert canon["method"] == "wormhole-canon"
+    assert canon["distance_ly"] == 99
+    # Not linked -> frame Euclidean (Sol is the origin).
+    frame = inter_system_distance(universe, "sol", "manticore")
+    assert frame["method"] == "frame"
+    assert frame["distance_ly"] == pytest.approx(512.0, abs=0.1)
+
+
 def test_systems_endpoints(artifact_path: str) -> None:
     from fastapi.testclient import TestClient
 
     from hvsim.api.app import create_app
 
     client = TestClient(create_app(database_url="sqlite://", universe_db=artifact_path))
-    ids = {s["id"] for s in client.get("/systems").json()}
-    assert {"manticore", "yeltsin"} <= ids
+    systems = client.get("/systems").json()
+    assert {"manticore", "yeltsin"} <= {s["id"] for s in systems}
+    assert next(s for s in systems if s["id"] == "manticore")["coordinates"]["z_ly"] == 512
     bodies = client.get("/systems/manticore/bodies").json()
     assert any(b["id"] == "manticore:manticore" for b in bodies)
     assert client.get("/systems/nope/bodies").status_code == 404
+    assert len(client.get("/wormholes").json()) == 1
+    assert len(client.get("/junctions").json()) == 1
+    dist = client.get("/systems/manticore/distance/yeltsin").json()
+    assert dist["distance_ly"] == 99 and dist["method"] == "wormhole-canon"

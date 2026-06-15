@@ -22,7 +22,7 @@ from hvsim.clock import SimClock
 from hvsim.ephemeris import BODIES, heliocentric_position, list_bodies
 from hvsim.flightplan import FlightPlan, Ship, Waypoint, compile_plan, state_at
 from hvsim.kinematics import ZERO, Vec3
-from hvsim.universe import Universe, body_positions
+from hvsim.universe import Universe, body_positions, inter_system_distance
 
 from .db import (
     FlightPlanRow,
@@ -208,9 +208,32 @@ def create_app(
                 "star_nation_id": s["star_nation_id"],
                 "is_binary": bool(s["is_binary"]),
                 "distance_ly": s["distance_ly"],
+                "coordinates": (
+                    None
+                    if s["coord_x_ly"] is None
+                    else {"x_ly": s["coord_x_ly"], "y_ly": s["coord_y_ly"], "z_ly": s["coord_z_ly"]}
+                ),
             }
             for s in u.systems()
         ]
+
+    @app.get("/junctions")
+    def list_junctions() -> list[dict]:
+        u = app.state.universe
+        return [] if u is None else u.wormhole_junctions()
+
+    @app.get("/wormholes")
+    def list_wormholes() -> list[dict]:
+        """Wormhole links (the route-graph edges)."""
+        u = app.state.universe
+        return [] if u is None else u.wormhole_links()
+
+    @app.get("/systems/{a}/distance/{b}")
+    def system_distance(a: str, b: str) -> dict:
+        u = app.state.universe
+        if u is None:
+            raise HTTPException(404, "no universe loaded")
+        return {"from": a, "to": b, **inter_system_distance(u, a, b)}
 
     @app.get("/systems/{system_id}/bodies")
     def system_bodies(system_id: str, at: datetime | None = None) -> list[dict]:

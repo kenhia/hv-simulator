@@ -54,6 +54,40 @@ class Universe:
             for r in self.con.execute("SELECT * FROM bodies WHERE system_id=?", (system_id,))
         ]
 
+    def wormhole_junctions(self) -> list[dict]:
+        return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_junctions ORDER BY id")]
+
+    def wormhole_links(self) -> list[dict]:
+        return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_links ORDER BY id")]
+
+
+def _coords(u: Universe, system_id: str) -> tuple[float, float, float] | None:
+    """A system's galactic-frame coordinates (ly). Sol is the origin."""
+    if system_id == "sol":
+        return (0.0, 0.0, 0.0)
+    s = u.system(system_id)
+    if s and s.get("coord_x_ly") is not None:
+        return (s["coord_x_ly"], s["coord_y_ly"], s["coord_z_ly"])
+    return None
+
+
+def inter_system_distance(u: Universe, a: str, b: str) -> dict:
+    """Distance (ly) between two systems: canon wormhole-link span if directly
+    linked, else the frame-derived Euclidean distance. method records which."""
+    row = u.con.execute(
+        "SELECT distance_ly FROM wormhole_links "
+        "WHERE (from_system_id=? AND to_system_id=?) OR (from_system_id=? AND to_system_id=?) "
+        "LIMIT 1",
+        (a, b, b, a),
+    ).fetchone()
+    if row and row[0] is not None:
+        return {"distance_ly": row[0], "method": "wormhole-canon"}
+    ca, cb = _coords(u, a), _coords(u, b)
+    if ca and cb:
+        d = math.sqrt(sum((x - y) ** 2 for x, y in zip(ca, cb, strict=True)))
+        return {"distance_ly": round(d, 3), "method": "frame"}
+    return {"distance_ly": None, "method": "unknown"}
+
 
 def _kepler_offset_m(body: dict, when: datetime) -> Vec3:
     """Position of a body relative to its primary, from its orbit row (metres)."""
