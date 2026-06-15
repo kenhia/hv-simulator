@@ -357,7 +357,7 @@ the core itself doesn't exist yet. Split into three sprints:
   match); 82 engine tests green.
 - **Sprint 014 — inter-system travel (engine modes).** Multi-mode execution on
   the core: n-space accel/coast/decel (the **coast phase finally fires** on
-  binary/interstellar legs), the climb-to-hyper-limit leg, `hyper_cruise` (band
+  binary/interstellar legs), the run out to the hyper limit, `hyper_cruise` (band
   apparent-velocity + hyper-limit, read from data), `wormhole_transit` as instant
   + fixed safety buffer (no dynamic queue yet). New `hvsim.universe` accessors for
   bands/limits/buffer; the leg→segment decomposition (`compile_route`); a
@@ -368,12 +368,26 @@ the core itself doesn't exist yet. Split into three sprints:
   demo-route` flies Sol→Beowulf→Manticore→Grayson (~130-day clock) across hyper +
   wormhole; coast fires on long n-space legs; 90 engine tests green. Contract
   unchanged (v0.1.1).
-- **Sprint 015 — nav route planner (separate tool).** `tools/nav-planner/` (its
+- **Sprint 015 — hyperspace band model (supplemental, inserted 2026-06-15).**
+  Correct the FTL model the 014 single-band placeholder stubbed. The Honorverse
+  "climb/descent" is *translating between hyperspace bands* (higher band = higher
+  apparent speed, with an apparent-speed loss on descent) — distinct from the
+  mundane n-space run out to / approach from the hyper limit (014's "run-out"/
+  "approach"). **Affects ship data:** a ship class gets a **max safe hyper band**,
+  and we add a **per-band apparent-speed model** (likely a per-ship factor / a
+  penalty per band climbed). Engine: cruise at `min(ship max band, …)`, enforce
+  the **alpha-translation 0.3c ceiling** (the one canon number; higher-band
+  transitions cite none). Out: crash-translation modelling beyond the 0.3c rule,
+  grav waves / Warshawski sail-riding (still deferred). Touches the data schema +
+  contract (ship_classes). *Done before the planner so it routes on the real
+  band/speed model.*
+- **Sprint 016 — nav route planner (separate tool).** `tools/nav-planner/` (its
   own pyproject) — graph search over systems + wormhole edges + hyper lanes →
   a filed multi-mode route the engine executes. Per the founding split the
   planner is **not** physics and stays out of the engine; built **UI-first in
   intent** so it later backs the flow *select a ship → pick a destination →
-  planner emits a flight plan for user approval*.
+  planner emits a flight plan for user approval*. (Then Phase 2c — wormhole
+  queues — follows.)
 - **Deliverable (end of 2b, demonstrated in 014):** end-to-end **Sol → Beowulf
   →(wormhole)→ Manticore → Yeltsin's Star** flight with realistic multi-day
   clocks; state queryable across systems — exercising every mode (hyper +
@@ -389,7 +403,8 @@ the core itself doesn't exist yet. Split into three sprints:
   is **not needed**: the limit (~2.6 AU for a G star) is a negligible point at
   interstellar (ly) scale, so the optimum is simply *clear the nearest limit
   crossing, then straight-line hyper.* The planner only needs the short
-  climb-to-limit leg — no two-route comparison. **Will implement** (the climb leg).
+  run-out-to-limit leg — no two-route comparison. ✅ **Implemented (014)** (the
+  n-space run to the limit).
 - *In-system star avoidance.* The straight-chord solver can route a trip
   *through the primary* when origin and destination are near-opposite as seen
   from the star (a "corona flyby"). Real but rare. Fix = detect chord-vs-star

@@ -161,16 +161,23 @@ exhaustive dispatch (`des/model.py`) — the seam new travel modes plug into.
 
 **`route/` is multi-mode interstellar travel** (Sprint 014). A filed `Route` of
 mode-tagged legs (`nspace` / `hyper` / `wormhole`) compiles via `compile_route`
-into DES segments: a hyper leg → n-space **climb** past the origin star's hyper
-limit + `hyper_cruise` (distance ÷ band apparent velocity) + **descent**; a
-wormhole leg → `wormhole_transit` (instant + fixed `buffer_normal_s`). Every
+into DES segments: a hyper leg → an n-space **run out** past the origin star's
+hyper limit + `hyper_cruise` (distance ÷ band apparent velocity) + an n-space
+**approach** to the target body; a wormhole leg → `wormhole_transit` (instant +
+fixed `buffer_normal_s`). (The run-out/approach are the mundane impeller legs to
+and from the hyper limit — *not* the Honorverse band "climb/descent".) Every
 parameter (bands, per-star `hyper_limit_lmin`, distances, buffer) is **read from
 the artifact** via new `Universe` accessors — the engine stays a configurable
 physics box. In-system positions are heliocentric per system; an interstellar
 `hyper_cruise` reports a **galactic-frame** position (`ShipState.frame` /
-`.system` say which). The coast phase finally fires on long n-space legs.
-**Route-finding is Sprint 015's `tools/nav-planner/`** — routes here are
-hand-filed. Demo: `just demo-route` (Sol → Beowulf → Manticore → Grayson).
+`.system` say which). The coast phase finally fires on long n-space legs. Demo:
+`just demo-route` (Sol → Beowulf → Manticore → Grayson).
+
+**Hyperspace band model is deferred to Sprint 015** (next): per-ship **max safe
+band** + a per-band apparent-speed model (true band climb/descent between bands;
+the α-translation ≤0.3c ceiling). Until then `route/` cruises a single configured
+band (Alpha) for every ship. The **`tools/nav-planner/`** route-finder follows
+(Sprint 016); routes are hand-filed until then.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

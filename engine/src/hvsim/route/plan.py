@@ -8,15 +8,21 @@ distances, and the wormhole buffer **from the artifact** — and emits the DES
 
 - ``nspace`` — an in-system hop (brachistochrone/coast); the coast phase fires on
   long legs.
-- ``hyper`` — a system→system leg, decomposed into **climb** out past the origin
-  star's hyper limit (n-space), **hyper_cruise** across the interstellar distance
-  at the band's apparent velocity, and **descent** in to the target body.
+- ``hyper`` — a system→system leg, decomposed into a **run out** past the origin
+  star's hyper limit (n-space impeller leg), **hyper_cruise** across the
+  interstellar distance at the band's apparent velocity, and an **approach** in to
+  the target body. (NB: "run out"/"approach" are the mundane n-space legs to and
+  from the hyper limit — *not* the Honorverse band "climb/descent", which is
+  translating between hyperspace bands; that and per-ship max band land in the
+  Sprint 015 hyperspace band-model sprint.)
 - ``wormhole`` — a junction translation: instant + the fixed safety buffer.
 
-v1 simplifications (documented): the climb is a brachistochrone to the limit
-sphere (arrives at rest, trivially within the band entry-velocity limit); a
-wormhole leg fires from wherever the ship is (no explicit hop to the nexus).
-Route-finding itself is Sprint 015's nav-planner; routes here are hand-filed.
+v1 simplifications (documented): the run out to the limit is a brachistochrone
+(arrives at rest, trivially within the alpha-translation 0.3c ceiling); a single
+configured band's apparent velocity is used for every ship (per-ship max band +
+multi-band climb/descent are the Sprint 015 band model); a wormhole leg fires from
+wherever the ship is (no explicit hop to the nexus). Route-*finding* is the
+nav-planner (after the band model); routes here are hand-filed.
 """
 
 from __future__ import annotations
@@ -123,14 +129,16 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
             when, pos = ic.arrival, resolve(system, leg.to_body, ic.arrival)
 
         elif leg.mode == HYPER:
-            # 1. Climb out past the origin star's hyper limit (brachistochrone).
+            # 1. Run out past the origin star's hyper limit (n-space impeller leg;
+            #    NOT a band "climb"). Brachistochrone -> arrives within the
+            #    alpha-translation 0.3c ceiling. Per-ship max band: Sprint 015.
             limit_m = (u.hyper_limit_lmin(system) or 0.0) * LMIN_M
             direction = pos.unit() if pos.norm() > 0.0 else _ZAXIS
-            climb_end = direction * max(limit_m, pos.norm())
-            climb = Trajectory.between(pos, climb_end, accel, v_cap)
-            climb_arrival = when + timedelta(seconds=climb.duration)
-            add(Segment(seq, "transit", when, climb_arrival, trajectory=climb, system=system))
-            when = climb_arrival
+            limit_point = direction * max(limit_m, pos.norm())
+            run_out = Trajectory.between(pos, limit_point, accel, v_cap)
+            run_out_arrival = when + timedelta(seconds=run_out.duration)
+            add(Segment(seq, "transit", when, run_out_arrival, trajectory=run_out, system=system))
+            when = run_out_arrival
 
             # 2. Hyper cruise across the interstellar distance at band speed.
             dist = inter_system_distance(u, system, leg.to_system)["distance_ly"]
@@ -152,7 +160,8 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
             )
             when, system = cruise_end, leg.to_system
 
-            # 3. Descend from the destination's hyper limit to the target body.
+            # 3. Approach: n-space leg in from the destination's hyper limit to
+            #    the target body (again, not a band "descent").
             limit_m = (u.hyper_limit_lmin(system) or 0.0) * LMIN_M
             if leg.to_body is not None:
                 target0 = resolve(system, leg.to_body, when)

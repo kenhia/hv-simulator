@@ -114,7 +114,7 @@ def _deliverable(u: Universe) -> Route:
 def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
     c = compile_route(_deliverable(u), u)
     kinds = [s.kind for s in c.segments]
-    # hyper = climb + cruise (no descent here); wormhole; hyper = climb + cruise + descent
+    # hyper = run-out + cruise (no approach here); wormhole; hyper = run-out + cruise + approach
     assert kinds == [
         "transit",
         "hyper_cruise",
@@ -154,19 +154,19 @@ def test_hyper_cruise_reports_galactic_frame(u: Universe) -> None:
     assert st.position.norm() == pytest.approx(20.0 * LY_M, rel=1e-6)
 
 
-# --- Climb to the hyper limit ---------------------------------------------------
+# --- Run out to the hyper limit -------------------------------------------------
 
 
-def test_climb_uses_hyper_limit_from_artifact(u: Universe) -> None:
+def test_run_to_limit_uses_hyper_limit_from_artifact(u: Universe) -> None:
     c = compile_route(_deliverable(u), u)
-    climb = c.segments[0]
-    assert climb.kind == "transit"
+    run_out = c.segments[0]  # n-space run to the hyper limit (not a band "climb")
+    assert run_out.kind == "transit"
     start = resolve_position(u, "alpha", "alpha:p1", DEPART)
     limit_m = 20.0 * LMIN_M
-    expected_climb = limit_m - start.norm()
-    assert climb.trajectory.profile.distance == pytest.approx(expected_climb, rel=1e-6)
-    # The short climb (~1.5 AU) is a brachistochrone — no coast.
-    assert not climb.trajectory.profile.coasts
+    expected = limit_m - start.norm()
+    assert run_out.trajectory.profile.distance == pytest.approx(expected, rel=1e-6)
+    # The short run (~1.5 AU) is a brachistochrone — no coast.
+    assert not run_out.trajectory.profile.coasts
 
 
 # --- Wormhole transit -----------------------------------------------------------

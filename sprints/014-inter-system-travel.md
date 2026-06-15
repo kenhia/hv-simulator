@@ -6,7 +6,8 @@ in-system n-space hops. The headline deliverable is an end-to-end
 **Sol → Beowulf → Manticore → Yeltsin's Star** flight with realistic multi-day
 clocks, state queryable across systems. **No dynamic wormhole queue** (that's
 2c) and **no automatic route-finding** — routes are hand-filed this sprint; the
-`nav-planner` tool that produces them is Sprint 015.
+`nav-planner` tool that produces them is Sprint 016 (the Sprint 015 hyperspace
+band model lands first — see the post-sprint note in Outcome).
 
 ## Goal
 
@@ -17,7 +18,7 @@ buffer). Demonstrate the canonical interstellar run end-to-end.
 
 ## Decisions baked in (this session)
 
-- **Engine modes only this sprint; nav-planner is 015.** Validate the multi-mode
+- **Engine modes only this sprint; nav-planner is 016.** Validate the multi-mode
   math against a *hand-filed* route before automating route-finding — the 013
   pattern (prove the substrate, then build on it).
 - **Deliverable exercises every mode:** Sol →(hyper)→ Beowulf (`sigma-draconis`)
@@ -86,7 +87,10 @@ segments:
 
 ## Out of scope
 
-- **Nav route planner** — Sprint 015 (`tools/nav-planner/`, UI-first).
+- **Nav route planner** — Sprint 016 (`tools/nav-planner/`, UI-first).
+- **The real hyperspace band model** (per-ship max band, per-band apparent speed,
+  band climb/descent, the alpha-translation 0.3c ceiling) — Sprint 015. This
+  sprint cruises a single configured band (Alpha) as a placeholder.
 - **Wormhole queue / phantom traffic / the `tau(M)` destabilisation model** —
   Phase 2c. 2b uses only the fixed buffer.
 - **Multi-band route optimisation, grav waves / sail-riding** — deferred ("fast
@@ -174,4 +178,13 @@ buffer), phase/system/frame reported across the whole trip. New
 climb-from-hyper-limit, the wormhole buffer, the galactic-frame interstellar
 state, arrival in the destination system, **coast firing** on a ~149 AU n-space
 leg, and determinism. `just check` green (**90 engine tests** + all tools).
-Contract unchanged (v0.1.1). Nav route-finding is Sprint 015.
+Contract unchanged (v0.1.1).
+
+**Post-sprint correction (2026-06-15).** The hyper leg's in-system legs were
+initially named *climb*/*descent*; in the Honorverse those terms mean translating
+between hyperspace **bands**, not the mundane n-space run out to / approach from
+the hyper limit. Renamed to **run-out**/**approach** in the code. The true band
+model — per-ship **max safe band**, per-band apparent speed, band climb/descent,
+the alpha-translation 0.3c ceiling (the one canon number) — plus its ship-data
+changes is its own **Sprint 015** (inserted next, before the nav-planner, now
+Sprint 016). 014 cruises a single configured band (Alpha) as a placeholder.
