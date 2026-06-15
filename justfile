@@ -51,12 +51,23 @@ seed:
 fleet:
     ./deploy/fleet.sh http://{{host}}:{{port}}
 
-# Run the engine validation gate (tests + lint + format check).
+# Run the validation gate: engine (tests + lint + format) and the tools' tests.
 check:
     cd engine && uv run pytest
     cd engine && uv run ruff check .
     cd engine && uv run ruff format --check .
+    cd tools/universe-compiler && uv run pytest -q
+    cd tools/orbit-derive && uv run pytest -q
 
 # Validate the boundary contracts (build sample artifact from DDL + lint OpenAPI).
 contracts:
     uv run --with openapi-spec-validator --with pyyaml python contracts/validate.py
+
+# Fill first-pass (fabricated) orbits into data/ JSON. Commit the result.
+derive-orbits:
+    cd tools/orbit-derive && uv run hvsim-derive-orbits --data ../../data
+
+# Compile data/ JSON into the read-only SQLite universe artifact (build/universe.db).
+compile-data:
+    cd tools/universe-compiler && uv run hvsim-compile --data ../../data \
+        --schema ../../contracts/universe-artifact/schema.sql --out ../../build/universe.db

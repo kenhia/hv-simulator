@@ -1,0 +1,25 @@
+[project]
+name = "hvsim-universe-compiler"
+version = "0.1.0"
+description = "Compile the Honorverse JSON dataset into the read-only SQLite universe artifact"
+requires-python = ">=3.12"
+dependencies = ["jsonschema>=4.0"]
+
+[project.scripts]
+hvsim-compile = "universe_compiler:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["universe_compiler"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
