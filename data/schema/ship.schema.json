@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsim.local/schema/ship.schema.json",
+  "title": "Honorverse Ship Registry",
+  "description": "First-cut schema (v0.1.0) for the individual-ship registry. A registry file wraps an array of ships; each references its class by class_id. Every ship carries a 'canon' flag.",
+  "type": "object",
+  "required": ["schema_version", "kind", "ships"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "kind": {"const": "ship_registry"},
+    "retrieved": {"type": "string"},
+    "ships": {"type": "array", "items": {"$ref": "#/$defs/ship"}}
+  },
+  "$defs": {
+    "ship": {
+      "type": "object",
+      "required": ["id", "name", "class_id", "canon"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "name": {"type": "string", "description": "Full name incl. prefix, e.g. 'HMS Fearless'."},
+        "prefix": {"type": ["string", "null"], "description": "e.g. 'HMS', 'GNS', 'GSNS'."},
+        "hull_number": {"type": ["string", "null"], "description": "e.g. 'CA-286', 'BC-44'."},
+        "class_id": {"type": "string", "description": "FK to a ship_class id."},
+        "navy": {"type": ["string", "null"]},
+        "affiliation_nation_id": {"type": ["string", "null"]},
+        "role": {"type": ["string", "null"], "description": "e.g. 'lead ship', 'type ship', 'flagship'."},
+        "status": {"type": ["string", "null"], "description": "e.g. 'active', 'destroyed', 'constructive total loss'."},
+        "fate_pd": {"type": ["integer", "string", "null"]},
+        "renamed_to": {"type": ["string", "null"]},
+        "canon": {"type": "boolean", "description": "true = established in canon; false = fabricated by us."},
+        "source": {"type": "string"},
+        "lore": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

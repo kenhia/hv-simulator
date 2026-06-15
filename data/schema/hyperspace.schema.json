@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsim.local/schema/hyperspace.schema.json",
+  "title": "Honorverse Hyperspace Model",
+  "description": "First-cut schema (v0.1.0) for the hyperspace travel model: the discrete hyper bands (with apparent-velocity multipliers), translation mechanics, and the hyper-limit table by spectral class. Gravity waves, the Tellerman/grav-wave 'sail' riding, and dimensional shear are deliberately deferred. Canon values are flagged canon:true; interpolated/invented values (e.g. the Eta band speed) are canon:false with a documented method.",
+  "type": "object",
+  "required": ["schema_version", "kind"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "kind": {"const": "hyperspace_model"},
+    "retrieved": {"type": "string"},
+    "bands": {"type": "array", "items": {"$ref": "#/$defs/band"}},
+    "translation": {"type": "object"},
+    "normal_space": {"type": "object"},
+    "hyper_limit": {"$ref": "#/$defs/hyperLimit"}
+  },
+  "$defs": {
+    "canonFlag": {"type": "boolean", "description": "true = established in canon; false = interpolated/invented by us."},
+    "band": {
+      "type": "object",
+      "required": ["order", "name", "canon"],
+      "properties": {
+        "order": {"type": "integer", "description": "1 = Alpha (lowest), ascending."},
+        "name": {"type": "string"},
+        "greek": {"type": "string"},
+        "canon": {"$ref": "#/$defs/canonFlag", "description": "Whether the band's existence is canon (all listed bands are)."},
+        "entry_velocity_limit_c": {"type": ["number", "null"], "description": "Max real velocity (in c) at which a ship may translate INTO this band (Alpha = 0.3c; exceeding is fatal)."},
+        "apparent_velocity_c": {
+          "type": "object",
+          "description": "Apparent velocity (multiple of c relative to n-space). 'nominal_c' is the model value the flight planner uses; 'canon_datapoints' are verbatim canon examples (note their real-velocity context).",
+          "properties": {
+            "nominal_c": {"type": ["number", "null"]},
+            "nominal_canon": {"$ref": "#/$defs/canonFlag"},
+            "method": {"type": "string"},
+            "canon_datapoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "real_velocity_c": {"type": ["number", "null"]},
+                  "apparent_velocity_c": {"type": ["number", "null"]},
+                  "source": {"type": "string"},
+                  "note": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "typical_users": {"type": "string"},
+        "danger": {"type": "string"},
+        "source": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "hyperLimit": {
+      "type": "object",
+      "description": "The radius (light-minutes) around a star inside which hyper translation is fatal. A function of mass / spectral class. Ships must be BEYOND this to translate in or out.",
+      "required": ["canon", "unit", "by_spectral_class"],
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "unit": {"const": "light-minutes"},
+        "varies_with": {"type": "string"},
+        "source": {"type": "string"},
+        "by_spectral_class": {
+          "type": "object",
+          "description": "Spectral class -> hyper limit in light-minutes (canon table).",
+          "additionalProperties": {"type": "number"}
+        },
+        "anomalies": {"type": "array", "items": {"type": "string"}},
+        "interpolation_note": {"type": "string"},
+        "applied_examples": {"type": "object", "description": "Built-system stars mapped to their looked-up hyper limit (convenience; the lookup itself is canon-exact)."}
+      }
+    }
+  }
+}

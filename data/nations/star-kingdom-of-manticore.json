@@ -1,0 +1,107 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "star-kingdom-of-manticore",
+  "name": "Star Kingdom of Manticore",
+  "government": "Constitutional Monarchy",
+  "capital_system_id": "manticore",
+  "capital_planet": "Manticore",
+  "capital_city": "Landing",
+  "founded_pd": 1485,
+  "succeeded_by": "star-empire-of-manticore",
+  "canon": true,
+  "source": "HH1, Companion, UHH",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Star_Kingdom_of_Manticore"],
+  "retrieved": "2026-06-13",
+
+  "lore": {
+    "summary": "An interstellar star nation consisting of the Manticore System plus all or part of the systems reachable through the Manticore Wormhole Junction. A single-system nation for most of its history, it began annexing systems from the 19th Century PD onward — chiefly to control Junction termini — and in 1921 PD merged with the Talbott Quadrant to form the Star Empire of Manticore.",
+    "official_language": "Standard English",
+    "currency": "Manticoran dollar",
+    "head_of_state": "Monarch of Manticore (House of Winton)",
+    "military": ["Royal Manticoran Navy", "Royal Manticoran Army", "Royal Manticoran Marine Corps", "Talbott Quadrant Guard"]
+  },
+
+  "territory": {
+    "note": "As of 1922 PD the Star Kingdom comprised 7 star systems plus protectorates. Each entry references a star_system file by 'system_id'. Systems other than Manticore are not yet built; the ids are placeholders to be filled as those system files are created.",
+
+    "member_systems": [
+      {
+        "system_id": "manticore",
+        "name": "Manticore Binary System",
+        "role": "capital",
+        "member_worlds": ["Manticore", "Sphinx", "Gryphon"],
+        "canon": true,
+        "source": "HH1"
+      },
+      {
+        "system_id": "trevors-star",
+        "name": "Trevor's Star System",
+        "member_worlds": ["San Martin"],
+        "annexed_pd": 1914,
+        "notes": "Annexed by act of Parliament; Haven ceded all claims in the 1922 PD peace treaty. Associated with the Trevor's Star Terminus of the Junction.",
+        "canon": true,
+        "source": "HH9-HH12"
+      },
+      {
+        "system_id": "lynx",
+        "name": "Lynx System",
+        "member_worlds": ["Lynx"],
+        "annexed_pd": 1920,
+        "notes": "Associated with the Lynx Terminus.",
+        "canon": true,
+        "source": "HH10, SI2"
+      }
+    ],
+
+    "wormhole_termini_systems": [
+      {"system_id": "basilisk", "terminus": "Basilisk Terminus", "annexed_pd": 1865, "inhabited_world": "Medusa", "canon": true, "source": "HH0, HH1"},
+      {"system_id": "gregor", "terminus": "Gregor Terminus", "component": "Gregor-A (uninhabitable)", "seized_before_pd": 1856, "notes": "Under Gregor System Defense Command, RMN; space station present.", "canon": true, "source": "HH6"},
+      {"system_id": "matapan", "terminus": "Matapan Terminus", "inhabited": false, "canon": true, "source": "Companion"},
+      {"system_id": "mq-l-1792-46a", "terminus": "Lynx Terminus", "inhabited": false, "claimed_pd": 1919, "canon": true, "source": "HH10"},
+      {"system_id": "sigma-draconis", "terminus": "Beowulf Terminus", "shared": true, "notes": "Terminus sovereignty held, but world (Beowulf) not annexed; transit fees and defense costs shared with the host system.", "canon": true, "source": "Companion"},
+      {"system_id": "hennesy", "terminus": "Hennesy Terminus", "shared": true, "notes": "Terminus sovereignty held without a claimed world; arrangements shared with host system.", "canon": true, "source": "Companion"}
+    ],
+
+    "naval_stations": [
+      {
+        "system_id": "hancock",
+        "name": "Hancock Station",
+        "established_pd": 1901,
+        "status": "active",
+        "canon": true,
+        "source": "HH3",
+        "notes": "RMN naval base in the otherwise uninhabited Hancock System. A key 'visitable place' — when the Hancock System file is built, Hancock Station becomes a place/station within it. Listed here at the nation layer because the system itself has no member world."
+      },
+      {
+        "system_id": "grendelsbane",
+        "name": "Grendelsbane Station",
+        "established_before_pd": 1905,
+        "destroyed_pd": 1919,
+        "status": "destroyed",
+        "canon": true,
+        "source": "Companion"
+      },
+      {
+        "system_id": "elric",
+        "name": "Elric Station",
+        "destroyed_pd": 1914,
+        "status": "destroyed",
+        "canon": true,
+        "source": "Companion"
+      }
+    ],
+
+    "protectorates": [
+      {"system_id": "basilisk", "subject": "Medusa (planet)", "type": "internal_protectorate", "since_pd": 1865, "canon": true, "source": "HH1"},
+      {"system_id": "endicott", "subject": "Masada (planet)", "type": "military_occupation", "since_pd": 1903, "canon": true, "source": "HH2, HH5"},
+      {"system_id": "talbott-cluster", "subject": "17 worlds of the Talbott Cluster", "type": "temporary_protectorate", "span_pd": "1919-1921", "canon": true, "source": "HH12, SI2", "notes": "Later united as the Talbott Quadrant within the Star Empire of Manticore."},
+      {"system_id": "silesia", "subject": "part of the former Silesian Confederacy", "type": "de_facto_protectorate", "since_pd": 1921, "canon": true, "source": "HH10, HH11, SI2"}
+    ]
+  },
+
+  "native_sentient_species": [
+    {"name": "Treecats", "homeworld": "Sphinx", "discovered_pd": 1518, "canon": true, "source": "HHA1, SK1, Companion"},
+    {"name": "Medusans", "homeworld": "Medusa", "discovered_pd": 1865, "canon": true, "source": "HH1, Companion"}
+  ]
+}

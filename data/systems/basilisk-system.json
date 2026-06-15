@@ -1,0 +1,131 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "basilisk",
+  "name": "Basilisk System",
+  "aliases": [],
+  "star_nation_id": "star-kingdom-of-manticore",
+  "canon": true,
+  "sources": ["HH1", "HH2", "HH3", "HH8", "Companion"],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Basilisk_System",
+    "https://honorverse.fandom.com/wiki/Medusa"
+  ],
+  "retrieved": "2026-06-13",
+
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 210,
+    "direction": "galactic north",
+    "galactic_coordinates": null,
+    "borders": {"east": "Republic of Haven", "west": "Silesian Confederacy"},
+    "source": "HH1, HH3",
+    "notes": "Stated as ~210 ly galactic-north of the Manticore System (Manticore lies 210 ly 'to the south'). Strategically placed between Haven and Silesia. No absolute galactic coordinates in canon."
+  },
+
+  "stars": [
+    {
+      "id": "basilisk-a",
+      "name": "Basilisk",
+      "role": "primary",
+      "spectral_type": "G5",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH1, HH3",
+      "notes": "Single star (no companion established). Mass/luminosity not given in canon; G5 is slightly cooler than Sol, consistent with the description of Medusa's 'brutal' climate."
+    }
+  ],
+
+  "bodies": [
+    {
+      "id": "medusa",
+      "name": "Medusa",
+      "designation": null,
+      "parent_star": "basilisk-a",
+      "orbit_index": null,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "canon": true,
+      "source": "HH1, Companion",
+      "gravity_g": 0.85,
+      "axial_tilt_deg": 40,
+      "lore": "The sole habitable world of Basilisk and homeworld of the Medusans (trilaterally symmetrical 'Stilties'), a Bronze-Age-level native sentient species held as an internal protectorate. Gray-green from orbit with large polar ice caps; climate considered brutal. Set up as a planet-wide reservation; only muscle-powered technology permitted to the natives. Capital is the Resident Commissioner's compound in the Delta region.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "a_au": 0.841,
+        "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null,
+        "notes": "Orbital distance of ~7 light-minutes is canon (HH1); a_au ≈ 0.841 derived from that (1 lm = 0.1201648 AU). Distance is canon-grounded, but eccentricity, inclination, and phase remain invented — hence canon:false for the full element set."
+      }
+    }
+  ],
+
+  "belts": [],
+
+  "places": [
+    {
+      "id": "basilisk-terminus",
+      "name": "Basilisk Terminus",
+      "type": "wormhole_terminus",
+      "parent_star": "basilisk-a",
+      "links_to": "manticore-wormhole-junction",
+      "canon": true,
+      "source": "HH1, Companion",
+      "lore": "The sixth terminus of the Manticore Wormhole Junction, discovered in 1865 PD. Its discovery triggered the annexation of Basilisk and brought heavy civilian traffic to the system.",
+      "position": {"canon": false, "determined": false, "notes": "In-system position of the terminus not specified; to be defined."}
+    },
+    {
+      "id": "basilisk-traffic-control",
+      "name": "Basilisk Traffic Control",
+      "type": "traffic_control_station",
+      "rides_on": null,
+      "parent_star": "basilisk-a",
+      "canon": true,
+      "source": "HH1, HH2",
+      "lore": "Traffic-control station at the mouth of the Basilisk Terminus, managing the junction traffic entering and leaving the system.",
+      "position": {"canon": false, "determined": false, "notes": "Co-located with the Basilisk Terminus."}
+    },
+    {
+      "id": "basilisk-station",
+      "name": "Basilisk Station (RMN picket)",
+      "type": "naval_station",
+      "parent_star": "basilisk-a",
+      "canon": true,
+      "source": "HH1",
+      "lore": "The Royal Manticoran Navy picket posting for the system, established with the 1865 PD annexation. The Act of Annexation limited the picket and barred fixed fortifications, so the assignment was long regarded as a banishment posting. Aggregate entry for the naval presence rather than a single named hull.",
+      "position": {"canon": false, "determined": false}
+    },
+    {
+      "id": "medusa-gold-warehouses",
+      "name": "Medusa Gold and orbital warehouses",
+      "type": "commercial_station",
+      "rides_on": "medusa",
+      "canon": true,
+      "source": "HH8",
+      "lore": "Commercial 'Gold' depot and orbital warehouses in Medusa orbit serving the system's transshipment trade.",
+      "position": {"canon": false, "determined": false}
+    }
+  ],
+
+  "demographics": {
+    "canon": true,
+    "total_population": 700000000,
+    "as_of_pd": 1900,
+    "source": "Medusa infobox (Companion)",
+    "notes": "~700 million Medusans on Medusa; the system is otherwise a protectorate with limited Manticoran presence (commissioner's compound, trading enclaves, naval picket)."
+  },
+
+  "lore": {
+    "summary": "A single-star (G5) system 210 ly galactic-north of Manticore whose value is its Manticore Wormhole Junction terminus, not its real estate. Its one habitable world, Medusa, is an internal Manticoran protectorate and home to the native Medusans. Annexed in 1865 PD to secure the terminus, it became a recurring Havenite target.",
+    "naming_convention": "Named for the Gorgon Medusa of Greek myth (cf. the Manticore system's mythological-creature theme).",
+    "peerages": "The system seat is the Duchy of Basilisk (granted to the future Queen Elizabeth III); Medusa itself became the Barony of Medusa (granted to Estelle Matsuko for her service as Resident Commissioner).",
+    "timeline": [
+      {"pd": 1865, "event": "Basilisk Terminus discovered (sixth terminus of the Manticore Junction); system annexed under the Act of Annexation to secure it; Medusa made an internal protectorate.", "source": "HH1, Companion"},
+      {"pd": 1900, "event": "Havenite-backed Medusan uprising; attack on the SKM government compound defeated by Marines from HMS Fearless and NPA agents (First Battle of Basilisk).", "source": "HH1", "notes": "Wiki dates the First Battle as 1900–1901 PD; events of On Basilisk Station."},
+      {"pd": 1913, "event": "Second Battle of Basilisk: Havenite Twelfth Fleet attacks during Operation Icarus, destroying the picket and orbital infrastructure; a simultaneous strike at the terminus is repelled by Eighth Fleet under White Haven.", "source": "HH8"}
+    ]
+  }
+}

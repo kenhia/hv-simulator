@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "yeltsins-star",
+  "name": "Yeltsin's Star System",
+  "aliases": [],
+  "star_nation_id": "protectorate-of-grayson",
+  "allied_with": ["star-kingdom-of-manticore"],
+  "canon": true,
+  "sources": ["HH2", "HH3", "HH5", "HH8", "HH9", "HH12", "Companion"],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Yeltsin's_Star_System",
+    "https://honorverse.fandom.com/wiki/Grayson_(planet)",
+    "https://honorverse.fandom.com/wiki/Blackbird"
+  ],
+  "retrieved": "2026-06-13",
+
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 31,
+    "direction": "galactic north-east",
+    "distance_from_earth_ly": 500,
+    "galactic_coordinates": null,
+    "source": "HH2, HH3",
+    "notes": "~31 ly galactic north-east of Manticore and over 500 ly from Earth; ~two days' travel west of the Endicott System. Its position between Manticore and Haven made it strategically pivotal. 'distance_from_earth_ly' is the canon 'over five hundred' lower bound, not exact."
+  },
+
+  "stars": [
+    {
+      "id": "yeltsins-star-a",
+      "name": "Yeltsin's Star",
+      "role": "primary",
+      "spectral_type": "F6",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH2, Companion",
+      "notes": "A young F6 star (hotter and more massive than Sol). Single star; orbited by ten planets. Mass/luminosity not given in canon."
+    }
+  ],
+
+  "bodies": [
+    {"id": "simiel", "name": "Simiel", "designation": "Yeltsin's Star I", "parent_star": "yeltsins-star-a", "orbit_index": 1, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null, "notes": "Order canon; placement invented. Planets named for angels."}},
+    {"id": "cecitiel", "name": "Cecitiel", "designation": "Yeltsin's Star II", "parent_star": "yeltsins-star-a", "orbit_index": 2, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {"id": "anael", "name": "Anael", "designation": "Yeltsin's Star III", "parent_star": "yeltsins-star-a", "orbit_index": 3, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {"id": "jophiel", "name": "Jophiel", "designation": "Yeltsin's Star IV", "parent_star": "yeltsins-star-a", "orbit_index": 4, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {
+      "id": "grayson",
+      "name": "Grayson",
+      "designation": "Yeltsin's Star V",
+      "parent_star": "yeltsins-star-a",
+      "orbit_index": 5,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "capital": true,
+      "canon": true,
+      "source": "HH2, Companion",
+      "gravity_g": 1.17,
+      "diameter_km": 12484,
+      "lore": "Capital world of the Protectorate of Grayson, settled in 988 PD by the Church of Humanity Unchained under Reverend Austin Grayson (originally 'Zion', later 'Grayson's World'). Blue-green from heavy chlorophyll; soil and dust laden with heavy metals (arsenic, cadmium) toxic to humans, forcing filtration masks, orbital/dome farms, and historically stunted lifespans until the Manticoran alliance brought modern medicine. Capital: Austin City. Continents include Idaho and New Covenant. Hosts 42 transplanted Sphinxian treecats.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "a_au": 1.622,
+        "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null,
+        "notes": "Orbital distance of ~13.5 light-minutes is canon (Companion); a_au ≈ 1.622 derived from that. Distance is canon-grounded; remaining elements invented."
+      }
+    },
+    {
+      "id": "uriel",
+      "name": "Uriel",
+      "designation": "Yeltsin's Star VI",
+      "parent_star": "yeltsins-star-a",
+      "orbit_index": 6,
+      "type": "planet",
+      "subtype": "gas_giant",
+      "habitable": false,
+      "canon": true,
+      "source": "HH2, Companion",
+      "moons": [
+        {"id": "blackbird", "name": "Blackbird", "canon": true, "source": "HH2, HH8", "orbit": {"canon": false, "determined": false}, "notes": "Site of the former Masadan Blackbird Base and later the Grayson/Manticoran Blackbird Yard. (Mis-identified as a planet in the short story 'A Ship Named Francis'.)"}
+      ],
+      "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}
+    },
+    {"id": "raguel", "name": "Raguel", "designation": "Yeltsin's Star VII", "parent_star": "yeltsins-star-a", "orbit_index": 7, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {"id": "remiel", "name": "Remiel", "designation": "Yeltsin's Star VIII", "parent_star": "yeltsins-star-a", "orbit_index": 8, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {"id": "saraqael", "name": "Saraqael", "designation": "Yeltsin's Star IX", "parent_star": "yeltsins-star-a", "orbit_index": 9, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}},
+    {"id": "zadkiel", "name": "Zadkiel", "designation": "Yeltsin's Star X", "parent_star": "yeltsins-star-a", "orbit_index": 10, "type": "planet", "subtype": null, "habitable": false, "canon": true, "source": "Companion", "moons": [], "orbit": {"canon": false, "determined": false, "a_au": null, "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null}}
+  ],
+
+  "belts": [
+    {
+      "id": "yeltsins-asteroid-belt",
+      "name": "Asteroid Belt (Yeltsin's Star)",
+      "parent_star": "yeltsins-star-a",
+      "after_body": "grayson",
+      "type": "asteroid_belt",
+      "canon": true,
+      "source": "Companion",
+      "notes": "Charted between Grayson (V) and Uriel (VI). Extent not specified in canon."
+    }
+  ],
+
+  "places": [
+    {
+      "id": "grayson-traffic-control",
+      "name": "Grayson Traffic Control",
+      "type": "traffic_control_station",
+      "rides_on": "grayson",
+      "canon": true,
+      "source": "HH2",
+      "lore": "Directs all incoming and outgoing traffic for the Yeltsin's Star system.",
+      "position": {"canon": false, "determined": false}
+    },
+    {
+      "id": "blackbird-yard",
+      "name": "Blackbird Yard",
+      "type": "shipyard_station",
+      "rides_on": "blackbird",
+      "canon": true,
+      "status": "destroyed",
+      "destroyed_pd": 1922,
+      "built_by": "Grayson Space Navy / Steadholder Honor Harrington",
+      "canon_owner": "protectorate-of-grayson",
+      "source": "HH8, HH12",
+      "lore": "A large naval shipyard built in orbit of the moon Blackbird by Steadholder Honor Harrington, the backbone of Grayson's wartime shipbuilding. Destroyed in 1922 PD by the Mesan Alignment's Operation Oyster Bay.",
+      "position": {"canon": false, "determined": false}
+    },
+    {
+      "id": "blackbird-base",
+      "name": "Blackbird Base (former Masadan)",
+      "type": "military_base",
+      "rides_on": "blackbird",
+      "canon": true,
+      "status": "captured",
+      "captured_pd": 1903,
+      "source": "HH2",
+      "lore": "A secret Navy of Masada military complex on Blackbird, unnoticed by Grayson until 1903 PD when it was taken by Manticoran and Grayson Space Navy forces in the Battle of Blackbird. Predecessor site of the later Blackbird Yard.",
+      "position": {"canon": false, "determined": false}
+    },
+    {
+      "id": "manticoran-basing-facilities",
+      "name": "Manticoran Alliance basing facilities",
+      "type": "naval_facility",
+      "parent_star": "yeltsins-star-a",
+      "canon": true,
+      "source": "HH2",
+      "lore": "Shared facilities established under the 1903 PD agreement in which Manticore gained basing rights at Yeltsin's Star in exchange for money, supplies, and a permanent security detachment to help defend Grayson. Aggregate entry for the Manticoran/allied presence.",
+      "position": {"canon": false, "determined": false},
+      "notes": "Represents the alliance relationship: Yeltsin's Star is sovereign Grayson territory, not annexed by Manticore."
+    }
+  ],
+
+  "demographics": {
+    "canon": true,
+    "total_population": 4500000000,
+    "as_of_pd": 1905,
+    "source": "HH2",
+    "notes": "Grayson population ~4.5 billion around 1905 PD per HH2 body text. The Grayson infobox lists ~3 billion 'in the early 20th Century PD' (plus 42 Sphinxian treecats) — an unresolved canon discrepancy; the later/higher figure is used here, flagged for verification against the novels."
+  },
+
+  "lore": {
+    "summary": "A young F6 system 31 ly from Manticore, home to the planet Grayson and the religiously-founded Protectorate of Grayson. Strategically wedged between Manticore and Haven, it became the cornerstone of the Manticoran Alliance after 1903 PD and the site of repeated battles against the neighboring theocracy of Masada (Endicott System).",
+    "naming_convention": "The system's ten planets are named after angels (Simiel, Cecitiel, Anael, Jophiel, Grayson, Uriel, Raguel, Remiel, Saraqael, Zadkiel) — fitting Grayson's deeply religious founding culture.",
+    "timeline": [
+      {"pd": 988, "event": "Grayson colonized by the Church of Humanity Unchained under Reverend Austin Grayson; system not yet surveyed.", "source": "HH2"},
+      {"pd": 1903, "event": "Manticore begins sending aid and gains basing rights; First and Second Battles of Yeltsin's Star and the Battle of Blackbird fought against Masada; Blackbird Base captured.", "source": "HH2"},
+      {"pd": 1905, "event": "Third Battle of Yeltsin's Star; with the Manticoran defense line only ~30 ly across here, the system is targeted by the Havenite Operation Perseus II.", "source": "HH3"},
+      {"pd": 1907, "event": "Fourth Battle of Yeltsin's Star (August 18, 1907 PD).", "source": "Companion"},
+      {"pd": 1922, "event": "Blackbird Yard destroyed in the Mesan Operation Oyster Bay.", "source": "HH12"}
+    ]
+  }
+}

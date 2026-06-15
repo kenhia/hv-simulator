@@ -15,9 +15,9 @@ remote_dir := "hvsim"     # ~/hvsim on the host holds the deploy compose
 default:
     @just --list
 
-# Build the image locally on this machine.
+# Build the image locally on this machine (context = engine/).
 build:
-    docker build -t {{image}} .
+    docker build -t {{image}} engine
 
 # Build, ship the image to {{host}}, and bring the stack up (real-time clock).
 deploy: build
@@ -51,8 +51,12 @@ seed:
 fleet:
     ./deploy/fleet.sh http://{{host}}:{{port}}
 
-# Run the local validation gate (tests + lint + format check).
+# Run the engine validation gate (tests + lint + format check).
 check:
-    uv run pytest
-    uv run ruff check .
-    uv run ruff format --check .
+    cd engine && uv run pytest
+    cd engine && uv run ruff check .
+    cd engine && uv run ruff format --check .
+
+# Validate the boundary contracts (build sample artifact from DDL + lint OpenAPI).
+contracts:
+    uv run --with openapi-spec-validator --with pyyaml python contracts/validate.py

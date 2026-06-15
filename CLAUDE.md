@@ -68,26 +68,46 @@ This separation is load-bearing — preserve it:
 Keep `ephemeris` and `kinematics` as **pure functions** so they are testable
 without running the service.
 
+## Monorepo layout (since Sprint 009 / Phase 2.0)
+
+```
+engine/      the hvsim engine — Python package + FastAPI service (MIT)
+tools/       standalone tools, each its own pyproject (universe-compiler, etc.)
+data/        Honorverse dataset, JSON source of truth — SEPARATE license (CC BY-SA)
+contracts/   the language-agnostic seam: universe-artifact SQL DDL + engine OpenAPI
+ui/          Phase 2.5 front-end (placeholder)
+deploy/ grafana/ planning/ sprints/   ops, observability, design docs
+justfile     workspace orchestration
+```
+
+The **engine is the only Python project at the moment**; it lives in `engine/`
+(run `uv` from there). `data/` is **CC BY-SA 3.0** (its own `LICENSE`); the code
+stays MIT. `contracts/` is versioned and frozen per minor version — it's what
+keeps a future engine-only Rust port (and the tools/UI) decoupled.
+
 ## Toolchain & commands
 
-Managed with `uv`. Python `>=3.12` (currently resolves to 3.13; either is fine).
+Managed with `uv`. Python `>=3.12` (resolves to 3.13). **Engine commands run in
+`engine/`:**
 
 ```sh
+cd engine
 uv sync                  # create .venv and install dev dependencies
-uv run pytest            # run the full test suite
-uv run pytest tests/test_smoke.py::test_package_imports   # run a single test
-uv run ruff check .      # lint
-uv run ruff format .     # format (use --check in CI / pre-ship)
-uv run where-is saturn   # CLI: heliocentric position of a body (--at <iso8601>)
-uv run where-is --list   # CLI: list known bodies (planets, moons, stations)
-
-# Run the API (port 4667; HVSIM_DEV_CLOCK=1 enables PUT /clock):
+uv run pytest            # run the engine test suite
+uv run ruff check . && uv run ruff format --check .
+uv run where-is saturn   # CLI: heliocentric position (--at <iso8601>, --list)
 HVSIM_DEV_CLOCK=1 uv run uvicorn --factory hvsim.api.app:create_app --port 4667
 ```
 
-The validation gate before shipping a sprint is: `uv run pytest`,
-`uv run ruff check .`, `uv run ruff format --check .` — all clean (or just
-`just check`).
+From the repo root, the `justfile` orchestrates: `just check` (engine gate),
+`just contracts` (validate the DDL + OpenAPI), `just build`/`deploy`/`health`/
+`fleet`/`seed`. The validation gate before shipping is `just check` (pytest +
+ruff + format), all clean.
+
+Deployment via the root `justfile`: `just deploy` builds from `engine/` and ships
+the image to the host; `just health`/`just fleet` query it. Target host/port come
+from `.env` (`HVSIM_HOST`/`HVSIM_PORT`, default `kubsdb:4667`). Deployed instance
+runs real time with `PUT /clock` off.
 
 Deployment is driven by the root `justfile` (`just` to list recipes): `just
 deploy` ships the image to the host and brings the stack up, `just health` /
@@ -99,12 +119,9 @@ In comments/docstrings/strings, write math with the ASCII hyphen-minus `-`, not
 the Unicode minus `−` (U+2212), which renders confusably. Ruff RUF001/002/003
 enforce this; en/em dashes (`–`/`—`) are allowed for ranges and prose.
 
-Package layout under `src/hvsim/`: `ephemeris/`, `kinematics/`, `flightplan/`,
-`clock/`, `api/`. Kinematics and ephemeris stay **pure functions** — unit-
-testable without the service running.
-
-FastAPI, Pydantic v2, SQLAlchemy + SQLite, and Docker are in the plan but not
-added until the sprint that needs them, to keep the dependency surface honest.
+Package layout under `engine/src/hvsim/`: `ephemeris/`, `kinematics/`,
+`flightplan/`, `clock/`, `api/`. Kinematics and ephemeris stay **pure
+functions** — unit-testable without the service running.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

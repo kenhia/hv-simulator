@@ -1,0 +1,476 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "ship_class_registry",
+  "retrieved": "2026-06-13",
+
+  "weapon_code_legend": {
+    "M": "Missile launcher / tube",
+    "MP": "Missile-pod mount (pod-layer aft rail) — interpretation uncertain",
+    "L": "Laser mount",
+    "G": "Graser mount",
+    "CM": "Countermissile launcher / tube",
+    "PD": "Point-defense laser cluster"
+  },
+
+  "classes": [
+    {
+      "id": "raoul-courvosier-ii",
+      "name": "Raoul Courvosier II class",
+      "ship_type": "pod-laying battlecruiser",
+      "hull_classification": "BC(P)",
+      "navy": "Grayson Space Navy",
+      "affiliation_nation_id": "protectorate-of-grayson",
+      "date_introduced_pd": 1919,
+      "preceded_by": "raoul-courvosier",
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH11", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Raoul_Courvosier_II_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 1763500, "length_m": 817, "beam_m": 118, "draught_m": 110, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 542.8, "max_g": 678.4, "derived": [],
+        "notes": "Both figures canon. Ratio is exactly 80% (normal = 0.8 × max), the standard compensator safety margin. Use max_g (678.4) for the sim's emergency max_accel_g."
+      },
+      "crew": {"canon": true, "source": "HH11", "total": 300, "derived": [], "notes": "~300, reduced via heavy automation from Manticoran Alliance technology transfers."},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "Broadside: 6M, 6G, 26CM, 24PD | Fore: 4M, 3G, 8CM, 12PD | Aft: 4MP, 4CM, 12PD",
+        "by_arc": {
+          "broadside": {"M": 6, "G": 6, "CM": 26, "PD": 24},
+          "fore": {"M": 4, "G": 3, "CM": 8, "PD": 12},
+          "aft": {"MP": 4, "CM": 4, "PD": 12}
+        },
+        "derived": [],
+        "notes": "Conventional missile broadside cut by four-fifths versus prior BCs; remaining energy mounts are superdreadnought-sized grasers."
+      },
+      "magazines": {"canon": true, "source": "Companion", "missile_pods": 360, "derived": []},
+      "lore": "The first pod-laying battlecruiser built by any navy. Massing nearly twice prior BC classes; criticized for retaining broadside mounts that compromised the pod-laying role. Over forty built by 1921 PD."
+    },
+
+    {
+      "id": "honor-harrington",
+      "name": "Honor Harrington class",
+      "ship_type": "pod-laying superdreadnought",
+      "hull_classification": "SD(P)",
+      "navy": "Grayson Space Navy",
+      "affiliation_nation_id": "protectorate-of-grayson",
+      "date_introduced_pd": 1914,
+      "preceded_by": null,
+      "succeeded_by": null,
+      "also_known_as": ["Medusa class (RMN designation)"],
+      "canon": true,
+      "sources": ["HH8", "HH9", "HH11", "Companion", "House of Steel"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Honor_Harrington_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {
+        "canon": true, "source": "Medusa class (Companion)",
+        "mass_tons": 8554750, "length_m": 1383, "beam_m": 201, "draught_m": 187, "derived": [],
+        "notes": "The Honor Harrington class IS the joint Grayson-Manticoran Medusa-class design; the GSN simply uses a different name. Specs taken from the Medusa-class infobox — canon for the shared design, not separately tabulated on the Honor Harrington page."
+      },
+      "acceleration": {
+        "canon": true, "source": "Medusa class (Companion)",
+        "normal_g": 402.3, "max_g": 502.8, "derived": [],
+        "notes": "From the Medusa-class infobox (same design). Ratio ~80%. Use max_g (502.8) for the sim."
+      },
+      "crew": {"canon": false, "source": null, "total": null, "derived": ["total"], "notes": "Not given in canon for this class; to be fabricated. A pod-SD with heavy automation would run a few thousand."},
+      "armament": {
+        "canon": true, "source": "Medusa class (Companion)",
+        "summary": "Broadside: 26M, 13L, 15G, 54CM, 52PD | Fore: 9M, 4L, 5G, 18CM, 22PD | Aft: 6MP, 4L, 5G, 14CM, 20PD",
+        "by_arc": {
+          "broadside": {"M": 26, "L": 13, "G": 15, "CM": 54, "PD": 52},
+          "fore": {"M": 9, "L": 4, "G": 5, "CM": 18, "PD": 22},
+          "aft": {"MP": 6, "L": 4, "G": 5, "CM": 14, "PD": 20}
+        },
+        "derived": [],
+        "notes": "Hollow-core pod bay runs ~30% of hull length; aft chase mounts sacrificed for the pod-flush door. Ships completed after early 1921 PD were Keyhole II capable as-built."
+      },
+      "magazines": {"canon": true, "source": "Companion, House of Steel", "missile_pods": 492, "missile_pods_max": 800, "derived": [], "notes": "492 missile pods; up to 800 Mk-17 flat-pack pods by 1921 PD."},
+      "lore": "The GSN's pod-laying SD, named in memory of Steadholder Honor Harrington after Haven faked her execution; the Grayson Admiralty kept the name even after she returned alive (the RMN reverted theirs to 'Medusa'). The first warship designed from the keel up to deploy pods from an inboard hold."
+    },
+
+    {
+      "id": "star-knight",
+      "name": "Star Knight class",
+      "ship_type": "heavy cruiser",
+      "hull_classification": "CA",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": 1893,
+      "preceded_by": "prince-consort / crusader",
+      "succeeded_by": "edward-saganami",
+      "also_known_as": ["Alliance class (GSN designation)"],
+      "canon": true,
+      "sources": ["HH2", "HH3", "Companion", "Jayne's 1905 PD"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Star_Knight_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 305250, "length_m": 523, "beam_m": 63, "draught_m": 53, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Jayne's 1905 PD / Companion",
+        "normal_g": 408, "max_g": 510, "derived": ["normal_g"],
+        "notes": "Canon lists a single unlabeled figure, 510 G, read here as the MAXIMUM (capability ceiling). This is consistent with its successor the Edward Saganami class being faster (max 592.2 G), and avoids inventing an acceleration higher than any canon source. normal_g = 408 derived as 0.8 × max per the common compensator margin (fabricated, hence in 'derived'). The normal:max ratio is not universal (cf. Reliant ~95%). Use max_g (510) for the sim's max_accel_g."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 925, "derived": []},
+      "armament": {
+        "canon": true, "source": "Jayne's 1905 PD",
+        "summary": "Broadside: 12 Mod 7b missile launchers, 4 graser, 6 laser, 8 CM tubes, 8 PD clusters | Chase: 2 Mod 7b missile, 1 graser, 5 CM tubes, 5 PD clusters",
+        "by_arc": {
+          "broadside": {"M": 12, "G": 4, "L": 6, "CM": 8, "PD": 8},
+          "chase": {"M": 2, "G": 1, "CM": 5, "PD": 5}
+        },
+        "inventory": ["20 Model 7b missile launchers", "2 Mk49 127 cm lasers", "6 Mk73 105 cm lasers", "4 Mk15 140 cm grasers", "26 Model 5b CM launchers", "26 Mk16(5) PD clusters"],
+        "derived": [],
+        "notes": "Missile launcher cycle time ~8 s. First two-deck heavy cruiser; first RMN cruiser designed to survive laser-head missiles. ~6× the firepower of the Courageous-class light cruisers."
+      },
+      "magazines": {"canon": true, "source": "Jayne's 1905 PD", "items": ["400 Mk-13 anti-ship missiles", "1,534 Mk21 countermissiles", "8 Mk23 recon drones", "6 ECM Mk15 decoys"], "derived": []},
+      "power": {"canon": true, "source": "Companion", "summary": "3 × Isler Corporation GM-4R fusion plants (only one required for normal operation)", "derived": []},
+      "electronics": {"canon": true, "source": "Jayne's 1905 PD", "summary": "AN/SPG-29a grav arrays; AN/SR-12 radar; AN/SL-13 lidar; AN/CAR-15(34) fire control; AN/CDT-16(26) CM fire control; ECM AN/ELQ-135", "derived": []},
+      "auxiliary_craft": {"canon": true, "source": "Jayne's 1905 PD", "summary": "3 Mk28 Condor pinnaces; 1 Mk9 Albatross shuttle; 4 C3 Dakota cutters", "derived": []},
+      "lore": "The RMN's frontline heavy cruiser around 1900 PD, built to carry the strongest available armament while retaining flag facilities. Operated by the GSN as the Alliance class; basis for the GSN Jason Alvarez class and the Solarian Marksman class."
+    },
+
+    {
+      "id": "reliant",
+      "name": "Reliant class",
+      "ship_type": "battlecruiser",
+      "hull_classification": "BC",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": 1900,
+      "preceded_by": "homer",
+      "succeeded_by": "nike",
+      "also_known_as": ["Hill class (GSN designation)"],
+      "canon": true,
+      "sources": ["HH3", "HH7", "HH10", "HH11", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Reliant_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 881250, "length_m": 713, "beam_m": 91, "draught_m": 81, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 488.6, "max_g": 515.5, "derived": [],
+        "notes": "Both figures canon. Note the normal:max ratio here is ~95%, NOT the 80% seen on pod-era classes — a useful counterexample showing the compensator margin varies by class/era. Use max_g (515.5) for the sim."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 2105, "officers": 151, "enlisted": 1362, "marines": 592, "derived": []},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "52 Mod 7b missile launchers; 16 Mk73 105 cm lasers; 2 Mk49 127 cm lasers; 16 Mk15 140 cm grasers; 32 Mod 5b countermissile launchers; 32 Mk16(6) PD lasers",
+        "inventory": ["52 Mod 7b missile launchers", "16 Mk73 105 cm lasers", "2 Mk49 127 cm lasers", "16 Mk15 140 cm grasers", "32 Mod 5b CM launchers", "32 Mk16(6) PD lasers"],
+        "derived": [],
+        "notes": "Per-deck armament scheme given in canon (upper/lower deck mount layouts). Pre-pod broadside design."
+      },
+      "magazines": {"canon": true, "source": "Companion", "items": ["1,352 Mk13 anti-ship missiles", "9,632 Mk21 countermissiles", "10 Mk36 EW drones"], "derived": []},
+      "power": {"canon": true, "source": "HH3", "summary": "3 × Isler GM-4R fusion reactors (two required at full power)", "derived": []},
+      "electronics": {"canon": true, "source": "Companion", "summary": "AN/SPG-29/b gravitic array; AN/SR-14a radar; AN/SL-14a lidar; AN/CAT-23b(64) fire control; AN/CDT-19(40) defensive fire control; AN/ELQ-146 ECM", "derived": []},
+      "auxiliary_craft": {"canon": true, "source": "Companion", "summary": "4 Mk28 Condor-class pinnaces; 2 Mk9 Albatross-class shuttles; 4 C3 Dakota-class cutters", "derived": []},
+      "lore": "The RMN's most modern battlecruiser at the start of the First Havenite-Manticoran War, outclassing Haven's contemporary Sultan and later Warlord classes. Used the newest GSN-designed inertial compensator. Regarded as obsolete in the pod era by 1920 PD but recommissioned when war resumed. Operated by the GSN as the Hill class; basis for the GSN Raoul Courvosier class."
+    },
+
+    {
+      "id": "nike",
+      "name": "Nike class",
+      "ship_type": "battlecruiser",
+      "hull_classification": "BC",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": "~1920",
+      "preceded_by": "reliant",
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH11", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Nike_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 2519750, "length_m": 1012, "beam_m": 129, "draught_m": 114, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 539.4, "max_g": 674.3, "derived": [],
+        "notes": "Infobox lists 674.3 G (6.613 kps²) as the primary figure and 539.4 G (5.29 kps²) labelled '80% accel' — so the UNLABELLED primary here is the MAX, and 539.4 is the sustained/normal. Ratio 80%. Use max_g (674.3) for the sim."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 750, "derived": [], "notes": "Larger crew and Marine complement than most ships its size — unusual for the era's automation trend — suiting the RMN's raiding/space-control doctrine."},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "Broadside: 12 graser, 25 missile tubes (off-bore capable), 32 CM tubes, 30 PD clusters | Chase: 4 graser, 12 PD clusters",
+        "by_arc": {
+          "broadside": {"G": 12, "M": 25, "CM": 32, "PD": 30},
+          "chase": {"G": 4, "PD": 12}
+        },
+        "derived": [],
+        "notes": "Missile tubes capable of off-bore firing."
+      },
+      "magazines": {"canon": true, "source": "Companion", "summary": "6,000 Mark 16 DDM (Dual Drive Missiles)", "derived": []},
+      "lore": "The RMN's most advanced battlecruiser at the onset of the Second Haven-Manticore War. Rather than the BC(P) pod-layer route (Agamemnon class), the Nike recasts the BC as a tough 'generalist' — ~2.5 Mt (3× a Reliant), higher accel from improved compensators, and far more damage-resistant than a pod-laying BC. Prototype HMS Nike (BC-562) was authorized by the Janacek Admiralty as a one-off testbed before White Haven's Admiralty greenlit mass production (~1921 PD)."
+    },
+
+    {
+      "id": "edward-saganami",
+      "name": "Edward Saganami class",
+      "ship_type": "heavy cruiser",
+      "hull_classification": "CA",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": 1908,
+      "preceded_by": "star-knight",
+      "succeeded_by": "edward-saganami-b",
+      "also_known_as": ["Protector Adrian class (co-developed GSN design)"],
+      "canon": true,
+      "sources": ["Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Edward_Saganami_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 393000, "length_m": 569, "beam_m": 69, "draught_m": 57, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 473.8, "max_g": 592.2, "derived": [],
+        "notes": "Infobox lists 592.2 G (5.808 kps²) primary and 473.8 G (4.646 kps²) labelled '80% accel' — primary is the MAX, 473.8 the sustained/normal. Ratio 80%. Use max_g (592.2) for the sim."
+      },
+      "crew": {"canon": false, "source": null, "total": null, "derived": ["total"], "notes": "Not tabulated in canon; to be fabricated. Lore notes extensive automation to reduce manning."},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "Broadside: 14M, 5G, 10CM, 10PD | Chase: 3M, 2G, 6CM, 6PD",
+        "by_arc": {
+          "broadside": {"M": 14, "G": 5, "CM": 10, "PD": 10},
+          "chase": {"M": 3, "G": 2, "CM": 6, "PD": 6}
+        },
+        "derived": [],
+        "notes": "All-graser energy layout copied from the Graysons; incorporated the Shrike-class LAC bow-wall concept."
+      },
+      "lore": "Successor to the Star Knight class and the most advanced RMN heavy cruiser at its introduction. Ships are traditionally named for celebrated RMN officers. Heavily delayed by the first war and repeatedly redesigned — the first flight were effectively prototypes — before reaching serial production in the second flight. Co-developed with Grayson's Protector Adrian class."
+    },
+
+    {
+      "id": "invictus",
+      "name": "Invictus class",
+      "ship_type": "pod-laying superdreadnought",
+      "hull_classification": "SD(P)",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": 1919,
+      "preceded_by": "medusa",
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH9", "HH10", "HH11", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Invictus_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 8768500, "length_m": 1394, "beam_m": 202, "draught_m": 188, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 450.1, "max_g": 562.6, "derived": [],
+        "notes": "Infobox '450.1 G (562.6 G maximum)' — primary is normal, paren is max. Ratio 80%. Use max_g (562.6) for the sim."
+      },
+      "crew": {"canon": false, "source": null, "total": null, "derived": ["total"], "notes": "Not given in canon; to be fabricated."},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "Broadside: 18G, 84CM, 62PD | Fore: 10G, 24CM, 22PD | Aft: 6MP, 10G, 14CM, 24PD",
+        "by_arc": {
+          "broadside": {"G": 18, "CM": 84, "PD": 62},
+          "fore": {"G": 10, "CM": 24, "PD": 22},
+          "aft": {"MP": 6, "G": 10, "CM": 14, "PD": 24}
+        },
+        "derived": [],
+        "notes": "Major design departure: ALL broadside missile batteries removed (note the absence of 'M' in any arc) in favour of pods, energy mounts, and heavier anti-missile defence. Rolls six pods every twelve seconds."
+      },
+      "magazines": {"canon": true, "source": "Companion", "missile_pods": 1074, "derived": []},
+      "lore": "Advanced pod-SD successor to the Medusa class, deployed at the turn of the 1920s PD. Developed late in the First Havenite-Manticoran War, then mothballed under the High Ridge drawdown; 46 unfinished hulls were destroyed at the Battle of Grendelsbane (Grendelsbane Station) to prevent capture. Only twelve were ready at the outbreak of the second war. All ships except the lead Invictus were Keyhole II capable."
+    },
+
+    {
+      "id": "sultan",
+      "name": "Sultan class",
+      "ship_type": "battlecruiser",
+      "hull_classification": "BC",
+      "navy": "People's Navy (Republic of Haven Navy)",
+      "affiliation_nation_id": "republic-of-haven",
+      "date_introduced_pd": "mid-19th Century PD",
+      "preceded_by": "tiger",
+      "succeeded_by": "warlord",
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH2", "HH6", "HH7", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Sultan_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 859250, "length_m": 707, "beam_m": 90, "draught_m": 80, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 391.4, "max_g": 489.2, "derived": ["normal_g"],
+        "notes": "Canon lists a single unlabeled figure, 489.2 G, read as the MAXIMUM (consistent with its successor Warlord's max of 487.4 G; reading it as normal would imply an implausibly high ~611 G max for an older ship). normal_g = 391.4 derived as 0.8 × max (fabricated, hence in 'derived'). Use max_g (489.2) for the sim."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 2195, "officers": 190, "enlisted": 1705, "marines": 300, "derived": []},
+      "armament": {
+        "canon": true, "source": "Companion, HH6",
+        "summary": "46 LMF-5(d) missile tubes, 4 L/130 capital lasers, 12 L/118 anti-ship lasers, 12 G/125 grasers, 40 LMC-8(g) CM tubes, 36 P/18x6 anti-missile lasers, tractor beam",
+        "by_arc": {
+          "broadside": {"M": 20},
+          "chase": {"M": 3}
+        },
+        "inventory": ["46 LMF-5(d) missile tubes", "4 L/130 capital-ship lasers", "12 L/118 anti-ship lasers", "12 G/125 grasers", "40 LMC-8(g) CM tubes", "36 P/18x6 anti-missile lasers"],
+        "derived": [],
+        "notes": "Canon: 20 missile launchers per broadside, 3 in chase (HH6). Twice the armament and five times the ammunition of a Manticoran Star Knight-class heavy cruiser (HH2)."
+      },
+      "magazines": {"canon": true, "source": "Companion", "items": ["1,528 F17 impeller-drive missiles", "3,640 C2 countermissiles", "10 LAD-15 tethered ECM decoys"], "derived": []},
+      "power": {"canon": true, "source": "Companion", "summary": "3 × RF/8 Tricastin 2 fusion reactors", "derived": []},
+      "electronics": {"canon": true, "source": "Companion", "summary": "AG-15 gravitic array; AR-18(a) radar; AL-13 lidar; SLC-19(a) 22×12-channel DCS; ARBB-23 ECM", "derived": []},
+      "auxiliary_craft": {"canon": true, "source": "Companion", "summary": "Ouragan-class (D.435) pinnaces; Mercure-class (DB.100) cutters", "derived": []},
+      "lore": "The People's Navy's frontline battlecruiser from the mid-19th to early 20th Century PD, ~10% larger than the preceding Tiger class. Markedly heavier than a contemporary Manticoran heavy cruiser. Superseded by the Warlord class during the First Havenite-Manticoran War."
+    },
+
+    {
+      "id": "warlord",
+      "name": "Warlord class",
+      "ship_type": "battlecruiser",
+      "hull_classification": "BC",
+      "navy": "People's Navy (Republic of Haven Navy)",
+      "affiliation_nation_id": "republic-of-haven",
+      "date_introduced_pd": "early 20th Century PD",
+      "preceded_by": "sultan",
+      "succeeded_by": "warrior-haven",
+      "also_known_as": ["Convert class (5 hulls captured into the GSN Protector's Own)"],
+      "canon": true,
+      "sources": ["HH7", "CS2", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Warlord_class",
+      "retrieved": "2026-06-13",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 918750, "length_m": 723, "beam_m": 92, "draught_m": 82, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 389.9, "max_g": 487.4, "derived": [],
+        "notes": "Infobox '389.9 G (487.4 G max.)' — primary normal, paren max. Ratio 80%. Use max_g (487.4) for the sim."
+      },
+      "crew": {"canon": true, "source": "HH7", "total": 2200, "marines": 300, "derived": []},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "64 missile tubes, 12 lasers, 16 grasers, 44 CM tubes, 36 PD clusters",
+        "by_arc": {
+          "broadside": {"M": 26, "L": 6, "G": 6, "CM": 16, "PD": 12},
+          "chase": {"M": 6, "G": 2, "CM": 6, "PD": 6}
+        },
+        "derived": [],
+        "notes": "Variant PNS Tepes traded 3 grasers and 1 missile tube per broadside for extra boat bays and a double Marine complement (600)."
+      },
+      "lore": "A People's Navy battlecruiser introduced during the First Havenite-Manticoran War — a big ship for its type (larger than a Reliant), following the Mars-class trend, and among the first Havenite designs to benefit from Solarian League technology transfers. Counterpart to the Mars-class CA. Five hulls captured by Honor Harrington at Cerberus (1913 PD) became the GSN's Convert class in the Protector's Own. Later Warlord B and Warlord C variants served State Security forces and the People's Navy in Exile."
+    },
+
+    {
+      "id": "courageous",
+      "name": "Courageous class",
+      "ship_type": "light cruiser",
+      "hull_classification": "CL",
+      "navy": "Royal Manticoran Navy",
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "date_introduced_pd": "~1800",
+      "preceded_by": null,
+      "succeeded_by": "valiant",
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH1", "Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Courageous_class",
+      "retrieved": "2026-06-14",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 88000, "length_m": 389, "beam_m": 40, "draught_m": 31, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 416, "max_g": 520, "derived": ["normal_g"],
+        "notes": "Single unlabeled canon figure 520 G, read as the MAXIMUM; normal_g = 416 derived as 0.8 x max. Use max_g (520) for the sim."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 200, "derived": []},
+      "armament": {
+        "canon": true, "source": "Companion",
+        "summary": "16 Mark 50 missile tubes, 4 graser mounts, 4 30cm laser mounts, 1 60cm spinal laser mount",
+        "inventory": ["16 Mark 50 missile tubes", "4 graser mounts", "4 30cm laser mounts", "1 60cm spinal laser mount"],
+        "derived": [],
+        "notes": "An older, light design — the spinal laser mount is an archaic feature. ~1/6 the firepower of a Star Knight-class heavy cruiser."
+      },
+      "auxiliary_craft": {"canon": true, "source": "Companion", "summary": "1 cutter; 2 pinnaces", "derived": []},
+      "lore": "An old, light RMN light cruiser class (~1800 PD), succeeded by the Valiant class; ships were named after strong character traits. Most notably, HMS Fearless (CL-56) — Honor Harrington's first hyper-capable command in On Basilisk Station — was a Courageous-class ship."
+    },
+
+    {
+      "id": "starhauler",
+      "name": "Starhauler class",
+      "ship_type": "freighter",
+      "hull_classification": null,
+      "navy": null,
+      "affiliation_nation_id": "silesia",
+      "operator": "Silesian Confederacy merchant marine",
+      "date_introduced_pd": null,
+      "preceded_by": null,
+      "succeeded_by": "masquerade",
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Starhauler_class",
+      "retrieved": "2026-06-14",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 1927000, "length_m": 767, "beam_m": 128, "draught_m": 119, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 172, "max_g": 215, "derived": ["normal_g"],
+        "notes": "Single unlabeled canon figure 215 G, read as the MAXIMUM (civilian freighters run far below warship accels); normal_g = 172 derived as 0.8 x max."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": null, "range": "23-35", "derived": [], "notes": "Crew 23-35 (minimal merchant complement)."},
+      "cargo_tons": 1799750,
+      "power": {"canon": true, "source": "Companion", "summary": "1 Burke-11 Micro-Core fusion reactor", "derived": []},
+      "electronics": {"canon": true, "source": "Companion", "summary": "Stevenson GravDTC gravitic detection array", "derived": []},
+      "auxiliary_craft": {"canon": true, "source": "Companion", "summary": "1 passenger shuttle; 8 cargo loaders/utility craft; 2 heavy cargo shuttles", "derived": []},
+      "lore": "A common Silesian Confederacy bulk freighter (cargo ~1.8 Mt), succeeded by the Masquerade class. A well-known Q-ship 'Missile Platform' conversion exists — fitting 24 missile launchers, 8 rapid-fire laser clusters, and military sensors into the hull at the cost of cargo — making it a favourite armed-merchant disguise."
+    },
+
+    {
+      "id": "dromedary",
+      "name": "Dromedary class",
+      "ship_type": "freighter",
+      "hull_classification": null,
+      "navy": null,
+      "affiliation_nation_id": "solarian-league",
+      "operator": "Solarian League merchant marine",
+      "date_introduced_pd": "~1770",
+      "preceded_by": null,
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["Companion"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Dromedary_class",
+      "retrieved": "2026-06-14",
+      "dimensions": {"canon": true, "source": "Companion", "mass_tons": 4000000, "length_m": null, "beam_m": null, "draught_m": null, "derived": []},
+      "acceleration": {
+        "canon": true, "source": "Companion",
+        "normal_g": 168, "max_g": 210, "derived": ["normal_g"],
+        "notes": "Single unlabeled canon figure 210 G, read as the MAXIMUM; normal_g = 168 derived as 0.8 x max."
+      },
+      "crew": {"canon": true, "source": "Companion", "total": 42, "derived": []},
+      "lore": "A large Solarian League freighter design in service since ~1770 PD — a representative big-hull bulk carrier (4 Mt)."
+    },
+
+    {
+      "id": "atlas-manticore",
+      "name": "Atlas class",
+      "ship_type": "passenger liner (armed merchant cruiser)",
+      "hull_classification": null,
+      "navy": null,
+      "affiliation_nation_id": "star-kingdom-of-manticore",
+      "operator": "Hauptman Lines",
+      "date_introduced_pd": null,
+      "preceded_by": null,
+      "succeeded_by": null,
+      "also_known_as": [],
+      "canon": true,
+      "sources": ["HH6"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Atlas_class_(Manticore)",
+      "retrieved": "2026-06-14",
+      "dimensions": {"canon": true, "source": "HH6", "mass_tons": 1000000, "length_m": null, "beam_m": null, "draught_m": null, "derived": [], "notes": "'about one million tons'."},
+      "acceleration": {
+        "canon": false, "source": null,
+        "normal_g": null, "max_g": null, "derived": ["normal_g", "max_g"],
+        "notes": "Not given in canon. Built with MILITARY-GRADE inertial compensators and impellers, so accel is likely comparable to a warship (far above an ordinary liner) — fabricate in that range when needed, flagged."
+      },
+      "crew": {"canon": false, "source": "HH6", "total": null, "derived": ["total"], "notes": "Largely former RMN personnel; number not given."},
+      "passenger_capacity": 5000,
+      "armament": {
+        "canon": true, "source": "HH6",
+        "summary": "CA-level (heavy-cruiser-level) missile armament plus sufficient anti-missile systems; EW drones; minimal cargo space",
+        "derived": [],
+        "notes": "Qualitative only (no mount counts in canon). Electronics suite equivalent to a Homer-class battlecruiser (with Phase One/Two upgrades, no stealth). Armed and crewed to fight off most pirates; could be mistaken for a battlecruiser."
+      },
+      "auxiliary_craft": {"canon": true, "source": "HH6", "summary": "at least 3 outsized lifeboats (passenger shuttles)", "derived": []},
+      "lore": "Luxury passenger liners built for Hauptman Lines' Silesian Confederacy runs (featured in Honor Among Enemies). Military-grade compensators/impellers, CA-level missiles, BC-level EW, up to ~5,000 passengers and minimal cargo — heavily armed for civilian ships because the Silesian run was pirate-infested."
+    }
+  ]
+}

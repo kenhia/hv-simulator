@@ -1,0 +1,189 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "hyperspace_model",
+  "retrieved": "2026-06-14",
+  "sources": ["HH2", "HH6", "HH12", "SI1", "CS1", "UHH", "Pearls of Weber (davidweber.net)"],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Hyperspace",
+    "https://honorverse.fandom.com/wiki/Hyper_limit"
+  ],
+  "_scope_note": "Captures the hyper bands (apparent-velocity model), translation mechanics, and the hyper-limit table. DEFERRED for now (per plan): gravity waves, the Tellerman wave, grav-wave sail riding, and dimensional shear beyond the basic hyper-limit rule.",
+
+  "bands": [
+    {
+      "order": 1, "name": "Alpha", "greek": "α", "canon": true,
+      "entry_velocity_limit_c": 0.3,
+      "apparent_velocity_c": {
+        "nominal_c": 200, "nominal_canon": false,
+        "method": "Interpolated. Geometric extrapolation downward (~1.65x per band) from the canon Delta/Epsilon/Zeta apparent velocities.",
+        "canon_datapoints": []
+      },
+      "typical_users": "The main/lowest travel band; historically the only one used until the hyper log improved.",
+      "danger": "Entry above 0.3c is instantly fatal — a limit that took ~200 years to be accepted.",
+      "source": "HH6"
+    },
+    {
+      "order": 2, "name": "Beta", "greek": "β", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 335, "nominal_canon": false,
+        "method": "Interpolated (no canon speed given for Beta). Geometric, between Alpha and Gamma.",
+        "canon_datapoints": []
+      },
+      "typical_users": null, "source": "HH6",
+      "notes": "No canon speed figures; one of the 'interpolate now' bands."
+    },
+    {
+      "order": 3, "name": "Gamma", "greek": "γ", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 550, "nominal_canon": false,
+        "method": "Interpolated. Geometric, between Beta and the canon Delta value.",
+        "canon_datapoints": []
+      },
+      "typical_users": "A low travel band. Grayson hyper-generator tech was limited to the middle Gamma band before it joined the Manticoran Alliance.",
+      "source": "HH2"
+    },
+    {
+      "order": 4, "name": "Delta", "greek": "δ", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 912, "nominal_canon": true,
+        "method": "Canon apparent velocity (at 0.5c real, low Delta). Used directly as the band nominal.",
+        "canon_datapoints": [
+          {"real_velocity_c": 0.5, "apparent_velocity_c": 912, "source": "HH6", "note": "Older Manticoran merchant ships, lower end of Delta."}
+        ]
+      },
+      "typical_users": "Older/slower merchant shipping.", "source": "HH6"
+    },
+    {
+      "order": 5, "name": "Epsilon", "greek": "ε", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 1442, "nominal_canon": true,
+        "method": "Canon apparent velocity (at 0.7c real). Used directly as the band nominal.",
+        "canon_datapoints": [
+          {"real_velocity_c": 0.7, "apparent_velocity_c": 1442, "source": "SI1", "note": "~32% faster than the average merchant; few merchant ships go this fast."}
+        ]
+      },
+      "typical_users": "Faster merchant shipping.", "source": "SI1"
+    },
+    {
+      "order": 6, "name": "Zeta", "greek": "ζ", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 2500, "nominal_canon": true,
+        "method": "Canon apparent velocity (at 0.7c real). Used directly as the band nominal.",
+        "canon_datapoints": [
+          {"real_velocity_c": 0.7, "apparent_velocity_c": 2500, "source": "HH6", "note": "Faster freighters / some passenger liners."}
+        ]
+      },
+      "typical_users": "Frequently used by warships — good speed with moderate safety.", "source": "HH6"
+    },
+    {
+      "order": 7, "name": "Eta", "greek": "η", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 4100, "nominal_canon": false,
+        "method": "Interpolated/extrapolated (no canon speed given for Eta). Geometric, ~1.65x above Zeta and below Theta. THE primary 'interpolate now' band.",
+        "canon_datapoints": []
+      },
+      "typical_users": null, "source": "HH6",
+      "notes": "No canon speed figures; value invented to keep the band sequence monotonic and usable."
+    },
+    {
+      "order": 8, "name": "Theta", "greek": "θ", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 6800, "nominal_canon": false,
+        "method": "Extrapolated (~1.65x above Eta). Canon gives only a relative hint (couriers on the 'ragged edge' run ~40% faster than frigates cruising Zeta), which does not cap the band ceiling.",
+        "canon_datapoints": []
+      },
+      "typical_users": "The fastest band in normal use; couriers ride its 'ragged edge'.",
+      "danger": "Highest band ever used and the most dangerous to travel.",
+      "source": "CS1"
+    },
+    {
+      "order": 9, "name": "Iota", "greek": "ι", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 11000, "nominal_canon": false,
+        "method": "Extrapolated (~1.65x above Theta). Invented; treat as indicative only.",
+        "canon_datapoints": []
+      },
+      "typical_users": "Effectively inaccessible until the early 20th Century PD — no ship entered and returned before then.",
+      "danger": "Second-highest known band; extreme.",
+      "source": "HH2, HH12"
+    },
+    {
+      "order": 10, "name": "Kappa", "greek": "κ", "canon": true,
+      "entry_velocity_limit_c": null,
+      "apparent_velocity_c": {
+        "nominal_c": 18500, "nominal_canon": false,
+        "method": "Extrapolated (~1.65x above Iota). Invented; treat as indicative only.",
+        "canon_datapoints": []
+      },
+      "typical_users": "Only became reachable with the streak drive in the early 20th Century PD.",
+      "danger": "Highest known band.",
+      "source": "HH12"
+    }
+  ],
+
+  "translation": {
+    "canon": true,
+    "source": "HH6",
+    "alpha_entry_max_velocity_c": 0.3,
+    "translate_up": {
+      "canon": true,
+      "description": "Crossing UP a band boundary bleeds off a percentage of relative velocity (regained by re-accelerating once in the new band) and crosses dangerous gravity-wave surges at the boundary. The Warshawski sail negated both the speed-bleed penalty and the shear danger.",
+      "speed_bleed": "unspecified percentage (canon qualitative only)"
+    },
+    "translate_down": {
+      "canon": true,
+      "velocity_retained_fraction": 0.2,
+      "description": "Each downward translation slows the ship to one-fifth of its relative velocity. Hardware faces no shear danger going down, but crew suffer nausea/distress that worsens with speed.",
+      "worked_example": "A ship at ~0.3c (90,000 km/s) translating down four bands (Delta -> n-space) ends at 90,000 / 5^4 = 144 km/s without re-acceleration."
+    },
+    "crash_translation": {
+      "canon": true,
+      "description": "A high-velocity translation: faster but induces strong nausea/physical distress; naval crews train for it, but it is avoided unless necessary. Merchants prefer low-velocity translations to reduce alpha-node wear and crew distress."
+    }
+  },
+
+  "normal_space": {
+    "max_velocity_c": {
+      "value": 0.8, "canon": false,
+      "notes": "NOT stated on the hyperspace/hyper-limit pages. ~0.8c is the widely-cited particle-shielding ceiling for impeller-wedge ships; the simulator's existing examples use 0.6c for a merchant. Confirm against a primary source before treating as canon. Typical real velocities seen in canon hyper travel are 0.5-0.7c."
+    }
+  },
+
+  "hyper_limit": {
+    "canon": true,
+    "unit": "light-minutes",
+    "varies_with": "stellar mass / spectral class",
+    "source": "UHH; Pearls of Weber (davidweber.net post 16, hyperlimits by class)",
+    "description": "Radius around a star inside which hyper translation causes fatal gravimetric shear. A ship must be BEYOND this limit to translate into or out of hyperspace. This sets the in-system distance a ship must cross under impeller drive before it can hyper out (departure leg) and where it re-enters n-space inbound.",
+    "by_spectral_class": {
+      "O": 49.60, "B": 33.42, "A": 28.76,
+      "F0": 25.42, "F1": 25.98, "F2": 25.54, "F3": 25.10, "F4": 24.66, "F5": 24.10, "F6": 23.76, "F7": 23.32, "F8": 22.88, "F9": 22.44,
+      "G0": 22.00, "G1": 21.56, "G2": 21.12, "G3": 20.68, "G4": 20.24, "G5": 19.80, "G6": 19.36, "G7": 18.92, "G8": 18.48, "G9": 18.04,
+      "K0": 17.60, "K1": 17.15, "K2": 16.72, "K3": 16.28, "K4": 15.84, "K5": 15.40, "K6": 14.96, "K7": 14.52, "K8": 14.08, "K9": 13.64,
+      "M0": 13.20, "M1": 12.76, "M2": 12.32, "M3": 11.88, "M4": 11.44, "M5": 11.00, "M6": 10.56, "M7": 10.12, "M8": 9.68, "M9": 9.24,
+      "Red Giant": 5.64
+    },
+    "anomalies": [
+      "F1 (25.98) exceeds F0 (25.42), breaking the otherwise-monotonic decline from hotter to cooler stars — almost certainly a transcription typo in the source table (F0 likely ~26.4, or F1 ~24.98). Values are captured verbatim from canon; do not silently 'correct' them, but be aware when interpolating around F0-F1.",
+      "F5 (24.10) is slightly off the steady ~0.44 lm/subclass cadence seen across F2-F9 and all of G/K/M; minor rounding in the source."
+    ],
+    "interpolation_note": "O, B, and A are given as single representative values (no subclasses). For an O/B/A subclass, interpolate linearly toward the next listed anchor (A -> F0). White dwarfs, giants (other than the one 'Red Giant' entry), and supergiants are not tabulated; invent as needed and flag canon:false. F/G/K/M subclasses are fully tabulated and need no interpolation.",
+    "applied_examples": {
+      "_note": "Looked up from by_spectral_class for our built systems (and Sol). The lookup is canon-exact, so these are canon values, not fabrications.",
+      "sol (G2)": 21.12,
+      "manticore-a (G0)": 22.00,
+      "manticore-b (G2)": 21.12,
+      "basilisk (G5)": 19.80,
+      "yeltsins-star (F6)": 23.76,
+      "endicott (K4)": 15.84
+    }
+  }
+}

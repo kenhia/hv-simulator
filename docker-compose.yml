@@ -1,6 +1,6 @@
 services:
   hvsim:
-    build: .
+    build: ./engine
     ports:
       # host:container — 4667 ("HONR") on the host avoids 8000 (taken by triton
       # on kai). Bound to 0.0.0.0, so reachable from other LAN machines at

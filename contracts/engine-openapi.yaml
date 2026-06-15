@@ -1,0 +1,306 @@
+openapi: 3.1.0
+info:
+  title: Honorverse Simulator — Engine API
+  version: 0.1.0
+  description: >-
+    CONTRACT (design-first, v0.1.0) for the Phase 2 galaxy engine. Frozen target
+    shape; not all paths are implemented yet. The engine LOADS a compiled universe
+    artifact, ACCEPTS ships and pre-planned routes, and ANSWERS "where is
+    everything at T" via lazy deterministic discrete-event replay. Route PLANNING
+    is out of scope (the nav planner is a tool, not the engine). Units are
+    human-facing (km/AU, km/s + fraction of c, durations); SI stays internal.
+servers:
+  - url: http://kubsdb:4667
+    description: homelab deployment
+
+paths:
+  /health:
+    get:
+      summary: Liveness
+      operationId: health
+      responses:
+        "200": { description: ok }
+
+  /clock:
+    get:
+      summary: Sim clock (PD + UTC, rate)
+      operationId: getClock
+      responses:
+        "200": { description: clock state, content: { application/json: { schema: { $ref: "#/components/schemas/Clock" } } } }
+    put:
+      summary: Dev-only clock controls (rate / jump); env-gated
+      operationId: setClock
+      responses:
+        "200": { description: updated clock }
+        "403": { description: dev controls disabled }
+
+  /systems:
+    get:
+      summary: List star systems in the loaded universe
+      operationId: listSystems
+      responses:
+        "200": { description: systems, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/SystemSummary" } } } } }
+
+  /systems/{system_id}:
+    get:
+      summary: System detail (stars, bodies, places, wormhole termini)
+      operationId: getSystem
+      parameters: [ { $ref: "#/components/parameters/SystemId" } ]
+      responses:
+        "200": { description: system, content: { application/json: { schema: { $ref: "#/components/schemas/System" } } } }
+        "404": { description: unknown system }
+
+  /systems/{system_id}/bodies:
+    get:
+      summary: Positions of all bodies in a system at a time
+      operationId: getSystemBodies
+      parameters:
+        - { $ref: "#/components/parameters/SystemId" }
+        - { $ref: "#/components/parameters/At" }
+      responses:
+        "200": { description: body positions, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/BodyState" } } } } }
+
+  /bodies/{body_id}/state:
+    get:
+      summary: Heliocentric/system position of one body at a time
+      operationId: getBodyState
+      parameters:
+        - { name: body_id, in: path, required: true, schema: { type: string }, description: system-namespaced id }
+        - { $ref: "#/components/parameters/At" }
+      responses:
+        "200": { description: body state, content: { application/json: { schema: { $ref: "#/components/schemas/BodyState" } } } }
+
+  /ships:
+    get:
+      summary: List ships with summary state
+      operationId: listShips
+      responses:
+        "200": { description: ships, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ShipState" } } } } }
+    post:
+      summary: Create a ship
+      operationId: createShip
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ShipCreate" } } }
+      responses:
+        "201": { description: created, content: { application/json: { schema: { $ref: "#/components/schemas/Ship" } } } }
+
+  /ships/{ship_id}:
+    get:
+      summary: Ship + current state
+      operationId: getShip
+      parameters: [ { $ref: "#/components/parameters/ShipId" } ]
+      responses:
+        "200": { description: ship, content: { application/json: { schema: { $ref: "#/components/schemas/ShipState" } } } }
+        "404": { description: unknown ship }
+
+  /ships/{ship_id}/route:
+    get:
+      summary: The ship's filed multi-mode route + per-leg timeline/ETAs
+      operationId: getRoute
+      parameters: [ { $ref: "#/components/parameters/ShipId" } ]
+      responses:
+        "200": { description: route, content: { application/json: { schema: { $ref: "#/components/schemas/Route" } } } }
+        "404": { description: no active route }
+    post:
+      summary: File a pre-planned multi-mode route (n-space / hyper / wormhole legs)
+      operationId: fileRoute
+      parameters: [ { $ref: "#/components/parameters/ShipId" } ]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteCreate" } } }
+      responses:
+        "201": { description: filed + compiled, content: { application/json: { schema: { $ref: "#/components/schemas/Route" } } } }
+        "409": { description: ship already has an active route }
+    delete:
+      summary: Abort the active route
+      operationId: abortRoute
+      parameters: [ { $ref: "#/components/parameters/ShipId" } ]
+      responses:
+        "200": { description: aborted }
+
+  /ships/{ship_id}/state:
+    get:
+      summary: Full galaxy-wide state vector at a time (system, mode, queue info)
+      operationId: getShipState
+      parameters:
+        - { $ref: "#/components/parameters/ShipId" }
+        - { $ref: "#/components/parameters/At" }
+      responses:
+        "200": { description: state, content: { application/json: { schema: { $ref: "#/components/schemas/ShipState" } } } }
+
+  /junctions:
+    get:
+      summary: List wormhole junctions
+      operationId: listJunctions
+      responses:
+        "200": { description: junctions, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Junction" } } } } }
+
+  /junctions/{junction_id}/queue:
+    get:
+      summary: Current transit queue at a junction (the dashboard "you are #3" view)
+      operationId: getJunctionQueue
+      parameters:
+        - { name: junction_id, in: path, required: true, schema: { type: string } }
+        - { $ref: "#/components/parameters/At" }
+      responses:
+        "200": { description: queue, content: { application/json: { schema: { $ref: "#/components/schemas/JunctionQueue" } } } }
+
+  /metrics:
+    get:
+      summary: Prometheus exposition (computed on scrape)
+      operationId: metrics
+      responses:
+        "200": { description: text exposition, content: { text/plain: {} } }
+
+components:
+  parameters:
+    SystemId:
+      name: system_id
+      in: path
+      required: true
+      schema: { type: string }
+    ShipId:
+      name: ship_id
+      in: path
+      required: true
+      schema: { type: string }
+    At:
+      name: at
+      in: query
+      required: false
+      description: ISO-8601 UTC instant (default = clock now)
+      schema: { type: string, format: date-time }
+
+  schemas:
+    Clock:
+      type: object
+      properties:
+        now: { type: string, format: date-time }
+        pd_year: { type: number }
+        rate: { type: number }
+        allow_anachronisms: { type: boolean }
+        dev_controls_enabled: { type: boolean }
+
+    Vector3:
+      type: object
+      properties: { x: { type: number }, y: { type: number }, z: { type: number } }
+
+    SystemSummary:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        star_nation_id: { type: [string, "null"] }
+        is_binary: { type: boolean }
+        distance_ly: { type: [number, "null"] }
+
+    System:
+      allOf:
+        - $ref: "#/components/schemas/SystemSummary"
+        - type: object
+          properties:
+            stars: { type: array, items: { type: object } }
+            bodies: { type: array, items: { type: object } }
+            places: { type: array, items: { type: object } }
+            termini: { type: array, items: { type: object } }
+
+    BodyState:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        kind: { type: string }
+        system_id: { type: string }
+        position_au: { $ref: "#/components/schemas/Vector3" }
+        position_km: { $ref: "#/components/schemas/Vector3" }
+
+    ShipCreate:
+      type: object
+      required: [name, class_id]
+      properties:
+        name: { type: string }
+        class_id: { type: string, description: FK to a ship class (gives accel/mass) }
+        home_system_id: { type: string }
+        home_body_id: { type: string }
+
+    Ship:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        class_id: { type: string }
+        status: { type: string }
+
+    ShipState:
+      allOf:
+        - $ref: "#/components/schemas/Ship"
+        - type: object
+          properties:
+            when: { type: string, format: date-time }
+            system_id: { type: [string, "null"] }
+            phase: { type: string, description: "idle|nspace|hyper|wormhole_queue|wormhole_transit|layover|arrived" }
+            position_au: { $ref: "#/components/schemas/Vector3" }
+            velocity_fraction_c: { type: number }
+            eta: { type: [string, "null"], format: date-time }
+            percent_complete: { type: [number, "null"] }
+            queue: { $ref: "#/components/schemas/QueuePosition" }
+
+    RouteCreate:
+      type: object
+      required: [legs]
+      description: A pre-planned ordered list of legs (from the nav planner).
+      properties:
+        depart_at: { type: [string, "null"], format: date-time }
+        legs:
+          type: array
+          items:
+            type: object
+            required: [mode]
+            properties:
+              mode: { type: string, description: "nspace|hyper|wormhole" }
+              to_system_id: { type: [string, "null"] }
+              to_body_id: { type: [string, "null"] }
+              via_junction_id: { type: [string, "null"] }
+              band: { type: [string, "null"], description: hyperspace band name }
+              layover_seconds: { type: number, default: 0 }
+
+    Route:
+      type: object
+      properties:
+        id: { type: string }
+        ship_id: { type: string }
+        status: { type: string }
+        depart_at: { type: string, format: date-time }
+        arrival: { type: string, format: date-time }
+        total_duration_seconds: { type: number }
+        legs: { type: array, items: { type: object } }
+
+    Junction:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        host_system_id: { type: string }
+
+    QueuePosition:
+      type: [object, "null"]
+      properties:
+        junction_id: { type: string }
+        position: { type: integer }
+        transit_eta: { type: string, format: date-time }
+
+    JunctionQueue:
+      type: object
+      properties:
+        junction_id: { type: string }
+        when: { type: string, format: date-time }
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              ship_id: { type: [string, "null"], description: null = phantom traffic }
+              position: { type: integer }
+              mass_tons: { type: number }
+              transit_eta: { type: string, format: date-time }
