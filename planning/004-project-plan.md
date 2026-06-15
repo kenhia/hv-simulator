@@ -239,24 +239,111 @@ slotted whenever. Each becomes its own sprint spec under `sprints/` when started
 
 ---
 
-## Phase 2 — Universe builder, hyperspace, wormholes
+## Phase 2 — Galaxy (re-founded engine)
 
-Per discussion 002 — summary of intent, design deferred until Phase 1 ships:
+*Design detail in `005-honorverse-data-review.md` (the dataset) and
+`006-galaxy-architecture-brainstorm.md` (architecture + decisions, 2026-06-14).
+This section is the sprint-triggering breakdown.*
 
-- **Universe builder**: separate app + DB (likely the Postgres trigger point).
-  Generates star systems (Manticore A/B, Yeltsin's Star…), planets, stations,
-  the wormhole graph, hyperspace band metadata, and the known-routes graph.
-- **Ship simulator additions**: new segment kinds only — `hyper_translate`,
-  `hyper_cruise` (speed multiplier per band), `wormhole_queue`,
-  `wormhole_transit`. The service still just executes segments it's handed.
-- **Route planning lives in the universe builder** (or a thin nav service),
-  not the physics engine.
-- This is where **days-and-weeks travel times** appear: hyper passage
-  Manticore→Yeltsin is days; without the Junction, far longer.
+**Goal:** a navigable multi-system galaxy with the same "realism of the clock,"
+reached by re-founding the engine on a **lazy deterministic discrete-event
+simulation (DES)** — the wormhole queue makes a ship's transit time
+unknowable-until-arrival, which pure precompute can't express. Segments stay
+closed-form; some boundaries are *events* resolved by stateful *resolvers*
+(wormhole queue first, combat later); `state(T)` = deterministic replay to T
+(no game loop, still zero-drift, reproducible).
+
+**Cross-cutting decisions (from 006):**
+
+- **Engine model:** lazy deterministic DES; **DES-core-first** (2a/2b build on
+  it, no retrofit). `ephemeris`/`kinematics` port; flight-plan/execution rebuilt.
+- **Language:** stay **Python**; freeze boundary contracts so a later
+  *engine-only* Rust port is cheap. Formal port-decision checkpoint at 2c.
+- **Data:** authored **JSON is source of truth** (git-reviewable, canon-flagged,
+  CC BY-SA); a **universe-compiler** emits a read-only **SQLite "universe
+  artifact"** the engine loads. Engine never touches loose JSON.
+- **Repo:** monorepo — `engine/ tools/<name>/ data/ ui/` + `justfile`;
+  **`data/` keeps its own CC BY-SA 3.0 license** (per-directory; code stays MIT).
+- **Epoch:** sim starts **1890 PD** (peacetime); advances toward ~1905 PD when
+  combat lands. **`ALLOW_ANACHRONISMS`** flag gates temporal validity
+  (`valid_from`/`valid_to`): default `true` pre-combat, `false` once combat
+  lands, always settable (the original *Fearless* can still fly).
+- **Separation preserved:** the **nav route planner computes routes** (tools/data
+  side); the **engine only executes** a filed route and never invents lore.
+
+### Phase 2.0 — Contracts & monorepo foundation  ⬅ next sprint
+
+The load-bearing seam. Freeze it before building on it.
+
+- Monorepo restructure (`engine/ tools/<name>/ data/ ui/`, per-tool
+  `pyproject.toml`, workspace `justfile`); `data/` carries CC BY-SA + attribution.
+- **Contract 1 — universe-artifact schema** (the compiled SQLite shape: systems,
+  stars/binary, bodies+orbits, places, belts, wormhole graph, hyperspace bands,
+  hyper-limit table, ship classes; FK-resolved, id-namespaced).
+- **Contract 2 — engine HTTP API** (OpenAPI): file ships/routes, query state
+  across systems, junction/queue state, clock.
+- Migrate the scribe skills into `tools/`; land the dataset JSON under `data/`.
+- **Deliverable:** agreed, versioned contracts + skeleton monorepo + build
+  orchestration. (This is the sprint we start with.)
+
+### Phase 2a — Universe foundation
+
+- **universe-compiler** tool: JSON → validate (schema) → resolve FKs → namespace
+  ids (the Sol/Manticore `titan` collision) → read-only SQLite artifact.
+- **coordinate-frame solver** (Sol-origin, +Z galactic north; triangulate canon
+  bearings/distances) — `canon:false`. Engine prefers canon pairwise distances
+  when present, frame-derived otherwise.
+- **orbit-derivation** tool (Kepler from canon anchors: Manticore 1.73 T-yr, etc.).
+- **Engine:** DES core skeleton; load the universe artifact; `ephemeris` extended
+  to **per-system + binary primaries**; report body positions galaxy-wide at T.
+- **Deliverable:** engine loads the compiled multi-system universe and answers
+  "where is body X in system Y at T," including binary Manticore-A/B.
+
+### Phase 2b — Inter-system travel (no queue yet)
+
+- **Nav route planner** (graph search over systems + wormhole edges + hyper
+  lanes) → a filed multi-mode route.
+- **Engine executes multi-mode plans on the DES core:** n-space accel/coast/decel
+  (the **coast phase finally fires** on binary/interstellar legs), `hyper_cruise`
+  (band apparent-velocity + hyper-limit, read from data), `wormhole_transit` as
+  instant + fixed safety buffer (no dynamic queue yet).
+- **Deliverable:** end-to-end **Sol → Manticore → Yeltsin's Star** flight plan
+  with realistic multi-day clocks; state queryable across systems. (Manticore↔
+  Yeltsin's is canon-31-ly and flyable without the full frame.)
+
+### Phase 2c — Wormhole queues (the DES payoff)
+
+- **Wormhole queue resolver:** the dataset's `transit_model`
+  (`tau(M)=A√M+B·M²`) + safety buffer + queue semantics; the "wait in queue"
+  segment is **open-ended** until the resolver fixes the departure time.
+- **Phantom traffic** (seeded, deterministic per junction) so queues feel alive
+  without thousands of tracked ships.
+- **Deliverable:** "SS Tankersley is #3 in the queue, transit in 12:27 … #2 …
+  #1 … *pops to Basilisk*." The engine is now a true simulator.
+- **Checkpoint:** formal **Rust-port decision** for the engine (likely "not yet,"
+  but the review point).
+
+### Phase 2.5 — First-class UI
+
+- **Galaxy/map view** (systems as nodes, wormhole edges, ships in transit) that
+  **drills into a per-system top-down** (today's Sol map, generalized).
+- **Switch systems, zoom, layer toggles** (kwi #57 generalizes here), **queue/ETA
+  panels** at junctions, **time controls**. Separate front-end on the engine API;
+  richer web stack than vanilla Canvas is fair game. Dead-reckoning still applies.
+- **Deliverable:** a first-class way to navigate the galaxy and watch ships/queues.
+
+### Deferred within Phase 2 (confirmed safe to skip for a navigable galaxy)
+
+Gravity waves, the Tellerman wave, Warshawski sail-riding, dimensional shear
+beyond the hyper-limit rule — these change *optimal* routing/speed ("fast lanes /
+weather") but aren't required. Revisit post-Phase-2.
 
 ## Phase 3 — Navies, combat, narrative
 
-Per discussion 003 — summary of intent:
+Per discussion 003 — summary of intent. Combat is the **next DES resolver** after
+the wormhole queue (battles resolve at an event time; results feed back as state).
+This is where the sim **advances toward ~1905 PD** and `ALLOW_ANACHRONISMS`
+default flips to `false` (era-correct fleets, still overridable).
 
 - **Combat simulator**: separate container; fleets in, stats out (damage,
   casualties, munitions, events). Tabletop-wargame-style rounds. No tactics UI.
