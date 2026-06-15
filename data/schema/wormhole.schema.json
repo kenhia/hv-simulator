@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsim.local/schema/wormhole.schema.json",
+  "title": "Honorverse Wormhole Network",
+  "description": "First-cut schema (v0.1.0) for the wormhole network — junctions (multi-terminus hubs) and bridges (two-ended), plus a derived 'links' graph for the flight-plan router. KEY RULE: ships transit nexus<->terminus only, never terminus<->terminus directly; so a junction connects its HOST system to each terminus system, and getting between two terminus systems requires routing through the host. Canon rarely fixes a terminus's in-system position, so 'position' blocks default to canon:false.",
+  "type": "object",
+  "required": ["schema_version", "kind"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "kind": {"const": "wormhole_network"},
+    "retrieved": {"type": "string"},
+    "junctions": {"type": "array", "items": {"$ref": "#/$defs/junction"}},
+    "bridges": {"type": "array", "items": {"$ref": "#/$defs/junction"}},
+    "links": {
+      "type": "array",
+      "description": "Derived graph edges for routing. Each link connects two systems with a transit cost. Regenerable from junctions[] (wormhole links) plus the fabricated integration/transfer edges.",
+      "items": {"$ref": "#/$defs/link"}
+    },
+    "transit_model": {"$ref": "#/$defs/transitModel"}
+  },
+  "$defs": {
+    "canonFlag": {"type": "boolean", "description": "true = established in canon; false = fabricated/derived by us."},
+    "position": {
+      "type": "object",
+      "description": "In-system position of a nexus/terminus. Almost always non-canon (the books rarely give it).",
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "determined": {"type": "boolean"},
+        "distance_from_primary_lighthours": {"type": ["number", "null"]},
+        "notes": {"type": "string"}
+      },
+      "required": ["canon", "determined"]
+    },
+    "junction": {
+      "type": "object",
+      "required": ["id", "name", "class", "host_system_id", "canon"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "name": {"type": "string"},
+        "class": {"type": "string", "enum": ["junction", "bridge", "quasi-junction"]},
+        "host_system_id": {"type": ["string", "null"], "description": "System containing the central nexus."},
+        "controlled_by": {"type": ["string", "null"], "description": "Nation id controlling the junction."},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "sources": {"type": "array", "items": {"type": "string"}},
+        "wiki_page": {"type": ["string", "null"], "format": "uri"},
+        "retrieved": {"type": "string"},
+        "nexus": {
+          "type": "object",
+          "description": "The central node. All traffic passes through it.",
+          "properties": {
+            "terminus_id": {"type": ["string", "null"]},
+            "node_diameter": {"type": ["string", "null"]},
+            "position": {"$ref": "#/$defs/position"},
+            "canon": {"$ref": "#/$defs/canonFlag"},
+            "source": {"type": "string"}
+          }
+        },
+        "termini": {"type": "array", "items": {"$ref": "#/$defs/terminus"}},
+        "lore": {"type": "string"}
+      }
+    },
+    "terminus": {
+      "type": "object",
+      "required": ["id", "name", "canon"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "is_nexus": {"type": "boolean", "description": "true for the central terminus (in the host system)."},
+        "leads_to_system_id": {"type": ["string", "null"], "description": "FK to the system this terminus sits in (the far end). Null if the far system is unnamed in canon."},
+        "leads_to_label": {"type": ["string", "null"]},
+        "region": {"type": ["string", "null"]},
+        "distance_ly": {"type": ["number", "null"], "description": "Wormhole length nexus->terminus in light-years (canon, where given). Transit time is ~instant regardless."},
+        "direction": {"type": ["string", "null"]},
+        "discovered_pd": {"type": ["integer", "string", "null"]},
+        "controlled_by": {"type": ["string", "null"]},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "position": {"$ref": "#/$defs/position"},
+        "notes": {"type": "string"}
+      }
+    },
+    "transitModel": {
+      "type": "object",
+      "description": "Fabricated model for junction transit destabilization timing (the clock cost of a transit and the basis for the transit queue). The mechanic is book-canon but unquantified on the wiki, so canon:false. Form: destabilization_seconds = A*sqrt(M) + B*M^2, M = mass transited (tons) in one event.",
+      "required": ["canon", "formula", "coefficients"],
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "status": {"type": "string"},
+        "summary": {"type": "string"},
+        "canon_basis": {"type": "string"},
+        "formula": {"type": "string"},
+        "variables": {"type": "object"},
+        "coefficients": {"type": "object", "properties": {"A": {"type": "number"}, "B": {"type": "number"}}},
+        "model_notes": {"type": "string"},
+        "anchors": {"type": "array", "items": {"type": "object"}},
+        "reference_masses_tons": {"type": "object"},
+        "worked_examples": {"type": "object"},
+        "safety_buffer": {
+          "type": "object",
+          "description": "Terminus-clearance spacing after a transit. Effective inter-transit interval = max(destabilization_seconds, buffer_seconds).",
+          "properties": {
+            "canon": {"$ref": "#/$defs/canonFlag"},
+            "purpose": {"type": "string"},
+            "normal_seconds": {"type": "number"},
+            "emergency_seconds": {"type": "number"},
+            "condition_zulu": {"type": "object"},
+            "effective_interval_examples": {"type": "array", "items": {"type": "object"}},
+            "notes": {"type": "string"}
+          }
+        },
+        "queue_semantics": {"type": "string"},
+        "tuning": {"type": "string"},
+        "deferred": {"type": "string"}
+      }
+    },
+    "link": {
+      "type": "object",
+      "description": "A routable edge between two systems.",
+      "required": ["id", "type", "endpoints", "canon"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["wormhole", "hyper_leg", "transfer"], "description": "wormhole = junction/bridge transit (~instant). hyper_leg = normal hyperspace travel (out of scope until Phase 2b). transfer = fabricated short leg bridging two termini in one region."},
+        "endpoints": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object",
+            "properties": {
+              "system_id": {"type": ["string", "null"]},
+              "label": {"type": ["string", "null"]},
+              "terminus": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "via_junction": {"type": ["string", "null"]},
+        "distance_ly": {"type": ["number", "null"]},
+        "transit": {"type": ["string", "null"], "description": "e.g. 'instant' for wormholes."},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

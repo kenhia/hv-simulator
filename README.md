@@ -26,21 +26,28 @@ sprint by sprint.
 - [`ruff`](https://docs.astral.sh/ruff/) for lint/format, `pytest` for tests.
 
 ```sh
+cd engine
 uv sync              # create the env and install dev dependencies
 uv run pytest        # run the test suite
 uv run ruff check .  # lint
 ```
 
+(Or from the repo root: `just check`.)
+
 ## Layout
 
+Monorepo (since Phase 2.0):
+
 ```
-src/hvsim/
-  ephemeris/   analytic planet/body positions (Keplerian elements)
-  kinematics/  closed-form trajectory math
-  flightplan/  compile flight plans into absolute-time segments
-  clock/       SimClock — the only time source
-  api/         FastAPI service (added in a later sprint)
-tests/         pytest suite
+engine/      hvsim engine — package + FastAPI service (MIT)
+  src/hvsim/   ephemeris · kinematics · flightplan · clock · api
+  tests/
+tools/       standalone tools (universe-compiler, etc.) — each its own pyproject
+data/        Honorverse dataset, JSON source of truth — CC BY-SA 3.0 (own LICENSE)
+contracts/   universe-artifact SQL DDL + engine OpenAPI (the language-agnostic seam)
+ui/          Phase 2.5 front-end (placeholder)
+deploy/ grafana/ planning/ sprints/   ops, observability, design, sprint specs
+justfile     workspace orchestration
 ```
 
 ## Running the service

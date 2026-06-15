@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsim.local/schema/ship-class.schema.json",
+  "title": "Honorverse Ship-Class Registry",
+  "description": "First-cut schema (v0.1.0) for the ship-class registry. A registry file wraps an array of ship classes. Each class — and each technical sub-block — carries a 'canon' flag, and numeric fields that we derived or fabricated are listed by name in a 'derived' array on their block.",
+  "type": "object",
+  "required": ["schema_version", "kind", "classes"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "kind": {"const": "ship_class_registry"},
+    "retrieved": {"type": "string"},
+    "weapon_code_legend": {
+      "type": "object",
+      "description": "Legend for the compact armament codes used in canon infoboxes.",
+      "additionalProperties": {"type": "string"}
+    },
+    "classes": {"type": "array", "items": {"$ref": "#/$defs/shipClass"}}
+  },
+  "$defs": {
+    "canonFlag": {"type": "boolean", "description": "true = established in canon; false = derived/fabricated by us."},
+    "techBlock": {
+      "type": "object",
+      "description": "A technical sub-block. 'canon' marks whether it is canon-grounded; 'derived' lists any numeric fields within it that we fabricated/inferred (so those specific fields are NOT canon even when the block is).",
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "derived": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"}
+      },
+      "required": ["canon"]
+    },
+    "shipClass": {
+      "type": "object",
+      "required": ["id", "name", "ship_type", "canon"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "name": {"type": "string"},
+        "ship_type": {"type": "string", "description": "e.g. 'pod-laying battlecruiser', 'heavy cruiser', 'pod-laying superdreadnought'."},
+        "hull_classification": {"type": ["string", "null"], "description": "Hull-code prefix, e.g. 'BC', 'CA', 'SD(P)'."},
+        "navy": {"type": ["string", "null"]},
+        "affiliation_nation_id": {"type": ["string", "null"], "description": "FK to a nation file id."},
+        "date_introduced_pd": {"type": ["integer", "string", "null"]},
+        "preceded_by": {"type": ["string", "null"]},
+        "succeeded_by": {"type": ["string", "null"]},
+        "also_known_as": {"type": "array", "items": {"type": "string"}, "description": "e.g. a sister navy's name for the same design."},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "sources": {"type": "array", "items": {"type": "string"}},
+        "wiki_page": {"type": ["string", "null"], "format": "uri"},
+        "retrieved": {"type": "string"},
+        "dimensions": {
+          "allOf": [{"$ref": "#/$defs/techBlock"}],
+          "description": "mass_tons, length_m, beam_m, draught_m."
+        },
+        "acceleration": {
+          "allOf": [{"$ref": "#/$defs/techBlock"}],
+          "description": "normal_g (sustained, with compensator safety margin) and max_g (emergency, zero-margin). The sim's max_accel_g should generally take max_g (fall back to normal_g). Canon sometimes gives only one figure; the normal:max ratio is NOT a fixed constant across classes."
+        },
+        "crew": {"allOf": [{"$ref": "#/$defs/techBlock"}], "description": "total, officers, enlisted, marines."},
+        "armament": {
+          "allOf": [{"$ref": "#/$defs/techBlock"}],
+          "description": "summary (verbatim canon text) plus optional by_arc breakdown {broadside, fore/chase, aft} with weapon-code counts. See weapon_code_legend."
+        },
+        "magazines": {"allOf": [{"$ref": "#/$defs/techBlock"}], "description": "missile_pods and/or itemized ordnance load."},
+        "power": {"allOf": [{"$ref": "#/$defs/techBlock"}]},
+        "electronics": {"allOf": [{"$ref": "#/$defs/techBlock"}]},
+        "auxiliary_craft": {"allOf": [{"$ref": "#/$defs/techBlock"}]},
+        "lore": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

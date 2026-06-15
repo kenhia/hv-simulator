@@ -1,0 +1,130 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "endicott",
+  "name": "Endicott System",
+  "aliases": [],
+  "star_nation_id": "masada",
+  "occupied_by": "star-kingdom-of-manticore",
+  "occupied_since_pd": 1903,
+  "canon": true,
+  "sources": ["HH2", "HH3", "HH5", "Companion"],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Endicott_System",
+    "https://honorverse.fandom.com/wiki/Masada",
+    "https://honorverse.fandom.com/wiki/Masada_(planet)"
+  ],
+  "retrieved": "2026-06-13",
+
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 38,
+    "direction": "galactic north-east",
+    "galactic_coordinates": null,
+    "source": "HH2, HH3",
+    "notes": "~38 ly galactic north-east of Manticore, roughly halfway between Manticore and the Republic of Haven (strategically contested by both). Canonically ~two days' travel east of Yeltsin's Star (Grayson lies 'two days travel west of the Endicott System')."
+  },
+
+  "stars": [
+    {
+      "id": "endicott-a",
+      "name": "Endicott",
+      "role": "primary",
+      "spectral_type": "K4",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH2",
+      "notes": "Single K4 star — cooler and dimmer than Sol, consistent with Masada's close-in habitable orbit. Mass/luminosity not given in canon."
+    }
+  ],
+
+  "bodies": [
+    {
+      "id": "masada",
+      "name": "Masada",
+      "designation": null,
+      "parent_star": "endicott-a",
+      "orbit_index": null,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "capital": true,
+      "canon": true,
+      "source": "HH2, Companion",
+      "axial_tilt_deg": 40,
+      "lore": "The system's sole habitable world and seat of the Masadan theocracy. Settled by the Faithful of the Church of Humanity Unchained after their exile from Grayson at the end of the Grayson Civil War. Despite a 40° axial tilt and severe weather, Masada is markedly more hospitable than Grayson — far lower toxic-heavy-metal burden — an irony given the Faithful's obsession with reconquering Grayson. Home of a rigid Old-Testament theocracy (Council of Elders, Chief Elder, 'Sword of the Faithful').",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": false,
+        "a_au": 0.406,
+        "e": null, "i_deg": null, "L_deg": null, "long_peri_deg": null, "long_node_deg": null, "period_days": null,
+        "notes": "Canon states Masada's orbital radius was 'barely a quarter that of Grayson' (HH2). Grayson orbits at ~13.5 lm, so ~3.4 lm here → a_au ≈ 0.406 (canon-grounded estimate). Eccentricity, inclination, and phase remain invented."
+      }
+    }
+  ],
+
+  "belts": [
+    {
+      "id": "endicott-asteroid-belt",
+      "name": "Asteroid Belt (Endicott)",
+      "parent_star": "endicott-a",
+      "after_body": null,
+      "type": "asteroid_belt",
+      "canon": true,
+      "source": "HH2",
+      "lore": "The system's asteroid belt, used by the Navy of Masada as a network of star bases / military facilities. Captured by Manticoran forces during the 1903 PD occupation.",
+      "orbit": {"canon": false, "determined": false, "inner_au": null, "outer_au": null, "notes": "Belt extent and its position relative to Masada not specified in canon."}
+    }
+  ],
+
+  "places": [
+    {
+      "id": "navy-of-masada-star-bases",
+      "name": "Navy of Masada star bases",
+      "type": "military_base",
+      "parent_star": "endicott-a",
+      "rides_on": null,
+      "canon": true,
+      "status": "captured",
+      "captured_pd": 1903,
+      "canon_owner": "masada",
+      "source": "HH2, HH3, HH5",
+      "lore": "Network of Navy of Masada bases sited among the system's asteroid belt. Seized by Royal Manticoran Marine Corps units after the Second Battle of Yeltsin's Star; the system was then placed under Manticoran military occupation. Aggregate entry for the dispersed belt installations.",
+      "position": {"canon": false, "determined": false, "notes": "Distributed through the asteroid belt; individual bases not separately named."}
+    },
+    {
+      "id": "manticoran-occupation-picket",
+      "name": "Manticoran occupation picket",
+      "type": "naval_facility",
+      "parent_star": "endicott-a",
+      "canon": true,
+      "status": "active",
+      "established_pd": 1903,
+      "source": "HH5",
+      "lore": "After conquering Endicott, Admiral White Haven left a naval picket in orbit with an embarked Marine contingent ready to drop on short notice; the Royal Manticoran Army later assumed ground-side policing. Orbital-bombardment-capable ships and Marine fast-attack units were kept in nearby space to deter any mass uprising. Aggregate entry for the occupation presence.",
+      "position": {"canon": false, "determined": false}
+    }
+  ],
+
+  "demographics": {
+    "canon": true,
+    "total_population": 4500000000,
+    "as_of_pd": 1903,
+    "source": "Masada infobox (Companion)",
+    "notes": "~4.5 billion as of 1903 PD. By 1919 PD most hard-line fundamentalist Masadans had fled, some into fringe/mercenary groups."
+  },
+
+  "lore": {
+    "summary": "A K4 single-star system 38 ly galactic-NE of Manticore, sitting roughly halfway between Manticore and Haven. Its lone habitable world, Masada, is home to the Faithful — radical exiles of the Grayson Civil War who built an Old-Testament theocracy and waged repeated holy wars to reconquer Grayson. Sovereign Masadan territory until 1903 PD, when Manticore conquered and occupied it after the Second Grayson-Masadan War.",
+    "naming_convention": "Endicott possibly named for John Endecott, colonial Massachusetts governor and persecutor of heretics; the planet Masada for the ancient Judean fortress of last-stand siege — fitting the Faithful's theology.",
+    "relationships": "Bitter enemy of the Protectorate of Grayson (Yeltsin's Star); courted by Haven as an anti-Manticore proxy. Manticore chose alliance with Grayson over Masada.",
+    "timeline": [
+      {"pd": "mid-1300s", "event": "The Faithful start the Grayson Civil War; after defeat they are exiled to Masada (rediscovered/resettled), threatening a 'doomsday weapon' that Barbara Bancroft's defection exposes.", "source": "HH2"},
+      {"pd": 1868, "event": "First Grayson-Masadan War: the Navy of Masada nuclear-bombards Grayson before being defeated.", "source": "HH2"},
+      {"pd": 1903, "event": "Haven funds a Masadan military buildup; Masada invades Yeltsin's Star (Second Grayson-Masadan War) and backs an assassination attempt on Protector Benjamin Mayhew, foiled by Honor Harrington. After the Masadan defeat, White Haven conquers Endicott and Manticore occupies the system.", "source": "HH2, HH3, HH5"},
+      {"pd": 1919, "event": "Occupation slowly stabilizes; most fundamentalist Masadans have fled by this point.", "source": "HH5"}
+    ]
+  }
+}

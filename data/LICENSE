@@ -1,0 +1,32 @@
+Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+===================================================================
+
+This directory (`data/`) — the Honorverse astrographic / ship dataset — is
+licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License,
+SEPARATELY from the rest of this repository (the code is MIT — see the root
+LICENSE).
+
+It incorporates material derived from the Honorverse Wiki
+(https://honorverse.fandom.com), which is itself CC BY-SA 3.0. See
+`ATTRIBUTION.md` in this directory for per-source citations and the list of wiki
+pages used.
+
+You are free to:
+  - Share — copy and redistribute the material in any medium or format.
+  - Adapt — remix, transform, and build upon the material for any purpose.
+
+Under the following terms:
+  - Attribution — You must give appropriate credit (see `ATTRIBUTION.md`),
+    provide a link to the license, and indicate if changes were made. Changes
+    here are tracked via the per-fact `canon` flag (`false` = our addition or
+    derivation).
+  - ShareAlike — If you remix, transform, or build upon the material, you must
+    distribute your contributions under the same license as the original.
+
+Full legal code: https://creativecommons.org/licenses/by-sa/3.0/legalcode
+Human-readable summary: https://creativecommons.org/licenses/by-sa/3.0/
+
+The full legal code at the URL above governs; it is incorporated here by
+reference. The underlying fictional universe (the "Honorverse") and its names,
+places, and lore are the creative property of David Weber and his publishers;
+this is a non-commercial fan/simulation project.

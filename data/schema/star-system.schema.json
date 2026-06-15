@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsim.local/schema/star-system.schema.json",
+  "title": "Honorverse Star System",
+  "description": "First-cut schema (v0.1.0) for an Honorverse star system data file. Every mapped object carries a 'canon' flag distinguishing established-universe facts from invented/derived data.",
+  "type": "object",
+  "required": ["schema_version", "kind", "id", "name", "canon"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "kind": {"const": "star_system"},
+    "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "name": {"type": "string"},
+    "aliases": {"type": "array", "items": {"type": "string"}},
+    "star_nation_id": {"type": ["string", "null"]},
+    "canon": {"type": "boolean", "description": "Whether the system's existence/identity is established in canon."},
+    "sources": {"type": "array", "items": {"type": "string"}},
+    "wiki_pages": {"type": "array", "items": {"type": "string", "format": "uri"}},
+    "retrieved": {"type": "string"},
+    "location": {"$ref": "#/$defs/canonObject"},
+    "binary": {"type": "object"},
+    "stars": {"type": "array", "items": {"$ref": "#/$defs/star"}},
+    "bodies": {"type": "array", "items": {"$ref": "#/$defs/body"}},
+    "belts": {"type": "array"},
+    "places": {"type": "array", "items": {"$ref": "#/$defs/place"}},
+    "demographics": {"$ref": "#/$defs/canonObject"},
+    "lore": {"type": "object"}
+  },
+  "$defs": {
+    "canonFlag": {
+      "type": "boolean",
+      "description": "true = established in canon (books or wiki). false = invented or derived by us to fill a gap."
+    },
+    "orbit": {
+      "type": "object",
+      "description": "Keplerian orbital elements aligned with the hvsim ephemeris. 'determined' is true once values are filled; until then they are null and canon is false.",
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "determined": {"type": "boolean"},
+        "a_au": {"type": ["number", "null"]},
+        "e": {"type": ["number", "null"]},
+        "i_deg": {"type": ["number", "null"]},
+        "L_deg": {"type": ["number", "null"]},
+        "long_peri_deg": {"type": ["number", "null"]},
+        "long_node_deg": {"type": ["number", "null"]},
+        "period_days": {"type": ["number", "null"]},
+        "notes": {"type": "string"}
+      },
+      "required": ["canon", "determined"]
+    },
+    "canonObject": {
+      "type": "object",
+      "properties": {
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["canon"]
+    },
+    "star": {
+      "type": "object",
+      "required": ["id", "name", "canon"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "role": {"type": "string"},
+        "spectral_type": {"type": ["string", "null"]},
+        "mass_solar": {"type": ["number", "null"]},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "body": {
+      "type": "object",
+      "required": ["id", "name", "type", "canon"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "designation": {"type": ["string", "null"]},
+        "parent_star": {"type": "string"},
+        "orbit_index": {"type": ["integer", "null"]},
+        "type": {"type": "string", "enum": ["planet", "moon", "dwarf_planet"]},
+        "subtype": {"type": ["string", "null"]},
+        "habitable": {"type": "boolean"},
+        "capital": {"type": "boolean"},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "source": {"type": "string"},
+        "lore": {"type": "string"},
+        "moons": {"type": "array"},
+        "orbit": {"$ref": "#/$defs/orbit"}
+      }
+    },
+    "place": {
+      "type": "object",
+      "description": "A visitable man-made or notable location: station, shipyard, wormhole junction, fortification, etc.",
+      "required": ["id", "name", "type", "canon"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "type": {"type": "string"},
+        "parent_star": {"type": "string"},
+        "rides_on": {"type": "string", "description": "Body this place is fixed to (orbits/sits on), aligning with hvsim Station semantics."},
+        "canon": {"$ref": "#/$defs/canonFlag"},
+        "status": {"type": "string"},
+        "source": {"type": "string"},
+        "lore": {"type": "string"},
+        "position": {"type": "object"}
+      }
+    }
+  }
+}

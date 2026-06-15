@@ -1,0 +1,300 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "wormhole_network",
+  "retrieved": "2026-06-13",
+
+  "_notes": "First cut: the two junctions needed to connect the implemented Sol System to Manticore. The wider network (Asgard, Felix, Visigoth, Yildun junctions + ~14 bridges) is not yet captured. RULE: transit is nexus<->terminus only; terminus<->terminus needs two transits through the nexus. The 'links' array encodes this correctly (every wormhole edge has the host system as one endpoint). In-system positions of nexus/termini are essentially uncharted in canon — treated as non-canon.",
+
+  "junctions": [
+    {
+      "id": "manticore-junction",
+      "name": "Manticore Wormhole Junction",
+      "class": "junction",
+      "host_system_id": "manticore",
+      "controlled_by": "star-kingdom-of-manticore",
+      "canon": true,
+      "sources": ["HH1", "HH2", "HH3", "HH10", "SI1", "Companion", "MA1", "MA4"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Manticore_Wormhole_Junction",
+      "retrieved": "2026-06-13",
+      "nexus": {
+        "terminus_id": "manticore-terminus",
+        "node_diameter": "1 light-second (invisible sphere)",
+        "canon": true,
+        "source": "SI1",
+        "position": {
+          "canon": true,
+          "determined": true,
+          "distance_from_primary_lighthours": 7,
+          "notes": "Canon: the nexus lies 7 light-hours from Manticore-A (SI1). Direction/exact vector within the system not specified — the radial distance is canon, the bearing is not. This is the in-system leg a ship must cross to reach the Junction before transiting."
+        }
+      },
+      "termini": [
+        {
+          "id": "manticore-terminus",
+          "name": "Manticore Terminus",
+          "is_nexus": true,
+          "leads_to_system_id": "manticore",
+          "leads_to_label": "Manticore-A (central node)",
+          "region": null,
+          "distance_ly": 0,
+          "direction": null,
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": true, "determined": true, "distance_from_primary_lighthours": 7, "notes": "The central node; all traffic passes through it regardless of destination."}
+        },
+        {
+          "id": "basilisk-terminus",
+          "name": "Basilisk Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "basilisk",
+          "leads_to_label": "Basilisk System",
+          "region": null,
+          "distance_ly": 210,
+          "direction": "Galactic North",
+          "discovered_pd": 1865,
+          "controlled_by": "star-kingdom-of-manticore",
+          "canon": true,
+          "source": "HH1, Companion",
+          "position": {"canon": false, "determined": false, "notes": "In-system position uncharted in canon. Forts/platforms typically sit ~500,000 km from a terminus (HH1)."}
+        },
+        {
+          "id": "beowulf-terminus",
+          "name": "Beowulf Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "sigma-draconis",
+          "leads_to_label": "Sigma Draconis System (Beowulf)",
+          "region": "Solarian League",
+          "distance_ly": 475,
+          "direction": "Galactic South",
+          "discovered_pd": 1585,
+          "controlled_by": "star-kingdom-of-manticore (co-managed with Beowulf)",
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false, "notes": "First terminus discovered (first transit 1585 PD by the survey ship Pathfinder). Co-managed with the Republic of Beowulf, a Solarian League member. THIS is the Sol-adjacent gateway: Beowulf is Sol's near neighbor."
+          }
+        },
+        {
+          "id": "gregor-terminus",
+          "name": "Gregor Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "gregor",
+          "leads_to_label": "Gregor System (Gregor-A)",
+          "region": null,
+          "distance_ly": 180,
+          "direction": "Galactic Northwest",
+          "controlled_by": "star-kingdom-of-manticore",
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false, "notes": "Gregor-B partially controlled by the Andermani Empire since 1869 PD; the terminus and Gregor-A are Manticoran."}
+        },
+        {
+          "id": "hennesy-terminus",
+          "name": "Hennesy Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "hennesy",
+          "leads_to_label": "Hennesy (Phoenix Cluster)",
+          "region": "Phoenix Cluster",
+          "distance_ly": 712,
+          "direction": "Galactic Southeast",
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false, "notes": "Located in the Phoenix Cluster. Note: the Erewhon Junction's Terra Haute terminus also reaches the Phoenix region — a possible (fabricated) transfer point between the two junctions; see links."}
+        },
+        {
+          "id": "lynx-terminus",
+          "name": "Lynx Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "mq-l-1792-46a",
+          "leads_to_label": "MQ-L-1792-46A (Talbott Cluster / Quadrant)",
+          "region": "Talbott Cluster",
+          "distance_ly": 612,
+          "direction": "Galactic Southwest",
+          "discovered_pd": 1919,
+          "controlled_by": "star-kingdom-of-manticore",
+          "canon": true,
+          "source": "HH10, Companion",
+          "position": {"canon": false, "determined": false, "notes": "Discovered/surveyed 1919 PD by HMS Harvest Joy; connects toward the Talbott Sector near the Solarian League."}
+        },
+        {
+          "id": "matapan-terminus",
+          "name": "Matapan Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "matapan",
+          "leads_to_label": "Matapan System",
+          "region": null,
+          "distance_ly": 472,
+          "direction": "Galactic West",
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false}
+        },
+        {
+          "id": "trevors-star-terminus",
+          "name": "Trevor's Star Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "trevors-star",
+          "leads_to_label": "Trevor's Star System (San Martin)",
+          "region": null,
+          "distance_ly": 210,
+          "direction": "Galactic Northeast",
+          "controlled_by": "star-kingdom-of-manticore",
+          "canon": true,
+          "source": "HH2, Companion",
+          "position": {"canon": false, "determined": false, "notes": "Held by Haven until annexed by Manticore (San Martin, 1914 PD); strategically vital as a second terminus an enemy could use against the nexus."}
+        }
+      ],
+      "lore": "One of the largest and most valuable wormhole junctions known and the foundation of the Star Kingdom's wealth. Indications first found in 1533 PD (Axelrod analyst Luther Luangpraseut at Beowulf) and independently by Dr. Tolochko on Manticore in 1535 PD; first transit 1585 PD. By 1900 PD the Junction gave Manticore ~78% of Sol's gross system product; Manticore exceeded Sol's by 1920 PD. Patrolled by the RMN; traffic handled by the Royal Manticoran Astro-Control Service."
+    },
+
+    {
+      "id": "erewhon-junction",
+      "name": "Erewhon Wormhole Junction",
+      "class": "junction",
+      "host_system_id": "erewhon",
+      "controlled_by": "erewhon",
+      "canon": true,
+      "sources": ["HH1", "HHA6", "Story:DLS"],
+      "wiki_page": "https://honorverse.fandom.com/wiki/Erewhon_Wormhole_Junction",
+      "retrieved": "2026-06-13",
+      "nexus": {
+        "terminus_id": "erewhon-terminus",
+        "node_diameter": null,
+        "canon": true,
+        "source": "HH1",
+        "position": {"canon": false, "determined": false, "notes": "In-system position not given in canon."}
+      },
+      "termini": [
+        {
+          "id": "erewhon-terminus",
+          "name": "Erewhon Terminus",
+          "is_nexus": true,
+          "leads_to_system_id": "erewhon",
+          "leads_to_label": "Erewhon System (central node)",
+          "distance_ly": 0,
+          "canon": true,
+          "source": "HH1",
+          "position": {"canon": false, "determined": false}
+        },
+        {
+          "id": "terra-haute-terminus",
+          "name": "Terra Haute Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": "phoenix",
+          "leads_to_label": "Phoenix",
+          "region": "Phoenix Cluster",
+          "distance_ly": 390,
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false, "notes": "Reaches the Phoenix region — candidate transfer point to the Manticore Junction's Hennesy terminus (see links)."}
+        },
+        {
+          "id": "joshua-terminus",
+          "name": "Joshua Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": null,
+          "leads_to_label": "Solarian League (system unspecified)",
+          "region": "Solarian League",
+          "distance_ly": 359,
+          "canon": true,
+          "source": "Companion",
+          "position": {"canon": false, "determined": false, "notes": "Canon says only 'Solarian League'; the specific far-end system is not named. Its proximity to the League deterred a Havenite attempt to seize the Junction in 1900 PD."}
+        },
+        {
+          "id": "sasebo-terminus",
+          "name": "Sasebo Terminus",
+          "is_nexus": false,
+          "leads_to_system_id": null,
+          "leads_to_label": "Sasebo",
+          "distance_ly": 859,
+          "canon": true,
+          "source": "HHA6",
+          "position": {"canon": false, "determined": false, "notes": "Mentioned only once (HHA6), as a terminus rather than a system; some maps show the Erewhon Junction as a two-legged wormhole, so treat this third terminus as low-confidence."}
+        }
+      ],
+      "lore": "A wormhole junction in the Erewhon System, valuable for its proximity to the Solarian League (which deterred Havenite conquest in 1900 PD). Erewhon later became a member of the Manticoran Alliance. The planet Silvestria lies close to one of its termini."
+    }
+  ],
+
+  "links": [
+    {"id": "wl-manticore-basilisk", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "basilisk", "label": "Basilisk", "terminus": "basilisk-terminus"}], "distance_ly": 210, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-manticore-sigma-draconis", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "sigma-draconis", "label": "Beowulf / Sigma Draconis", "terminus": "beowulf-terminus"}], "distance_ly": 475, "transit": "instant", "canon": true, "source": "Companion", "notes": "The Sol-adjacent gateway. Combine with link 'hl-sol-sigma-draconis' for the Sol->Manticore route."},
+    {"id": "wl-manticore-gregor", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "gregor", "label": "Gregor", "terminus": "gregor-terminus"}], "distance_ly": 180, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-manticore-hennesy", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "hennesy", "label": "Hennesy (Phoenix Cluster)", "terminus": "hennesy-terminus"}], "distance_ly": 712, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-manticore-lynx", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "mq-l-1792-46a", "label": "Lynx / Talbott", "terminus": "lynx-terminus"}], "distance_ly": 612, "transit": "instant", "canon": true, "source": "HH10, Companion"},
+    {"id": "wl-manticore-matapan", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "matapan", "label": "Matapan", "terminus": "matapan-terminus"}], "distance_ly": 472, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-manticore-trevors-star", "type": "wormhole", "via_junction": "manticore-junction", "endpoints": [{"system_id": "manticore", "label": "Manticore (nexus)"}, {"system_id": "trevors-star", "label": "Trevor's Star / San Martin", "terminus": "trevors-star-terminus"}], "distance_ly": 210, "transit": "instant", "canon": true, "source": "HH2, Companion"},
+
+    {"id": "wl-erewhon-phoenix", "type": "wormhole", "via_junction": "erewhon-junction", "endpoints": [{"system_id": "erewhon", "label": "Erewhon (nexus)"}, {"system_id": "phoenix", "label": "Phoenix", "terminus": "terra-haute-terminus"}], "distance_ly": 390, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-erewhon-joshua", "type": "wormhole", "via_junction": "erewhon-junction", "endpoints": [{"system_id": "erewhon", "label": "Erewhon (nexus)"}, {"system_id": null, "label": "Solarian League (unspecified)", "terminus": "joshua-terminus"}], "distance_ly": 359, "transit": "instant", "canon": true, "source": "Companion"},
+    {"id": "wl-erewhon-sasebo", "type": "wormhole", "via_junction": "erewhon-junction", "endpoints": [{"system_id": "erewhon", "label": "Erewhon (nexus)"}, {"system_id": null, "label": "Sasebo", "terminus": "sasebo-terminus"}], "distance_ly": 859, "transit": "instant", "canon": true, "source": "HHA6", "notes": "Low-confidence terminus (mentioned once)."},
+
+    {"id": "hl-sol-sigma-draconis", "type": "hyper_leg", "via_junction": null, "endpoints": [{"system_id": "sol", "label": "Sol"}, {"system_id": "sigma-draconis", "label": "Beowulf / Sigma Draconis"}], "distance_ly": null, "transit": null, "canon": false, "source": null, "notes": "FABRICATED integration edge. Sol has no wormhole terminus, so it attaches to the network via Beowulf over a hyperspace leg. This is the ONLY non-wormhole hop in the Sol->Manticore route and is out of scope for wormhole-only Phase 2 — implement with hyperspace in Phase 2b. Real-world Sol<->Sigma Draconis is ~18.8 ly; canonical Honorverse distance not captured here. Until hyperspace exists, the router can treat this as a stub edge to enable end-to-end Sol->Manticore testing."},
+    {"id": "tr-phoenix-hennesy", "type": "transfer", "via_junction": null, "endpoints": [{"system_id": "phoenix", "label": "Phoenix (Terra Haute)"}, {"system_id": "hennesy", "label": "Hennesy (Phoenix Cluster)"}], "distance_ly": null, "transit": null, "canon": false, "source": null, "notes": "FABRICATED transfer. Both the Erewhon Junction (Terra Haute) and the Manticore Junction (Hennesy) reach the Phoenix Cluster; a short intra-cluster leg could bridge the two junction networks. Co-location is not confirmed in canon. Only needed if routing Erewhon<->Manticore; the Sol->Manticore route uses Beowulf instead and does NOT require this."}
+  ],
+
+  "transit_model": {
+    "canon": false,
+    "status": "fabricated",
+    "summary": "A junction transit destabilizes the nexus for a period that scales with the mass transited in one transit event. The junction is unusable for that period, so transits serialize into a queue — which is what produces the 'SS Tankersley is 3rd in queue, expected transit 5:27' dashboard detail.",
+    "canon_basis": "The MECHANIC is book-canon: destabilization grows with transited mass; navies choose between sending ships through one-at-a-time (junction stays usable, ships arrive piecemeal) and a simultaneous 'mass transit' (all arrive together but the junction locks for far longer) — e.g. Admiral White Haven favouring first-come-first-through over a ~48-hour mass transit of a large force, and 8th Fleet's mass transit at the Battle of Manticore. The wiki gives NO quantitative figures (no 'Mass transit' page; Battle of Manticore confirms the mechanic only). All numbers below are therefore FABRICATED.",
+    "formula": "destabilization_seconds = A*sqrt(M) + B*M^2",
+    "variables": {"M": "total mass transited in a single transit event, in metric tons"},
+    "coefficients": {"A": 0.01684, "B": 6.9e-13},
+    "model_notes": "Two-term by design: the sqrt(M) term governs single-ship transits (seconds scale — the per-ship queue granularity), while the M^2 term governs simultaneous 'mass transits' (hours-to-days at fleet scale), matching the canon sense that mass transit cost rises steeply (~'square'). A single power law cannot fit both the few-second single ship and the ~48-hour fleet.",
+    "anchors": [
+      {"case": "single light cruiser", "mass_tons": 88000, "seconds": 5, "basis": "fabricated target; mass = Courageous-class light cruiser (canon)"},
+      {"case": "single medium freighter", "mass_tons": 1927000, "seconds": 26, "basis": "fabricated target (~25); mass = Starhauler-class freighter (canon)"},
+      {"case": "large fleet mass-transit (~50 SD + escorts)", "mass_tons": 500000000, "seconds": 172800, "hours": 48, "basis": "fabricated to match the canon ~48-hour fleet-mass-transit recollection"}
+    ],
+    "reference_masses_tons": {
+      "_source": "canon ship infobox pages",
+      "courageous_light_cruiser": 88000,
+      "star_knight_heavy_cruiser": 305250,
+      "reliant_battlecruiser": 881250,
+      "starhauler_freighter": 1927000,
+      "dromedary_freighter": 4000000,
+      "astra_freighter": 7600000,
+      "invictus_superdreadnought": 8768500
+    },
+    "worked_examples": {
+      "single_ship": [
+        {"label": "LAC (~20 kt)", "mass_tons": 20000, "seconds": 2.4},
+        {"label": "destroyer (~60 kt)", "mass_tons": 60000, "seconds": 4.1},
+        {"label": "light cruiser (88 kt)", "mass_tons": 88000, "seconds": 5.0},
+        {"label": "heavy cruiser (305 kt)", "mass_tons": 305250, "seconds": 9.4},
+        {"label": "battlecruiser (881 kt)", "mass_tons": 881250, "seconds": 16.3},
+        {"label": "freighter Starhauler (1.93 Mt)", "mass_tons": 1927000, "seconds": 25.9},
+        {"label": "freighter Dromedary (4 Mt)", "mass_tons": 4000000, "seconds": 44.7},
+        {"label": "freighter Astra (7.6 Mt)", "mass_tons": 7600000, "seconds": 86.3},
+        {"label": "SD(P) (8.77 Mt)", "mass_tons": 8768500, "seconds": 102.9}
+      ],
+      "mass_transit": [
+        {"label": "division (4 SD, ~35 Mt)", "mass_tons": 35000000, "seconds": 941, "human": "~16 min"},
+        {"label": "squadron (8 SD, ~70 Mt)", "mass_tons": 70000000, "seconds": 3521, "human": "~59 min"},
+        {"label": "battle squadron + escorts (~150 Mt)", "mass_tons": 150000000, "seconds": 15730, "human": "~4.4 h"},
+        {"label": "large fleet (~500 Mt)", "mass_tons": 500000000, "seconds": 172800, "human": "~48 h"},
+        {"label": "half Home Fleet (~870 Mt, 100 SD)", "mass_tons": 870000000, "seconds": 522500, "human": "~6 days"}
+      ]
+    },
+    "safety_buffer": {
+      "canon": false,
+      "purpose": "Minimum traffic-control spacing after a transit to let the arriving ship clear the terminus before the next ship transits. This is a TERMINUS-CLEARANCE constraint, separate from the wormhole-physics destabilization. The effective inter-transit interval = max(destabilization_seconds, buffer_seconds): for a single ship the buffer usually dominates (destabilization is only seconds); for a fleet-scale mass transit the destabilization dominates (hours) and the buffer is irrelevant.",
+      "normal_seconds": 300,
+      "emergency_seconds": 60,
+      "condition_zulu": {
+        "buffer_seconds": "<60 (no fixed floor)",
+        "restrictions": "Military vessels only, and requires flag-officer (Admiral) authorization. Reserved for combat emergencies where packing transits tighter than the 1-minute emergency spacing is a deliberate, accepted risk.",
+        "canon": false
+      },
+      "effective_interval_examples": [
+        {"ship": "freighter (~26 s destabilization)", "normal": "300 s — 5 min, buffer-bound", "emergency": "60 s — buffer-bound"},
+        {"ship": "SD(P) (~103 s destabilization)", "normal": "300 s — buffer-bound", "emergency": "103 s — destabilization-bound (exceeds the 60 s buffer)"},
+        {"ship": "large fleet mass-transit (~48 h destabilization)", "normal": "~48 h — destabilization-bound", "emergency": "~48 h — destabilization-bound"}
+      ],
+      "notes": "Non-canon, based on vague recollections of book traffic practice. Peacetime junctions run a relaxed ~5-minute spacing; under threat the Astro-Control Service / Junction Defense Command can compress to ~1 minute; anything tighter is Condition Zulu (authorized combat risk)."
+    },
+    "queue_semantics": "Transits serialize: a transit is ~instantaneous, but the junction cannot accept the next ship until BOTH the nexus has restabilized (tau(M) seconds) AND the arriving ship has cleared the terminus (the safety buffer). So the effective inter-transit interval is interval(M) = max(tau(M), buffer_seconds), where buffer_seconds is set by traffic posture (normal 300, emergency 60, Condition Zulu <60). A ship's expected wait = (time remaining on the in-progress interval) + the sum of interval(M_i) for every ship ahead of it in the queue. The Royal Manticoran Astro-Control Service orders the queue; dashboard ETA for 'your transit' = that running sum. A 'mass transit' bundles several ships into one event of total mass M (they all clear together, then the junction is locked for interval(M) — at fleet scale tau(M) dominates).",
+    "tuning": "All values FABRICATED (canon:false). Coefficient B sets fleet-scale drama (raise for longer lockouts); A sets per-ship granularity. Re-anchor freely as the novels are re-checked for hard numbers.",
+    "deferred": "Not modelled yet: a minimum settling floor for tiny craft, junction-size tolerance (a larger nexus may absorb more mass), per-terminus vs whole-junction effects, and Astro-Control prioritization rules. Add when needed."
+  }
+}
