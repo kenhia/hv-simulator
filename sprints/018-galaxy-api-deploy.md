@@ -88,8 +88,8 @@ at once.
       (file/fly/state/fleet/guard/abort/needs-artifact).
 - [x] `just check` + `just contracts` green; CLAUDE.md + plan updated. Contract
       unchanged (filed-doc lives in the service DB, not the artifact).
-- [ ] **Deploy to `kubsdb`** and run the live shakedown (after the local HTTP
-      checkpoint — which passed).
+- [x] **Deploy to `kubsdb`** and run the live shakedown (local checkpoint passed
+      first). Live run matched local — 5 routes filed, board advanced to arrivals.
 
 ## Acceptance criteria
 
@@ -139,5 +139,9 @@ hyper ships cruised interstellar, T+15d Nike arrived + Starhauler 95.6% into its
 Manticore approach, T+40d all arrived. `just check` (109 engine + all tools +
 `data OK`) + `just contracts` green; contract unchanged (v0.3.0).
 
-**Pending: deploy to `kubsdb` + live run** (the local checkpoint was clean, so per
-plan we proceed to deploy).
+**Deployed to `kubsdb` + live run — done.** `just deploy` built the image with the
+bundled artifact, shipped it, and brought the stack up (health ok, production
+clock). `just shakedown http://kubsdb:4667` reproduced the local result exactly:
+all 5 routes filed over HTTP, the board advanced T+0 → T+40d to all-arrived (clock
+control 403'd in production, as designed → used the `?at=` sweep). **Phase 2b.1
+complete — the galaxy is operable as a deployed service.**

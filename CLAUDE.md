@@ -26,7 +26,10 @@ the `expand-galaxy` orchestrator skill. **Phase 2b is complete** (Sprints 013–
 the engine was re-founded on a lazy discrete-event core (DES, Phase 1 parity), then
 gained inter-system travel (hyper + wormhole), the canon hyperspace band model, and
 the `tools/nav-planner` route-finder — a ship can now be auto-routed and flown
-across the galaxy with realistic multi-day clocks (`just plan`). Design is in
+across the galaxy with realistic multi-day clocks (`just plan`). **Phase 2b.1
+(operate the galaxy) is complete** (Sprints 017–018): canonical transponder ship
+identity, and the `/fleet` HTTP API to file/fly/board planned routes — **deployed
+to `kubsdb`** and validated with a live 5-ship shakedown. Design is in
 `planning/006`; **next is Phase 2c** (wormhole queues — the DES payoff).
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
