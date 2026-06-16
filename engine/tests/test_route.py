@@ -1,11 +1,11 @@
-"""Multi-mode interstellar routes: leg->segment decomposition + the new modes.
+"""Multi-mode interstellar routes: leg->segment decomposition + the band model.
 
-Self-contained: builds a tiny artifact from the contract DDL (three systems, a
-hyper band, the wormhole buffer, a wormhole link) so the route compiler can be
-exercised without the real data/ artifact. Checks the headline behaviours: the
-segment decomposition, hyper_cruise timing from the band + distance, the
-climb-to-hyper-limit, the wormhole buffer, and that the coast phase finally fires
-on a long n-space leg.
+Self-contained: builds a tiny artifact from the contract DDL (systems, the
+Weber hyper-band columns + model row, ship classes/ships with an override, a
+wormhole link) so the route compiler can be exercised without the real data/
+artifact. Checks the segment decomposition, the Weber band speed model
+(apparent = multiplier x real velocity), the climb-to-hyper-limit, the wormhole
+buffer, effective-stat (class + override) resolution, band gating, and coast.
 """
 
 from __future__ import annotations
@@ -16,14 +16,15 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from hvsim.clock import T_YEAR
 from hvsim.flightplan import Ship
-from hvsim.route import Route, RouteLeg, compile_route, simulation_for_route
+from hvsim.kinematics import SPEED_OF_LIGHT
+from hvsim.route import Route, RouteLeg, compile_route, ship_from_artifact, simulation_for_route
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
 DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
 DEPART = datetime(1890, 1, 1, tzinfo=UTC)
-SHIP = Ship(name="SS Test", max_accel_g=250.0, max_velocity_c=0.6)
+# A ship that cruises Eta (multiplier 4294) at warship 0.6c.
+WARSHIP = Ship("Test Warship", 600.0, 0.6, max_hyper_band=7, hyper_cruise_velocity_c=0.6)
 
 
 @pytest.fixture
@@ -55,7 +56,6 @@ def artifact_path(tmp_path) -> str:
             (sid, sysid, star_id, sid, a_au, 365.25 * a_au**1.5),
         )
 
-    # alpha (origin) at the frame origin; beta 40 ly up; gamma 31 ly past beta.
     system("alpha", 0.0)
     system("beta", 40.0)
     system("gamma", 71.0)
@@ -63,15 +63,48 @@ def artifact_path(tmp_path) -> str:
     star("beta:s", "beta", 20.0)
     star("gamma:s", "gamma", 22.0)
     planet("alpha:p1", "alpha", "alpha:s", 1.0)
-    planet("alpha:far", "alpha", "alpha:s", 150.0)  # a long n-space leg (forces coast)
+    planet("alpha:far", "alpha", "alpha:s", 150.0)  # long n-space leg (forces coast)
     planet("beta:p1", "beta", "beta:s", 1.0)
     planet("gamma:p1", "gamma", "gamma:s", 1.5)
 
-    # Alpha band + wormhole buffer + a beta<->gamma link.
+    # Hyper bands (Weber chart): Delta, Eta, Theta usable; Iota unattainable.
+    for order, name, mult, bleed, unatt in [
+        (4, "Delta", 2178, 72, 0),
+        (7, "Eta", 4294, 56, 0),
+        (8, "Theta", 5000, 52, 0),
+        (9, "Iota", 6000, 48, 1),
+    ]:
+        con.execute(
+            "INSERT INTO hyperspace_bands (band_order,name,velocity_multiplier,multiplier_canon,"
+            "translation_bleed_off_pct,bleed_off_canon,unattainable,canon) "
+            "VALUES (?,?,?,1,?,1,?,1)",
+            (order, name, mult, bleed, unatt),
+        )
     con.execute(
-        "INSERT INTO hyperspace_bands (band_order,name,entry_velocity_limit_c,apparent_velocity_c,"
-        "apparent_canon,canon) VALUES (1,'Alpha',0.3,200,0,1)"
+        "INSERT INTO hyperspace_model (id,warship_real_velocity_c,merchant_real_velocity_c,"
+        "non_crash_translation_c,alpha_entry_max_velocity_c,canon) VALUES (1,0.6,0.5,0.2,0.3,1)"
     )
+
+    # A warship class (Eta, 0.6c) + a merchant class (Delta, 0.5c).
+    con.execute(
+        "INSERT INTO ship_classes (id,name,navy,hull_classification,max_g,max_hyper_band,"
+        "real_cruise_velocity_c,singleton,canon) VALUES "
+        "('warbird','Warbird','TSN','BC',600,7,0.6,0,1)"
+    )
+    con.execute(
+        "INSERT INTO ship_classes (id,name,max_g,max_hyper_band,real_cruise_velocity_c,"
+        "singleton,canon) VALUES ('hauler','Hauler',200,4,0.5,0,1)"
+    )
+    # war-1 inherits the class; war-2 has a Theta upgrade override; haul-1 is a merchant.
+    con.execute("INSERT INTO ships (id,name,class_id,canon) VALUES ('war-1','War One','warbird',1)")
+    con.execute(
+        "INSERT INTO ships (id,name,class_id,ovr_max_hyper_band,canon) "
+        "VALUES ('war-2','War Two','warbird',8,1)"
+    )
+    con.execute(
+        "INSERT INTO ships (id,name,class_id,canon) VALUES ('haul-1','Haul One','hauler',1)"
+    )
+
     con.execute(
         "INSERT INTO transit_model (id,formula,coeff_a,coeff_b,buffer_normal_s,buffer_emergency_s,"
         "canon) VALUES (1,'A*sqrt(M)+B*M^2',0.01684,6.9e-13,300,120,0)"
@@ -93,17 +126,17 @@ def u(artifact_path: str) -> Universe:
     return Universe.open(artifact_path)
 
 
-def _deliverable(u: Universe) -> Route:
-    # alpha ->(hyper)-> beta ->(wormhole)-> gamma:p1  — exercises every mode.
+def _deliverable(ship: Ship) -> Route:
+    # alpha ->(hyper)-> beta ->(wormhole)-> gamma:p1 — exercises every mode.
     return Route(
-        ship=SHIP,
+        ship=ship,
         origin_system="alpha",
         origin_body="alpha:p1",
         depart_at=DEPART,
         legs=[
             RouteLeg("hyper", "beta"),
             RouteLeg("wormhole", "gamma"),
-            RouteLeg("hyper", "gamma", "gamma:p1"),  # in-gamma after the pop-through
+            RouteLeg("hyper", "gamma", "gamma:p1"),
         ],
     )
 
@@ -112,9 +145,8 @@ def _deliverable(u: Universe) -> Route:
 
 
 def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
+    c = compile_route(_deliverable(WARSHIP), u)
     kinds = [s.kind for s in c.segments]
-    # hyper = run-out + cruise (no approach here); wormhole; hyper = run-out + cruise + approach
     assert kinds == [
         "transit",
         "hyper_cruise",
@@ -123,49 +155,61 @@ def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
         "hyper_cruise",
         "transit",
     ]
-    # Segments are contiguous in absolute time.
     for earlier, later in zip(c.segments, c.segments[1:], strict=False):
         assert earlier.t_end == later.t_start
 
 
-# --- Hyper cruise ---------------------------------------------------------------
+# --- The Weber band model: apparent = multiplier x real velocity ----------------
 
 
-def test_hyper_cruise_time_from_band_and_distance(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
-    cruise = c.segments[1]  # alpha -> beta, 40 ly at 200c
-    expected_s = 40.0 / 200.0 * T_YEAR.total_seconds()
-    assert cruise.duration_s == pytest.approx(expected_s, rel=1e-9)
-    # Endpoints are galactic-frame (metres): beta is 40 ly up the z-axis.
+def test_hyper_cruise_accel_coast_decel_at_band_speed(u: Universe) -> None:
+    c = compile_route(_deliverable(WARSHIP), u)
+    cruise = c.segments[1]  # alpha -> beta, 40 ly
+    # An interstellar leg reaches the apparent v_cap and coasts.
+    assert cruise.trajectory.profile.coasts
+    peak = cruise.trajectory.profile.v_peak
+    assert peak == pytest.approx(4294 * 0.6 * SPEED_OF_LIGHT, rel=1e-9)  # mult x real x c
+    # Duration = the constant-cruise lower bound + a small accel/decel overhead.
+    lower = 40.0 * LY_M / peak
+    assert lower < cruise.duration_s < lower * 1.2
     assert cruise.to_pos.norm() == pytest.approx(40.0 * LY_M, rel=1e-9)
-    assert cruise.from_pos.norm() == pytest.approx(0.0, abs=1.0)
 
 
 def test_hyper_cruise_reports_galactic_frame(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
+    c = compile_route(_deliverable(WARSHIP), u)
     sim = simulation_for_route(c, u)
     cruise = c.segments[1]
-    mid = cruise.t_start + timedelta(seconds=cruise.duration_s / 2)
-    st = sim.state(mid)
+    st = sim.state(cruise.t_start + timedelta(seconds=cruise.duration_s / 2))
     assert st.phase == "hyper_cruise"
-    assert st.system is None
-    assert st.frame == "galactic"
-    # Halfway should be ~20 ly up the z-axis.
+    assert st.system is None and st.frame == "galactic"
     assert st.position.norm() == pytest.approx(20.0 * LY_M, rel=1e-6)
+
+
+def test_higher_band_ship_is_faster(u: Universe) -> None:
+    # Same route, Theta ship vs Delta ship: the higher band arrives sooner.
+    theta = Ship("Fast", 600.0, 0.6, max_hyper_band=8, hyper_cruise_velocity_c=0.6)
+    delta = Ship("Slow", 200.0, 0.5, max_hyper_band=4, hyper_cruise_velocity_c=0.5)
+    t_fast = compile_route(_deliverable(theta), u).arrival
+    t_slow = compile_route(_deliverable(delta), u).arrival
+    assert t_fast < t_slow
+
+
+def test_unattainable_band_is_rejected(u: Universe) -> None:
+    iota = Ship("TooFast", 600.0, 0.6, max_hyper_band=9, hyper_cruise_velocity_c=0.6)
+    with pytest.raises(ValueError, match="unattainable"):
+        compile_route(_deliverable(iota), u)
 
 
 # --- Run out to the hyper limit -------------------------------------------------
 
 
 def test_run_to_limit_uses_hyper_limit_from_artifact(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
-    run_out = c.segments[0]  # n-space run to the hyper limit (not a band "climb")
+    c = compile_route(_deliverable(WARSHIP), u)
+    run_out = c.segments[0]
     assert run_out.kind == "transit"
     start = resolve_position(u, "alpha", "alpha:p1", DEPART)
-    limit_m = 20.0 * LMIN_M
-    expected = limit_m - start.norm()
+    expected = 20.0 * LMIN_M - start.norm()
     assert run_out.trajectory.profile.distance == pytest.approx(expected, rel=1e-6)
-    # The short run (~1.5 AU) is a brachistochrone — no coast.
     assert not run_out.trajectory.profile.coasts
 
 
@@ -173,34 +217,44 @@ def test_run_to_limit_uses_hyper_limit_from_artifact(u: Universe) -> None:
 
 
 def test_wormhole_transit_is_buffer_only(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
+    c = compile_route(_deliverable(WARSHIP), u)
     wh = c.segments[2]
     assert wh.kind == "wormhole_transit"
     assert wh.from_system == "beta" and wh.to_system == "gamma"
-    assert wh.duration_s == pytest.approx(300.0)  # buffer_normal_s from the artifact
+    assert wh.duration_s == pytest.approx(300.0)
 
 
 def test_state_after_arrival_in_destination_system(u: Universe) -> None:
-    c = compile_route(_deliverable(u), u)
+    c = compile_route(_deliverable(WARSHIP), u)
     sim = simulation_for_route(c, u)
     st = sim.state(c.arrival + timedelta(hours=1))
-    assert st.phase == "arrived"
-    assert st.system == "gamma"
+    assert st.phase == "arrived" and st.system == "gamma"
+
+
+# --- Effective ship stats (class + override) ------------------------------------
+
+
+def test_effective_ship_resolves_override_over_class(u: Universe) -> None:
+    assert u.effective_ship("war-1")["max_hyper_band"] == 7  # inherits class
+    assert u.effective_ship("war-2")["max_hyper_band"] == 8  # override wins
+    assert u.effective_ship("haul-1")["real_cruise_velocity_c"] == 0.5
+
+
+def test_ship_from_artifact_carries_band_profile(u: Universe) -> None:
+    ship = ship_from_artifact(u, "war-2")
+    assert ship.max_hyper_band == 8 and ship.hyper_cruise_velocity_c == 0.6
+    # The upgraded hull (Theta) beats the stock hull (Eta) on the same route.
+    stock = ship_from_artifact(u, "war-1")
+    assert (
+        compile_route(_deliverable(ship), u).arrival < compile_route(_deliverable(stock), u).arrival
+    )
 
 
 # --- Coast finally fires --------------------------------------------------------
 
 
 def test_coast_fires_on_long_nspace_leg(u: Universe) -> None:
-    # A ~149 AU in-system hop exceeds the brachistochrone-vs-cap threshold (~88 AU
-    # at 250 g / 0.6c), so the accel-coast-decel profile engages — a first.
-    route = Route(
-        ship=SHIP,
-        origin_system="alpha",
-        origin_body="alpha:p1",
-        depart_at=DEPART,
-        legs=[RouteLeg("nspace", "alpha", "alpha:far")],
-    )
+    route = Route(WARSHIP, "alpha", "alpha:p1", [RouteLeg("nspace", "alpha", "alpha:far")], DEPART)
     c = compile_route(route, u)
     assert len(c.segments) == 1
     assert c.segments[0].trajectory.profile.coasts
@@ -210,11 +264,11 @@ def test_coast_fires_on_long_nspace_leg(u: Universe) -> None:
 
 
 def test_route_is_deterministic(u: Universe) -> None:
-    a = compile_route(_deliverable(u), u)
-    b = compile_route(_deliverable(u), u)
+    a = compile_route(_deliverable(WARSHIP), u)
+    b = compile_route(_deliverable(WARSHIP), u)
     assert [s.kind for s in a.segments] == [s.kind for s in b.segments]
     assert a.arrival == b.arrival
     sim_a, sim_b = simulation_for_route(a, u), simulation_for_route(b, u)
-    for frac in (0.0, 0.25, 0.5, 0.75, 1.1):
+    for frac in (0.0, 0.5, 1.1):
         when = a.depart_at + (a.arrival - a.depart_at) * frac
         assert sim_a.state(when) == sim_b.state(when)

@@ -19,7 +19,7 @@ import json
 import pathlib
 import sqlite3
 
-CONTRACT_VERSION = "0.1.1"
+CONTRACT_VERSION = "0.2.0"
 
 
 def _b(v: object) -> int:
@@ -224,16 +224,57 @@ def _load_nation(con: sqlite3.Connection, doc: dict) -> None:
     )
 
 
+def _is_warship(c: dict) -> bool:
+    """A class is a warship if it has a navy and a (military) hull classification.
+
+    Civilian hulls (freighters, liners) have no navy/hull_classification — they
+    carry an operator instead. Drives the Weber reference cruise velocity.
+    """
+    return bool(c.get("navy")) and bool(c.get("hull_classification"))
+
+
+def _default_max_band(c: dict) -> int:
+    """Inferred (canon:false) max safe hyper band by hull type.
+
+    Canon hints only: warships commonly cruise Zeta (6), battlecruisers/couriers
+    push higher (Eta 7), an old light cruiser less; merchants ~Delta (4), a
+    military-grade liner a touch more. A class may override via hyper.max_band.
+    No per-class canon figures exist. (Bands: 4 Delta .. 8 Theta.)
+    """
+    hull = (c.get("hull_classification") or "").upper()
+    ship_type = (c.get("ship_type") or "").lower()
+    if not _is_warship(c):
+        return 5 if "liner" in ship_type else 4  # liner Epsilon, freighter Delta
+    if hull.startswith("BC"):
+        return 7  # battlecruisers — fast raiders, Eta
+    if hull.startswith(("DD", "FG", "CL")):
+        return 6  # destroyers/frigates/light cruisers, Zeta
+    return 6  # capital ships + heavy cruisers default to Zeta
+
+
 def _load_ship_classes(con: sqlite3.Connection, doc: dict) -> None:
     for c in doc.get("classes", []):
         acc = c.get("acceleration") or {}
         dim = c.get("dimensions") or {}
         crew = c.get("crew") or {}
         mag = c.get("magazines") or {}
+        hyp = c.get("hyper") or {}
+        # Real hyper cruise velocity: explicit, else the Weber reference (warship
+        # 0.6c / merchant 0.5c). The reference lives in hyperspace_model too.
+        cruise = hyp.get("real_cruise_velocity_c")
+        if cruise is None:
+            cruise = 0.6 if _is_warship(c) else 0.5
+        # Authored band wins; otherwise infer (canon:false) from the hull type.
+        max_band = hyp.get("max_band")
+        band_canon = hyp.get("canon") if max_band is not None else False
+        if max_band is None:
+            max_band = _default_max_band(c)
         con.execute(
             "INSERT INTO ship_classes (id,name,ship_type,hull_classification,navy,"
             "affiliation_nation_id,date_introduced_pd,normal_g,max_g,mass_tons,length_m,"
-            "crew_total,missile_pods,canon) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "crew_total,missile_pods,max_hyper_band,max_hyper_band_canon,"
+            "real_cruise_velocity_c,singleton,canon) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 c["id"],
                 c["name"],
@@ -248,27 +289,68 @@ def _load_ship_classes(con: sqlite3.Connection, doc: dict) -> None:
                 dim.get("length_m"),
                 crew.get("total"),
                 mag.get("missile_pods"),
+                _int(max_band),
+                _b(band_canon),
+                cruise,
+                _b(c.get("singleton")),
                 _b(c.get("canon")),
             ),
         )
 
 
+def _singleton_class_for(con: sqlite3.Connection, s: dict) -> str:
+    """Create (and return the id of) an auto singleton class for a classless ship.
+
+    Tooling guard: every ship must resolve to a class. A hull filed without one
+    gets its own class (named for the ship, singleton=1) — later the UI can offer
+    to rename it if a second hull joins. Defaults to a merchant cruise velocity.
+    """
+    cid = f"{s['id']}-class"
+    con.execute(
+        "INSERT INTO ship_classes (id,name,navy,affiliation_nation_id,"
+        "real_cruise_velocity_c,singleton,canon) VALUES (?,?,?,?,?,1,?)",
+        (
+            cid,
+            f"{s['name']} class",
+            s.get("navy"),
+            s.get("affiliation_nation_id"),
+            0.5,
+            _b(s.get("canon")),
+        ),
+    )
+    return cid
+
+
 def _load_ships(con: sqlite3.Connection, doc: dict) -> None:
+    known = {row[0] for row in con.execute("SELECT id FROM ship_classes")}
     for s in doc.get("ships", []):
+        cid = s.get("class_id")
+        if not cid:
+            cid = _singleton_class_for(con, s)  # classless -> auto singleton
+            known.add(cid)
+        elif cid not in known:
+            raise ValueError(f"ship {s['id']!r} references unknown class {cid!r}")
+        ovr = s.get("overrides") or {}
         con.execute(
             "INSERT INTO ships (id,name,prefix,hull_number,class_id,navy,"
-            "affiliation_nation_id,role,status,fate_pd,canon) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "affiliation_nation_id,role,status,fate_pd,ovr_max_g,ovr_normal_g,"
+            "ovr_max_hyper_band,ovr_real_cruise_velocity_c,canon) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 s["id"],
                 s["name"],
                 s.get("prefix"),
                 s.get("hull_number"),
-                s.get("class_id"),
+                cid,
                 s.get("navy"),
                 s.get("affiliation_nation_id"),
                 s.get("role"),
                 s.get("status"),
                 _int(s.get("fate_pd")),
+                ovr.get("max_g"),
+                ovr.get("normal_g"),
+                _int(ovr.get("max_band")),
+                ovr.get("real_cruise_velocity_c"),
                 _b(s.get("canon")),
             ),
         )
@@ -277,18 +359,35 @@ def _load_ships(con: sqlite3.Connection, doc: dict) -> None:
 def _load_hyperspace(con: sqlite3.Connection, doc: dict) -> dict[str, float]:
     """Load bands + the hyper-limit-by-class table. Returns the class->limit map."""
     for band in doc.get("bands", []):
-        av = band.get("apparent_velocity_c") or {}
         con.execute(
             "INSERT INTO hyperspace_bands (band_order,name,greek,entry_velocity_limit_c,"
-            "apparent_velocity_c,apparent_canon,canon) VALUES (?,?,?,?,?,?,?)",
+            "velocity_multiplier,multiplier_canon,translation_bleed_off_pct,bleed_off_canon,"
+            "unattainable,canon) VALUES (?,?,?,?,?,?,?,?,?,?)",
             (
                 band.get("order"),
                 band.get("name"),
                 band.get("greek"),
                 band.get("entry_velocity_limit_c"),
-                av.get("nominal_c"),
-                _b(av.get("nominal_canon")),
+                band.get("velocity_multiplier"),
+                _b(band.get("multiplier_canon")),
+                band.get("translation_bleed_off_pct"),
+                _b(band.get("bleed_off_canon")),
+                _b(band.get("unattainable")),
                 _b(band.get("canon")),
+            ),
+        )
+    model = doc.get("apparent_velocity_model") or {}
+    ref = model.get("reference_real_velocity_c") or {}
+    if ref or model:
+        con.execute(
+            "INSERT INTO hyperspace_model (id,warship_real_velocity_c,merchant_real_velocity_c,"
+            "non_crash_translation_c,alpha_entry_max_velocity_c,canon) VALUES (1,?,?,?,?,?)",
+            (
+                ref.get("warship"),
+                ref.get("merchant"),
+                model.get("non_crash_translation_velocity_c"),
+                model.get("alpha_entry_max_velocity_c"),
+                _b(model.get("canon")),
             ),
         )
     hl = doc.get("hyper_limit") or {}
@@ -427,6 +526,7 @@ def compile_universe(data_dir: pathlib.Path, schema_sql: pathlib.Path, out: path
             "ship_classes",
             "ships",
             "hyperspace_bands",
+            "hyperspace_model",
             "hyper_limits",
             "wormhole_junctions",
             "wormhole_links",

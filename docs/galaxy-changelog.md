@@ -9,6 +9,28 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-16 — Hyperspace band model + ship tech-data model (Sprint 015)
+
+A modeling change rather than new astrography. Encoded **David Weber's own
+"Effective Speed By Hyper Band" chart** into `data/hyperspace/hyperspace.json`:
+per-band `velocity_multiplier` + `translation_bleed_off_pct` (canon), with
+`apparent = multiplier × real_cruise_velocity` (warship 0.6c / merchant 0.5c).
+See [data/README.md](../data/README.md) for the source + copyright note (the
+chart is "All Rights Reserved"; authorization to be sought at v1.0.0+).
+
+Ship tech-data model: each `ship_class` now carries a **`max_hyper_band`**
+(inferred by hull type — warships Zeta/Eta, merchants Delta, canon:false) and a
+real cruise velocity; an individual ship can **override** class stats
+(`ovr_*` → effective = class ⊕ override). Every ship must resolve to a class
+(classless → auto `singleton` class). **Contract → v0.2.0.**
+
+Counts unchanged (13 systems / 14 classes / 33 ships); the artifact gains the
+`hyperspace_model` globals row. Effect: interstellar trips now vary by ship —
+e.g. a Nike-class BC (Eta) flies Sol→Grayson in ~11.1 d vs a Starhauler freighter
+(Delta) in ~26.2 d (was a flat 130 d under the 014 single-band placeholder).
+
+---
+
 ## 2026-06-15 — Expansion: Beowulf + Trevor's Star, Solarian Nevada class
 
 First Phase 2a.1 expansion — proves the data→artifact→engine pipeline handles

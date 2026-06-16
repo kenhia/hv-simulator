@@ -78,6 +78,43 @@ class Universe:
         r = self.con.execute("SELECT * FROM transit_model WHERE id=1").fetchone()
         return dict(r) if r else None
 
+    def hyperspace_model(self) -> dict | None:
+        r = self.con.execute("SELECT * FROM hyperspace_model WHERE id=1").fetchone()
+        return dict(r) if r else None
+
+    def ship(self, ship_id: str) -> dict | None:
+        r = self.con.execute("SELECT * FROM ships WHERE id=?", (ship_id,)).fetchone()
+        return dict(r) if r else None
+
+    def ship_class(self, class_id: str) -> dict | None:
+        r = self.con.execute("SELECT * FROM ship_classes WHERE id=?", (class_id,)).fetchone()
+        return dict(r) if r else None
+
+    def effective_ship(self, ship_id: str) -> dict | None:
+        """A ship's effective stats = class values with ship overrides applied.
+
+        Resolves COALESCE(ship.ovr_*, class.*) for the engine-relevant fields, so
+        a hull with an upgrade/mod/damage shadows its class. Returns None if the
+        ship (or its class) is missing.
+        """
+        s = self.ship(ship_id)
+        if s is None:
+            return None
+        c = self.ship_class(s["class_id"]) or {}
+
+        def eff(ovr_key: str, class_key: str):
+            return s[ovr_key] if s.get(ovr_key) is not None else c.get(class_key)
+
+        return {
+            "id": s["id"],
+            "name": s["name"],
+            "class_id": s["class_id"],
+            "max_g": eff("ovr_max_g", "max_g"),
+            "normal_g": eff("ovr_normal_g", "normal_g"),
+            "max_hyper_band": eff("ovr_max_hyper_band", "max_hyper_band"),
+            "real_cruise_velocity_c": eff("ovr_real_cruise_velocity_c", "real_cruise_velocity_c"),
+        }
+
     def hyper_limit_lmin(self, system_id: str) -> float | None:
         """The primary star's hyper limit (light-minutes).
 
