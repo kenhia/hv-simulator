@@ -20,7 +20,7 @@ from datetime import datetime
 from hvsim.kinematics import ZERO, Vec3
 
 from .event import Event, EventQueue
-from .model import BodyResolver, body_position, evaluate, segment_end
+from .model import BodyResolver, body_position, evaluate, queue_position, segment_end
 from .segment import Segment
 
 
@@ -35,11 +35,13 @@ class ShipState:
     when: datetime
     position: Vec3
     velocity: Vec3
-    phase: str  # predeparture | transit | layover | hyper_cruise | wormhole_transit | arrived
+    # predeparture | transit | layover | hyper_cruise | queued | wormhole_transit | arrived
+    phase: str
     segment_seq: int | None
     eta: datetime | None  # end of the current segment / overall arrival
     system: str | None = None
     frame: str = "heliocentric"
+    queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
 
 
 def _context(segment: Segment) -> tuple[str | None, str]:
@@ -48,6 +50,8 @@ def _context(segment: Segment) -> tuple[str | None, str]:
         return None, "galactic"
     if segment.kind == "wormhole_transit":
         return segment.to_system, "heliocentric"
+    if segment.kind == "wormhole_queue":
+        return segment.from_system, "heliocentric"
     return segment.system, "heliocentric"
 
 
@@ -107,7 +111,8 @@ class Simulation:
         if when < end:
             position, velocity, phase = evaluate(active, when, self.resolve_body)
             system, frame = _context(active)
-            return ShipState(when, position, velocity, phase, active.seq, end, system, frame)
+            qpos = queue_position(active, when)
+            return ShipState(when, position, velocity, phase, active.seq, end, system, frame, qpos)
 
         # Past the last segment's end (no successor entered) — docked at the
         # final body of the final system.

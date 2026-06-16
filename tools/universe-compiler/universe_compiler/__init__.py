@@ -19,7 +19,7 @@ import json
 import pathlib
 import sqlite3
 
-CONTRACT_VERSION = "0.3.0"
+CONTRACT_VERSION = "0.4.0"
 
 
 def _b(v: object) -> int:
@@ -404,9 +404,17 @@ def _load_hyperspace(con: sqlite3.Connection, doc: dict) -> dict[str, float]:
 
 def _load_wormholes(con: sqlite3.Connection, doc: dict) -> None:
     for j in doc.get("junctions", []):
+        traffic = j.get("traffic") or {}
         con.execute(
-            "INSERT INTO wormhole_junctions (id,name,host_system_id,canon) VALUES (?,?,?,?)",
-            (j["id"], j.get("name"), j.get("host_system_id"), _b(j.get("canon"))),
+            "INSERT INTO wormhole_junctions "
+            "(id,name,host_system_id,traffic_intensity,canon) VALUES (?,?,?,?,?)",
+            (
+                j["id"],
+                j.get("name"),
+                j.get("host_system_id"),
+                traffic.get("mean_queue_depth"),
+                _b(j.get("canon")),
+            ),
         )
     for link in doc.get("links", []):
         eps = link.get("endpoints") or []

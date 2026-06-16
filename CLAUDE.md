@@ -29,8 +29,14 @@ the `tools/nav-planner` route-finder — a ship can now be auto-routed and flown
 across the galaxy with realistic multi-day clocks (`just plan`). **Phase 2b.1
 (operate the galaxy) is complete** (Sprints 017–018): canonical transponder ship
 identity, and the `/fleet` HTTP API to file/fly/board planned routes — **deployed
-to `kubsdb`** and validated with a live 5-ship shakedown. Design is in
-`planning/006`; **next is Phase 2c** (wormhole queues — the DES payoff).
+to `kubsdb`** and validated with a live 5-ship shakedown. **Phase 2c is underway**:
+Sprint 019 landed the engine's **first stateful resolver** — wormhole transit
+**queues**. A ship reaching a junction joins a queue (an open-ended
+`wormhole_queue` segment the fleet resolver fixes at arrival) and reports `queued`
+with a counting-down position + ETA (`just queue-demo`); depth comes from a
+seeded per-junction phantom-traffic knob (`traffic_intensity`, contract v0.4.0)
+plus deterministic real-ship interleaving. Engine/CLI-level; the deployed `/fleet`
+queue board is Sprint 020. Design is in `planning/006`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,

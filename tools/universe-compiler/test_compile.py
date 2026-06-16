@@ -21,7 +21,7 @@ def test_compiles_catalog(tmp_path) -> None:
 
     con = sqlite3.connect(out)
     # schema_meta version recorded.
-    assert con.execute("SELECT version FROM schema_meta").fetchone()[0] == "0.3.0"
+    assert con.execute("SELECT version FROM schema_meta").fetchone()[0] == "0.4.0"
     # Ids are system-namespaced (no Sol/Manticore "titan" collision).
     bid = con.execute("SELECT id FROM bodies WHERE name='Manticore'").fetchone()[0]
     assert bid == "manticore:manticore"

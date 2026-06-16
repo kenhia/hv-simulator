@@ -465,9 +465,15 @@ Phase 2b is engine/CLI-level; the deployed HTTP service is still Phase-1 shaped
 
 ### Phase 2c — Wormhole queues (the DES payoff)
 
+Split: **Sprint 019** builds the resolver + phantom traffic + the countdown at the
+engine/CLI level (the hard, architectural part — resolution moves from per-ship to
+a fleet-level fold); **Sprint 020** surfaces queue positions on the deployed
+`/fleet` board. Real-ship interleaving is in 019 (the DES's reason for being).
+
 - **Wormhole queue resolver:** the dataset's `transit_model`
   (`tau(M)=A√M+B·M²`) + safety buffer + queue semantics; the "wait in queue"
-  segment is **open-ended** until the resolver fixes the departure time.
+  segment is **open-ended** until the resolver fixes the departure time (the
+  `OpenEndedSegment` seam from Sprint 013).
 - **Phantom traffic** — seeded so queues feel alive without thousands of tracked
   ships. **Deterministic in *result*, varied in *depth*** (the key refinement):
   - **A junction is not a constant.** Don't make every arrival at Junction-X land

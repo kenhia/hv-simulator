@@ -1,4 +1,7 @@
--- Universe artifact — compiled SQLite schema (CONTRACT v0.3.0)
+-- Universe artifact — compiled SQLite schema (CONTRACT v0.4.0)
+-- v0.4.0 (Sprint 019): wormhole_junctions.traffic_intensity — a fabricated
+--   (canon:false) per-junction mean-queue-depth knob driving the wormhole queue
+--   resolver's phantom-traffic stream (busy junction -> deeper queue).
 -- v0.3.0 (Sprint 017): transponder identity — nations.code + ship_classes.code +
 --   ships.hull_code give each ship a dotted nation.class.hull transponder (stored
 --   on ships.transponder); ships.modified (engine-only, derived from ovr_*).
@@ -133,10 +136,13 @@ CREATE TABLE places (                            -- stations, jun:nexus, forts, 
 );
 
 CREATE TABLE wormhole_junctions (
-    id              TEXT PRIMARY KEY,
-    name            TEXT NOT NULL,
-    host_system_id  TEXT REFERENCES star_systems(id),
-    canon           INTEGER NOT NULL DEFAULT 1
+    id                TEXT PRIMARY KEY,
+    name              TEXT NOT NULL,
+    host_system_id    TEXT REFERENCES star_systems(id),
+    -- Fabricated (canon:false) mean queue depth a ship expects to find on arrival;
+    -- the wormhole queue resolver's phantom-traffic mean. NULL -> no queue modelled.
+    traffic_intensity REAL,
+    canon             INTEGER NOT NULL DEFAULT 1
 );
 
 -- Directed-or-undirected wormhole edges between systems (one per traversable link).

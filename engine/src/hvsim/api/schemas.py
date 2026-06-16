@@ -85,7 +85,7 @@ class VelocityOut(BaseModel):
 
 class StateOut(BaseModel):
     when: datetime
-    # idle | predeparture | transit | layover | hyper_cruise | wormhole_transit | arrived
+    # idle | predeparture | transit | layover | hyper_cruise | queued | wormhole_transit | arrived
     phase: str
     segment_seq: int | None
     position: PositionOut
@@ -99,6 +99,7 @@ class StateOut(BaseModel):
     system: str | None = None
     frame: str = "heliocentric"  # heliocentric | galactic
     transponder: str | None = None
+    queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
 
 
 class ShipOut(BaseModel):

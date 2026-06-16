@@ -12,6 +12,10 @@ frame; inter-system kinds (``hyper_cruise``, ``wormhole_transit``) added in Spri
   ``hyper_cruise`` so position interpolates along the interstellar line.
 - ``from_system`` / ``to_system`` — endpoints of a hyper or wormhole leg; a
   ``wormhole_transit`` reports arrival in ``to_system``.
+- ``junction`` / ``queue_ahead`` — a ``wormhole_queue`` segment (Sprint 019): the
+  junction the ship waits at, and the sorted transit-open instants of everything
+  ahead of it once the fleet resolver has fixed the queue (used for ``position``).
+  Open-ended (``t_end is None``) until the resolver runs.
 """
 
 from __future__ import annotations
@@ -37,6 +41,8 @@ class Segment:
     to_pos: Vec3 | None = None  # hyper_cruise: galactic-frame end (metres)
     from_system: str | None = None  # hyper / wormhole origin
     to_system: str | None = None  # hyper / wormhole destination
+    junction: str | None = None  # wormhole_queue: the junction being transited
+    queue_ahead: tuple[datetime, ...] | None = None  # wormhole_queue: transit-opens ahead
 
     @property
     def duration_s(self) -> float:

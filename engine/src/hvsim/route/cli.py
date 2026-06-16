@@ -20,6 +20,7 @@ from hvsim.route import (
     Route,
     RouteLeg,
     compile_route,
+    resolve_route,
     ship_from_artifact,
     simulation_for_route,
 )
@@ -45,7 +46,9 @@ def render(u: Universe) -> str:
     for ship_id in DEMO_SHIPS:
         ship = ship_from_artifact(u, ship_id)
         route = Route(ship, "sol", "earth", list(LEGS), DEPART)
-        c: CompiledRoute = compile_route(route, u)
+        # Resolve the wormhole queue (phantom traffic) so the timeline is closed.
+        key = u.transponder(ship_id) or ship_id
+        c: CompiledRoute = resolve_route(compile_route(route, u), u, key)
         band = u.hyperspace_band(ship.max_hyper_band or 4)
         total = (c.arrival - c.depart_at).total_seconds()
         lines.append(

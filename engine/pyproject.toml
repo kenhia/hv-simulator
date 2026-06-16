@@ -15,6 +15,7 @@ dependencies = [
 [project.scripts]
 where-is = "hvsim.ephemeris.cli:main"
 demo-route = "hvsim.route.cli:main"
+queue-demo = "hvsim.queue.cli:main"
 
 [dependency-groups]
 dev = [

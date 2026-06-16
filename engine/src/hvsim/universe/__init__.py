@@ -58,6 +58,12 @@ class Universe:
     def wormhole_junctions(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_junctions ORDER BY id")]
 
+    def wormhole_junction(self, junction_id: str) -> dict | None:
+        r = self.con.execute(
+            "SELECT * FROM wormhole_junctions WHERE id=?", (junction_id,)
+        ).fetchone()
+        return dict(r) if r else None
+
     def wormhole_links(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_links ORDER BY id")]
 
@@ -115,6 +121,7 @@ class Universe:
             "normal_g": eff("ovr_normal_g", "normal_g"),
             "max_hyper_band": eff("ovr_max_hyper_band", "max_hyper_band"),
             "real_cruise_velocity_c": eff("ovr_real_cruise_velocity_c", "real_cruise_velocity_c"),
+            "mass_tons": c.get("mass_tons"),
         }
 
     def transponder(self, ship_id: str) -> str | None:
