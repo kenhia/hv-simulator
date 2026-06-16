@@ -392,12 +392,22 @@ the core itself doesn't exist yet. Split into three sprints:
   override) + singleton classes; `compile_route` flies per-ship band speeds
   (`demo-route`: Nike/Eta ~11.1 d vs Starhauler/Delta ~26.2 d). Contract → v0.2.0.
 - **Sprint 016 — nav route planner (separate tool).** `tools/nav-planner/` (its
-  own pyproject) — graph search over systems + wormhole edges + hyper lanes →
-  a filed multi-mode route the engine executes. Per the founding split the
-  planner is **not** physics and stays out of the engine; built **UI-first in
-  intent** so it later backs the flow *select a ship → pick a destination →
-  planner emits a flight plan for user approval*. (Then Phase 2c — wormhole
-  queues — follows.)
+  own pyproject) — Dijkstra over systems (hyper edges all-pairs by frame distance,
+  wormhole edges from the link graph; ship-aware time weights from the band model)
+  → a **filed-route JSON** the engine loads + flies. Depends on the engine package
+  (reuses `Universe`/`effective_ship`/`Route`); route-finding stays in the tool,
+  physics stays in the engine. Built **UI-first in intent** (the JSON is the
+  *flight plan for approval*) so it later backs *select a ship → pick a destination
+  → approve → fly*. **Plan-and-fly end-to-end** (`just plan`). A filed route
+  requires the ship to be **at its origin (at rest) unless in dev mode** — derived
+  from the ship's current `ShipState` via `Simulation.navigable_location` (phase
+  predeparture/layover/arrived → a body; in-motion → None/reject), no new field;
+  re-routing an in-flight ship is deferred. v1 returns the single fastest route.
+  ✅ **Done (Sprint 016):** `tools/nav-planner/` (Dijkstra; wormhole edges =
+  `transit=="instant"` only) → filed-route JSON; engine `to_filed`/`from_filed` +
+  `fly_filed_route` + `Simulation.navigable_location` guard; `just plan` auto-plans
+  & flies Sol→Grayson (~11.1 d, the canonical route). Contract v0.2.0. **Phase 2b
+  complete.** (Then Phase 2c — wormhole queues — follows.)
 - **Deliverable (end of 2b, demonstrated in 014):** end-to-end **Sol → Beowulf
   →(wormhole)→ Manticore → Yeltsin's Star** flight with realistic multi-day
   clocks; state queryable across systems — exercising every mode (hyper +

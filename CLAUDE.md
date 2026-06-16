@@ -22,8 +22,12 @@ engine load the compiled SQLite **universe artifact** — placing bodies (binary
 in any system, the wormhole route graph + hyperspace model, and a Sol-origin galactic
 frame. 2a.1 (Sprint 012) proved the pipeline on real expansion (Beowulf, Trevor's
 Star, the Solarian Nevada class), stood up `docs/galaxy-changelog.md`, and codified
-the `expand-galaxy` orchestrator skill. Design is in `planning/006`; the engine is
-being re-founded on a lazy discrete-event core (DES) for travel/queues in 2b/2c.
+the `expand-galaxy` orchestrator skill. **Phase 2b is complete** (Sprints 013–016):
+the engine was re-founded on a lazy discrete-event core (DES, Phase 1 parity), then
+gained inter-system travel (hyper + wormhole), the canon hyperspace band model, and
+the `tools/nav-planner` route-finder — a ship can now be auto-routed and flown
+across the galaxy with realistic multi-day clocks (`just plan`). Design is in
+`planning/006`; **next is Phase 2c** (wormhole queues — the DES payoff).
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
@@ -184,8 +188,19 @@ have a class; a classless one gets an auto **`singleton`** class. The per-band
 translation bleed-off + Iota-needs-streak-drive are recorded but not enforced on
 v1 clocks (band-climb time is noise; only the 0.3c alpha-translation is a limit);
 nation/era caps (e.g. Grayson pre-Alliance Gamma) await `ALLOW_ANACHRONISMS`
-enforcement. Contract is **v0.2.0**. The **`tools/nav-planner/`** route-finder
-follows (Sprint 016); routes are hand-filed until then.
+enforcement. Contract is **v0.2.0**.
+
+**`tools/nav-planner/` is the route-finder** (Sprint 016) — the first tool that
+depends on the engine package. Dijkstra over placed systems (hyper edges all-pairs
+by frame distance with ship-aware band-speed weights; wormhole edges from the link
+graph, weight ~buffer) → a **filed-route JSON** (`hvsim.route.to_filed` /
+`from_filed`, the planner↔engine seam and the "flight plan for approval"). The
+engine loads + flies it via `fly_filed_route`, guarded by
+`Simulation.navigable_location(when)` — a phase-based derivation of the ship's
+current navigable point (predeparture/layover/arrived → a body; in-motion → None):
+outside dev mode the route origin must equal it, else reject (re-routing a moving
+ship is deferred). `nav-plan` CLI / `just plan`. Route-finding stays in the tool;
+physics stays in the engine.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

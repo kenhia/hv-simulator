@@ -18,7 +18,17 @@ import pytest
 
 from hvsim.flightplan import Ship
 from hvsim.kinematics import SPEED_OF_LIGHT
-from hvsim.route import Route, RouteLeg, compile_route, ship_from_artifact, simulation_for_route
+from hvsim.route import (
+    NotAtOrigin,
+    Route,
+    RouteLeg,
+    compile_route,
+    fly_filed_route,
+    from_filed,
+    ship_from_artifact,
+    simulation_for_route,
+    to_filed,
+)
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
 DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
@@ -272,3 +282,73 @@ def test_route_is_deterministic(u: Universe) -> None:
     for frac in (0.0, 0.5, 1.1):
         when = a.depart_at + (a.arrival - a.depart_at) * frac
         assert sim_a.state(when) == sim_b.state(when)
+
+
+# --- navigable_location (phase-based) -------------------------------------------
+
+
+def test_navigable_location_by_phase(u: Universe) -> None:
+    c = compile_route(_deliverable(WARSHIP), u)
+    sim = simulation_for_route(c, u)
+    # Pre-departure: at the origin body.
+    assert sim.navigable_location(DEPART - timedelta(hours=1)) == ("alpha", "alpha:p1")
+    # Mid-trip (any moving phase): not navigable.
+    assert sim.navigable_location(DEPART + (c.arrival - DEPART) * 0.5) is None
+    # Arrived: at the destination body.
+    assert sim.navigable_location(c.arrival + timedelta(hours=1)) == ("gamma", "gamma:p1")
+
+
+def test_navigable_location_layover(u: Universe) -> None:
+    # An in-system hop with a layover: navigable (at rest at the body) during it.
+    route = Route(
+        WARSHIP,
+        "alpha",
+        "alpha:p1",
+        [RouteLeg("nspace", "alpha", "alpha:far", layover=timedelta(days=2))],
+        DEPART,
+    )
+    c = compile_route(route, u)
+    sim = simulation_for_route(c, u)
+    layover = next(s for s in c.segments if s.kind == "layover")
+    mid = layover.t_start + timedelta(hours=1)
+    assert sim.navigable_location(mid) == ("alpha", "alpha:far")
+
+
+# --- Filed-route round-trip + the at-origin guard -------------------------------
+
+
+def _filed(u: Universe, ship_id: str = "war-1") -> dict:
+    legs = list(_deliverable(WARSHIP).legs)
+    route = Route(ship_from_artifact(u, ship_id), "alpha", "alpha:p1", legs, DEPART)
+    return to_filed(route, ship_id)
+
+
+def test_filed_route_round_trips(u: Universe) -> None:
+    doc = _filed(u)
+    route = from_filed(doc, u)
+    assert (route.origin_system, route.origin_body) == ("alpha", "alpha:p1")
+    assert [(leg.mode, leg.to_system) for leg in route.legs] == [
+        ("hyper", "beta"),
+        ("wormhole", "gamma"),
+        ("hyper", "gamma"),
+    ]
+    # The reloaded route compiles and flies.
+    assert compile_route(route, u).segments
+
+
+def test_fly_filed_route_guard(u: Universe) -> None:
+    doc = _filed(u)
+    current = simulation_for_route(compile_route(_deliverable(WARSHIP), u), u)
+    # Ship at the origin (pre-departure) -> accepted.
+    compiled = fly_filed_route(doc, u, current=current, now=DEPART - timedelta(hours=1))
+    assert compiled.segments
+    # Ship under way -> rejected (navigable_location is None).
+    mid = DEPART + (current_arrival(u) - DEPART) * 0.5
+    with pytest.raises(NotAtOrigin):
+        fly_filed_route(doc, u, current=current, now=mid)
+    # Dev mode bypasses the guard.
+    assert fly_filed_route(doc, u, current=current, now=mid, dev=True).segments
+
+
+def current_arrival(u: Universe) -> datetime:
+    return compile_route(_deliverable(WARSHIP), u).arrival

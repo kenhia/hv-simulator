@@ -59,6 +59,7 @@ check:
     cd tools/universe-compiler && uv run pytest -q
     cd tools/orbit-derive && uv run pytest -q
     cd tools/coordinate-frame && uv run pytest -q
+    cd tools/nav-planner && uv run pytest -q
 
 # Validate the boundary contracts (build sample artifact from DDL + lint OpenAPI).
 contracts:
@@ -79,6 +80,14 @@ galaxy-summary:
 # Fly the canonical interstellar route (Sol -> Beowulf -> Manticore -> Grayson).
 demo-route:
     cd engine && HVSIM_UNIVERSE_DB=../build/universe.db uv run demo-route
+
+# Plan a route for a ship (nav-planner) and show the engine's clock. Args:
+# `just plan <ship> <from-system> <from-body> <to-system> <to-body>` (defaults to
+# HMS Nike, Sol/earth -> Yeltsin's Star/Grayson).
+plan ship="hms-nike-bc-562" fromsys="sol" frombody="earth" tosys="yeltsins-star" tobody="yeltsins-star:grayson":
+    cd tools/nav-planner && uv run nav-plan --db ../../build/universe.db \
+        --ship {{ship}} --from-system {{fromsys}} --from-body {{frombody}} \
+        --to-system {{tosys}} --to-body {{tobody}}
 
 # Compile data/ JSON into the read-only SQLite universe artifact (build/universe.db).
 compile-data:

@@ -25,8 +25,8 @@ run-out and the hyper cruise both decelerate to rest at the hyper limit, which
 trivially satisfies the translation-velocity limits (<=0.3c entering Alpha from
 n-space, <=0.2c x mult exiting) — modelling translate-while-moving at those caps is
 a future refinement. A wormhole leg fires from wherever the ship is (no explicit
-hop to the nexus). Route-*finding* is the nav-planner (next sprint); routes here
-are hand-filed.
+hop to the nexus). Route-*finding* lives in the `tools/nav-planner` tool, which
+emits a filed route (see `to_filed` / `from_filed`); routes can also be hand-filed.
 """
 
 from __future__ import annotations
@@ -262,3 +262,84 @@ def simulation_for_route(compiled: CompiledRoute, u: Universe) -> Simulation:
         final_body=compiled.final_body,
         resolve_body=body_resolver(u),
     )
+
+
+# -- Filed-route document (the planner -> engine seam) --------------------------
+
+FILED_ROUTE_SCHEMA = "hvsim.filed-route/v1"
+
+
+class NotAtOrigin(Exception):
+    """A planned route was filed for a ship not at the route's origin."""
+
+
+def to_filed(route: Route, ship_id: str) -> dict:
+    """Serialize a route to the filed-route document the engine can reload.
+
+    ``ship_id`` is carried explicitly (a :class:`Ship` holds no artifact id); on
+    reload it is resolved back to effective stats via :func:`ship_from_artifact`.
+    """
+    return {
+        "schema": FILED_ROUTE_SCHEMA,
+        "ship": ship_id,
+        "origin": {"system": route.origin_system, "body": route.origin_body},
+        "depart_at": route.depart_at.isoformat(),
+        "legs": [
+            {
+                "mode": leg.mode,
+                "to_system": leg.to_system,
+                "to_body": leg.to_body,
+                "layover_s": leg.layover.total_seconds(),
+            }
+            for leg in route.legs
+        ],
+    }
+
+
+def from_filed(doc: dict, u: Universe) -> Route:
+    """Rebuild a :class:`Route` from a filed-route document (resolving the ship)."""
+    if doc.get("schema") != FILED_ROUTE_SCHEMA:
+        raise ValueError(f"unexpected filed-route schema: {doc.get('schema')!r}")
+    ship = ship_from_artifact(u, doc["ship"])
+    legs = [
+        RouteLeg(
+            mode=leg["mode"],
+            to_system=leg["to_system"],
+            to_body=leg.get("to_body"),
+            layover=timedelta(seconds=leg.get("layover_s") or 0.0),
+        )
+        for leg in doc["legs"]
+    ]
+    return Route(
+        ship=ship,
+        origin_system=doc["origin"]["system"],
+        origin_body=doc["origin"]["body"],
+        legs=legs,
+        depart_at=datetime.fromisoformat(doc["depart_at"]),
+    )
+
+
+def fly_filed_route(
+    doc: dict,
+    u: Universe,
+    *,
+    current: Simulation | None = None,
+    now: datetime | None = None,
+    dev: bool = False,
+) -> CompiledRoute:
+    """Load and compile a filed route, enforcing the at-origin precondition.
+
+    Unless ``dev``, a ship with an active plan (``current``) must be at the route's
+    origin (a navigable point) *now* — else :class:`NotAtOrigin`. An idle ship
+    (``current is None``) is accepted (its location can't be derived yet). Re-routing
+    an in-motion ship is rejected (``navigable_location`` returns None).
+    """
+    route = from_filed(doc, u)
+    if not dev and current is not None:
+        at = now if now is not None else route.depart_at
+        loc = current.navigable_location(at)
+        if loc != (route.origin_system, route.origin_body):
+            raise NotAtOrigin(
+                f"ship is at {loc}, not the route origin {(route.origin_system, route.origin_body)}"
+            )
+    return compile_route(route, u)
