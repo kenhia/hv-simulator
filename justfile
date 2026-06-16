@@ -76,6 +76,10 @@ frame:
 galaxy-summary:
     python3 tools/galaxy-summary.py build/universe.db
 
+# Fly the canonical interstellar route (Sol -> Beowulf -> Manticore -> Grayson).
+demo-route:
+    cd engine && HVSIM_UNIVERSE_DB=../build/universe.db uv run demo-route
+
 # Compile data/ JSON into the read-only SQLite universe artifact (build/universe.db).
 compile-data:
     cd tools/universe-compiler && uv run hvsim-compile --data ../../data \

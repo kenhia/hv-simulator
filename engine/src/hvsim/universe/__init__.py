@@ -18,6 +18,7 @@ from hvsim.ephemeris.kepler import AU_M, _orbital_to_xyz, days_since_j2000
 from hvsim.kinematics import Vec3
 
 LMIN_M = 1.798754748e10  # 1 light-minute in metres
+LY_M = 9.460730472580800e15  # 1 light-year in metres
 
 
 class Universe:
@@ -59,6 +60,55 @@ class Universe:
 
     def wormhole_links(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_links ORDER BY id")]
+
+    # -- Hyperspace / wormhole model (the travel parameters, read from data) ----
+
+    def hyperspace_bands(self) -> list[dict]:
+        return [
+            dict(r) for r in self.con.execute("SELECT * FROM hyperspace_bands ORDER BY band_order")
+        ]
+
+    def hyperspace_band(self, band_order: int) -> dict | None:
+        r = self.con.execute(
+            "SELECT * FROM hyperspace_bands WHERE band_order=?", (band_order,)
+        ).fetchone()
+        return dict(r) if r else None
+
+    def transit_model(self) -> dict | None:
+        r = self.con.execute("SELECT * FROM transit_model WHERE id=1").fetchone()
+        return dict(r) if r else None
+
+    def hyper_limit_lmin(self, system_id: str) -> float | None:
+        """The primary star's hyper limit (light-minutes).
+
+        Sol is special-cased (no star row in the artifact): it is a G2 star, so
+        the canon-exact G2 entry from the hyper-limit table is used.
+        """
+        if system_id == "sol":
+            r = self.con.execute(
+                "SELECT limit_lmin FROM hyper_limits WHERE spectral_class='G2'"
+            ).fetchone()
+            return r[0] if r else None
+        r = self.con.execute(
+            "SELECT hyper_limit_lmin FROM stars WHERE system_id=? "
+            "ORDER BY (role='primary') DESC LIMIT 1",
+            (system_id,),
+        ).fetchone()
+        return r[0] if r and r[0] is not None else None
+
+    def coordinates(self, system_id: str) -> tuple[float, float, float] | None:
+        """A system's galactic-frame coordinates (ly); Sol is the origin."""
+        return _coords(self, system_id)
+
+    def wormhole_link_between(self, a: str, b: str) -> dict | None:
+        """The wormhole link directly connecting systems ``a`` and ``b``, if any."""
+        r = self.con.execute(
+            "SELECT * FROM wormhole_links "
+            "WHERE (from_system_id=? AND to_system_id=?) OR (from_system_id=? AND to_system_id=?) "
+            "LIMIT 1",
+            (a, b, b, a),
+        ).fetchone()
+        return dict(r) if r else None
 
 
 def _coords(u: Universe, system_id: str) -> tuple[float, float, float] | None:
