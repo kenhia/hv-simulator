@@ -216,7 +216,7 @@ effective stats. Band-climb time + bleed-off are recorded but not applied to
 clocks (only the 0.3c limit); nation/era caps await `ALLOW_ANACHRONISMS`.
 
 `just demo-route` now flies the canonical route for two hulls: **HMS Nike
-(Eta) ≈ 10.5 d** vs **CMS Starhauler (Delta) ≈ 24.6 d** (was a flat 130 d).
+(Eta) ≈ 11.1 d** vs **CMS Starhauler (Delta) ≈ 26.2 d** (was a flat 130 d).
 Tests: engine `tests/test_route.py` (12 — band model, galactic-frame cruise,
 higher-band-is-faster, unattainable-band rejection, run-to-limit, wormhole buffer,
 effective-stat override resolution, coast, determinism); compiler tests add

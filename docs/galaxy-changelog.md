@@ -26,8 +26,8 @@ real cruise velocity; an individual ship can **override** class stats
 
 Counts unchanged (13 systems / 14 classes / 33 ships); the artifact gains the
 `hyperspace_model` globals row. Effect: interstellar trips now vary by ship —
-e.g. a Nike-class BC (Eta) flies Sol→Grayson in ~10.5 d vs a Starhauler freighter
-(Delta) in ~24.6 d (was a flat 130 d under the 014 single-band placeholder).
+e.g. a Nike-class BC (Eta) flies Sol→Grayson in ~11.1 d vs a Starhauler freighter
+(Delta) in ~26.2 d (was a flat 130 d under the 014 single-band placeholder).
 
 ---
 

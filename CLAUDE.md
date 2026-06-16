@@ -162,7 +162,7 @@ exhaustive dispatch (`des/model.py`) — the seam new travel modes plug into.
 **`route/` is multi-mode interstellar travel** (Sprint 014). A filed `Route` of
 mode-tagged legs (`nspace` / `hyper` / `wormhole`) compiles via `compile_route`
 into DES segments: a hyper leg → an n-space **run out** past the origin star's
-hyper limit + `hyper_cruise` (distance ÷ band apparent velocity) + an n-space
+hyper limit + `hyper_cruise` (accel/coast/decel at apparent = band-multiplier × real velocity) + an n-space
 **approach** to the target body; a wormhole leg → `wormhole_transit` (instant +
 fixed `buffer_normal_s`). (The run-out/approach are the mundane impeller legs to
 and from the hyper limit — *not* the Honorverse band "climb/descent".) Every

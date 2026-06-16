@@ -390,7 +390,7 @@ the core itself doesn't exist yet. Split into three sprints:
   encoded as data (`apparent = multiplier × real`, warship 0.6 / merchant 0.5);
   `ship_classes.max_hyper_band` + per-ship `ovr_*` overrides (effective = class ⊕
   override) + singleton classes; `compile_route` flies per-ship band speeds
-  (`demo-route`: Nike/Eta ~10.5 d vs Starhauler/Delta ~24.6 d). Contract → v0.2.0.
+  (`demo-route`: Nike/Eta ~11.1 d vs Starhauler/Delta ~26.2 d). Contract → v0.2.0.
 - **Sprint 016 — nav route planner (separate tool).** `tools/nav-planner/` (its
   own pyproject) — graph search over systems + wormhole edges + hyper lanes →
   a filed multi-mode route the engine executes. Per the founding split the

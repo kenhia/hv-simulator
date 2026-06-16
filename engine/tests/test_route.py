@@ -16,8 +16,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from hvsim.clock import T_YEAR
 from hvsim.flightplan import Ship
+from hvsim.kinematics import SPEED_OF_LIGHT
 from hvsim.route import Route, RouteLeg, compile_route, ship_from_artifact, simulation_for_route
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
@@ -162,12 +162,16 @@ def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
 # --- The Weber band model: apparent = multiplier x real velocity ----------------
 
 
-def test_hyper_cruise_time_from_multiplier_and_real_velocity(u: Universe) -> None:
+def test_hyper_cruise_accel_coast_decel_at_band_speed(u: Universe) -> None:
     c = compile_route(_deliverable(WARSHIP), u)
     cruise = c.segments[1]  # alpha -> beta, 40 ly
-    apparent_c = 4294 * 0.6  # Eta multiplier x warship real velocity
-    expected_s = 40.0 / apparent_c * T_YEAR.total_seconds()
-    assert cruise.duration_s == pytest.approx(expected_s, rel=1e-9)
+    # An interstellar leg reaches the apparent v_cap and coasts.
+    assert cruise.trajectory.profile.coasts
+    peak = cruise.trajectory.profile.v_peak
+    assert peak == pytest.approx(4294 * 0.6 * SPEED_OF_LIGHT, rel=1e-9)  # mult x real x c
+    # Duration = the constant-cruise lower bound + a small accel/decel overhead.
+    lower = 40.0 * LY_M / peak
+    assert lower < cruise.duration_s < lower * 1.2
     assert cruise.to_pos.norm() == pytest.approx(40.0 * LY_M, rel=1e-9)
 
 

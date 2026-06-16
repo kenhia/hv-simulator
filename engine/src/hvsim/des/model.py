@@ -65,15 +65,6 @@ def _resolve(segment: Any, when: datetime, resolve_body: BodyResolver | None) ->
     return body_position(segment.body, when)
 
 
-def _fraction(segment: Any, when: datetime) -> float:
-    """Elapsed fraction of a closed segment, clamped to [0, 1]."""
-    assert segment.t_end is not None
-    total = (segment.t_end - segment.t_start).total_seconds()
-    if total <= 0.0:
-        return 1.0
-    return min(max((when - segment.t_start).total_seconds() / total, 0.0), 1.0)
-
-
 def segment_end(segment: Any, when: datetime) -> datetime:
     """Resolve a segment's end instant.
 
@@ -102,13 +93,11 @@ def evaluate(
     if segment.kind == "layover":
         return _resolve(segment, when, resolve_body), ZERO, "layover"
     if segment.kind == "hyper_cruise":
-        assert segment.from_pos is not None and segment.to_pos is not None
-        leg = segment.to_pos - segment.from_pos
-        frac = _fraction(segment, when)
-        position = segment.from_pos + leg * frac
-        total = (segment.t_end - segment.t_start).total_seconds()  # type: ignore[operator]
-        velocity = leg * (1.0 / total) if total > 0.0 else ZERO
-        return position, velocity, "hyper_cruise"
+        # Accel/coast/decel in the galactic frame (apparent units). Same closed-form
+        # trajectory as a transit, just reported in the galactic frame.
+        assert segment.trajectory is not None
+        st = segment.trajectory.state((when - segment.t_start).total_seconds())
+        return st.position, st.velocity, "hyper_cruise"
     if segment.kind == "wormhole_transit":
         # Near-instant translation + buffer; reported at the destination star
         # centre (origin of the to_system frame). Position precision during the
