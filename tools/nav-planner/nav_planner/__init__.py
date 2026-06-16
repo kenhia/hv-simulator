@@ -175,7 +175,10 @@ def main(argv: list[str] | None = None) -> int:
     route = plan_route(
         u, args.ship, args.from_system, args.from_body, args.to_system, args.to_body, depart
     )
-    filed = to_filed(route, args.ship)
+    transponder = u.transponder(args.ship)
+    if transponder is None:
+        raise SystemExit(f"ship {args.ship!r} has no transponder")
+    filed = to_filed(route, transponder)
 
     compiled = compile_route(route, u)  # the engine's authoritative clock
     eta_s = (compiled.arrival - compiled.depart_at).total_seconds()

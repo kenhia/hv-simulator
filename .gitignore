@@ -2,6 +2,8 @@
 
 # Compiled universe artifact (build output; data/ JSON is the source of truth)
 build/
+# Transient: `just build` stages the artifact here for the Docker context
+engine/universe.db
 
 # Local env (justfile reads .env); keep the committed example.
 .env

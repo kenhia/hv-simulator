@@ -106,13 +106,17 @@ def artifact_path(tmp_path) -> str:
         "singleton,canon) VALUES ('hauler','Hauler',200,4,0.5,0,1)"
     )
     # war-1 inherits the class; war-2 has a Theta upgrade override; haul-1 is a merchant.
-    con.execute("INSERT INTO ships (id,name,class_id,canon) VALUES ('war-1','War One','warbird',1)")
     con.execute(
-        "INSERT INTO ships (id,name,class_id,ovr_max_hyper_band,canon) "
-        "VALUES ('war-2','War Two','warbird',8,1)"
+        "INSERT INTO ships (id,name,class_id,transponder,canon) "
+        "VALUES ('war-1','War One','warbird','1.1.1',1)"
     )
     con.execute(
-        "INSERT INTO ships (id,name,class_id,canon) VALUES ('haul-1','Haul One','hauler',1)"
+        "INSERT INTO ships (id,name,class_id,ovr_max_hyper_band,transponder,canon) "
+        "VALUES ('war-2','War Two','warbird',8,'1.1.2',1)"
+    )
+    con.execute(
+        "INSERT INTO ships (id,name,class_id,transponder,canon) "
+        "VALUES ('haul-1','Haul One','hauler','1.2.1',1)"
     )
 
     con.execute(
@@ -317,10 +321,10 @@ def test_navigable_location_layover(u: Universe) -> None:
 # --- Filed-route round-trip + the at-origin guard -------------------------------
 
 
-def _filed(u: Universe, ship_id: str = "war-1") -> dict:
+def _filed(u: Universe, transponder: str = "1.1.1") -> dict:
     legs = list(_deliverable(WARSHIP).legs)
-    route = Route(ship_from_artifact(u, ship_id), "alpha", "alpha:p1", legs, DEPART)
-    return to_filed(route, ship_id)
+    route = Route(ship_from_artifact(u, "war-1"), "alpha", "alpha:p1", legs, DEPART)
+    return to_filed(route, transponder)
 
 
 def test_filed_route_round_trips(u: Universe) -> None:

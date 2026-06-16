@@ -10,6 +10,7 @@ services:
       - hvsim-data:/data       # persistent SQLite across restarts/redeploys
     environment:
       - HVSIM_DB=sqlite:////data/hvsim.db
+      - HVSIM_UNIVERSE_DB=/app/universe.db   # galaxy artifact bundled in the image
     restart: unless-stopped    # comes back after a host reboot
     networks:
       - kubsdb-net             # shared bridge: Prometheus scrapes hvsim:8000/metrics by name

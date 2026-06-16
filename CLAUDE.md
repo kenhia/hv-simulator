@@ -26,7 +26,10 @@ the `expand-galaxy` orchestrator skill. **Phase 2b is complete** (Sprints 013–
 the engine was re-founded on a lazy discrete-event core (DES, Phase 1 parity), then
 gained inter-system travel (hyper + wormhole), the canon hyperspace band model, and
 the `tools/nav-planner` route-finder — a ship can now be auto-routed and flown
-across the galaxy with realistic multi-day clocks (`just plan`). Design is in
+across the galaxy with realistic multi-day clocks (`just plan`). **Phase 2b.1
+(operate the galaxy) is complete** (Sprints 017–018): canonical transponder ship
+identity, and the `/fleet` HTTP API to file/fly/board planned routes — **deployed
+to `kubsdb`** and validated with a live 5-ship shakedown. Design is in
 `planning/006`; **next is Phase 2c** (wormhole queues — the DES payoff).
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
@@ -212,6 +215,17 @@ assigns + validates uniqueness; the engine resolves a transponder → effective
 `effective_ship_by_transponder`, + `parse_transponder`/`format_transponder`).
 Slug ids stay primary keys (transponder supplements). False-flag spoofing is
 wartime (deferred). Contract is **v0.3.0**.
+
+**Galaxy fleet API** (Sprint 018) — the deployed service operates galaxy routes,
+**addressed by transponder**, alongside the Phase-1 Sol user-ship endpoints:
+`POST /fleet/routes` (a planner filed-route JSON; persisted as the doc in a
+`RouteRow` and **recompiled on query** — no segment-row churn), `GET
+/fleet/{transponder}/state` (adds `system`/`frame`/vector), `GET /fleet` (the
+board), `DELETE /fleet/{transponder}/route`. The at-origin guard runs at the
+boundary (dev bypass). The artifact is **bundled into the image** (`just build`
+stages `build/universe.db` → `engine/universe.db`; `HVSIM_UNIVERSE_DB` in compose).
+`just shakedown [url]` plans + files a fleet and prints the board (a `?at=` sim-time
+sweep). Planner stays client-side (no `/plan` endpoint).
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.
