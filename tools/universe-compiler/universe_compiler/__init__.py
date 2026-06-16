@@ -19,7 +19,7 @@ import json
 import pathlib
 import sqlite3
 
-CONTRACT_VERSION = "0.2.0"
+CONTRACT_VERSION = "0.3.0"
 
 
 def _b(v: object) -> int:
@@ -482,6 +482,58 @@ def _stub_missing_refs(con: sqlite3.Connection) -> dict[str, int]:
     return {"nations": len(stub_n), "systems": len(stub_s)}
 
 
+def _assign_transponders(con: sqlite3.Connection, codes: dict) -> None:
+    """Assign stable transponder codes + compute each ship's transponder.
+
+    Runs after stubbing so every nation/class/ship exists. A transponder is the
+    dotted ``nation.class.hull`` (stored on ``ships.transponder``); ``modified`` is
+    1 iff the hull carries any ``ovr_*`` override. Codes come from the registry
+    (data/transponder-codes.json); a missing nation/class code is a build error
+    (assign one — never renumber). Auto singleton classes (none in canon data) get
+    a high per-nation code so they don't clash with authored ones.
+    """
+    nation_codes = codes.get("nations", {})
+    class_codes = codes.get("classes", {})
+
+    for (nid,) in con.execute("SELECT id FROM nations").fetchall():
+        code = nation_codes.get(nid)
+        if code is None:
+            raise ValueError(f"nation {nid!r} has no transponder code (add it to transponder-codes.json)")
+        con.execute("UPDATE nations SET code=? WHERE id=?", (code, nid))
+
+    auto_class: dict[str | None, int] = {}
+    for cid, nat in con.execute("SELECT id, affiliation_nation_id FROM ship_classes").fetchall():
+        code = class_codes.get(cid)
+        if code is None:  # auto singleton class -> next free high code in its nation
+            code = auto_class.get(nat, 900)
+            auto_class[nat] = code + 1
+        con.execute("UPDATE ship_classes SET code=? WHERE id=?", (code, cid))
+
+    rows = con.execute(
+        "SELECT s.id, s.class_id, c.code, c.affiliation_nation_id, s.ovr_max_g, s.ovr_normal_g, "
+        "s.ovr_max_hyper_band, s.ovr_real_cruise_velocity_c "
+        "FROM ships s JOIN ship_classes c ON s.class_id=c.id ORDER BY s.class_id, s.id"
+    ).fetchall()
+    hull_counter: dict[str, int] = {}
+    for sid, cls, ccode, nat, *ovr in rows:
+        hull = hull_counter.get(cls, 0) + 1
+        hull_counter[cls] = hull
+        modified = 1 if any(o is not None for o in ovr) else 0
+        nrow = con.execute("SELECT code FROM nations WHERE id=?", (nat,)).fetchone() if nat else None
+        ncode = nrow[0] if nrow and nrow[0] is not None else 0
+        transponder = f"{ncode}.{ccode}.{hull}"
+        con.execute(
+            "UPDATE ships SET hull_code=?, modified=?, transponder=? WHERE id=?",
+            (hull, modified, transponder, sid),
+        )
+
+    dups = con.execute(
+        "SELECT transponder, count(*) c FROM ships GROUP BY transponder HAVING c > 1"
+    ).fetchall()
+    if dups:
+        raise ValueError(f"duplicate transponders: {dups}")
+
+
 def compile_universe(data_dir: pathlib.Path, schema_sql: pathlib.Path, out: pathlib.Path) -> dict:
     """Build the artifact at `out`. Returns a small summary dict."""
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -511,6 +563,12 @@ def compile_universe(data_dir: pathlib.Path, schema_sql: pathlib.Path, out: path
     if (wf := data_dir / "wormholes" / "wormhole-network.json").exists():
         _load_wormholes(con, json.loads(wf.read_text()))
     stubs = _stub_missing_refs(con)
+    # Transponders run last: stub nations now exist, so every nation/class/ship
+    # is present to receive a code.
+    codes = {}
+    if (tf := data_dir / "transponder-codes.json").exists():
+        codes = json.loads(tf.read_text())
+    _assign_transponders(con, codes)
     con.commit()
 
     print(f"  stubbed {stubs['nations']} unbuilt nations, {stubs['systems']} unbuilt systems")

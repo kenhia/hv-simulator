@@ -32,7 +32,7 @@ across the galaxy with realistic multi-day clocks (`just plan`). Design is in
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
 canon:false) → `just compile-data` → `build/universe.db` (artifact, contract
-v0.2.0) → engine loads it (`HVSIM_UNIVERSE_DB`). The artifact carries systems
+v0.3.0) → engine loads it (`HVSIM_UNIVERSE_DB`). The artifact carries systems
 (coords, binary, per-star hyper limits), bodies, the wormhole route graph +
 transit model, and the hyperspace bands. Query via `where-is --system <sys>
 <body>`, `GET /systems`, `/wormholes`, `/junctions`, `/systems/{a}/distance/{b}`
@@ -201,6 +201,17 @@ current navigable point (predeparture/layover/arrived → a body; in-motion → 
 outside dev mode the route origin must equal it, else reject (re-routing a moving
 ship is deferred). `nav-plan` CLI / `just plan`. Route-finding stays in the tool;
 physics stays in the engine.
+
+**Transponder identity** (Sprint 017): every ship has a canonical dotted
+**`nation.class.hull`** transponder (stable integer codes from
+`data/transponder-codes.json` — nation codes are non-sequential: 0 unaffiliated,
+1 Sol, 2 Beowulf reserved, others random-ish in [42,999]) plus an engine-only
+**`modified`** bit (1 iff the hull carries an `ovr_*` override). The compiler
+assigns + validates uniqueness; the engine resolves a transponder → effective
+(class ⊕ override) stats (`Universe.transponder` / `ship_by_transponder` /
+`effective_ship_by_transponder`, + `parse_transponder`/`format_transponder`).
+Slug ids stay primary keys (transponder supplements). False-flag spoofing is
+wartime (deferred). Contract is **v0.3.0**.
 
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.

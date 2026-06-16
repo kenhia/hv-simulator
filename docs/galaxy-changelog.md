@@ -9,6 +9,21 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-16 — Transponder ship identity (Sprint 017)
+
+A data/identity change (no new astrography). Every ship now has a canonical
+**`nation.class.hull`** transponder built from stable integer codes in
+`data/transponder-codes.json`, plus an engine-only `modified` bit (set when a hull
+overrides its class). Nation codes are non-sequential for a lived-in feel: **0**
+unaffiliated, **1** Sol (Solarian League), **2** Beowulf (reserved), others
+random-ish in [42, 999]. All 33 ships got unique transponders (e.g. SLNS *Nevada*
+= `1.2.3`, GNS *Honor Harrington* = `213.1.1`). Slug ids stay the primary keys
+(transponder supplements). **Contract → v0.3.0.** Sets up the deployed galaxy
+service (Sprint 018) and Phase-3 combat/narrative (where transponders + false-flag
+matter). Realizes kwi #65.
+
+---
+
 ## 2026-06-16 — Hyperspace band model + ship tech-data model (Sprint 015)
 
 A modeling change rather than new astrography. Encoded **David Weber's own
