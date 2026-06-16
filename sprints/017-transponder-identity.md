@@ -131,3 +131,11 @@ All **33 ships got unique transponders** (e.g. `emerald-dawn` = `1.1.1`, SLNS
 + compiler (real-data uniqueness/codes + a synthetic modified/missing-code unit).
 `just check` (103 engine + all tools) + `just contracts` green. No route/API
 behavior change — routes/API adopt transponders in Sprint 018.
+
+**Follow-up (same sprint):** hull codes are now **authored** in `ships/ships.json`
+(not compiler-assigned) so they're stable against future ship insertions — the
+compiler reads them (auto-assign remains the fallback for ad-hoc hulls). Added
+`tools/validate-data.py` (+ `just validate-data`, wired into `just check`): a
+source-data linter that enforces the transponder triple is unique (no
+double-assigned hulls) and that classes/nations have codes — catching authoring
+mistakes without a compile.

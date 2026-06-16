@@ -334,8 +334,8 @@ def _load_ships(con: sqlite3.Connection, doc: dict) -> None:
         con.execute(
             "INSERT INTO ships (id,name,prefix,hull_number,class_id,navy,"
             "affiliation_nation_id,role,status,fate_pd,ovr_max_g,ovr_normal_g,"
-            "ovr_max_hyper_band,ovr_real_cruise_velocity_c,canon) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "ovr_max_hyper_band,ovr_real_cruise_velocity_c,hull_code,canon) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 s["id"],
                 s["name"],
@@ -351,6 +351,7 @@ def _load_ships(con: sqlite3.Connection, doc: dict) -> None:
                 ovr.get("normal_g"),
                 _int(ovr.get("max_band")),
                 ovr.get("real_cruise_velocity_c"),
+                _int(s.get("hull_code")),
                 _b(s.get("canon")),
             ),
         )
@@ -510,14 +511,18 @@ def _assign_transponders(con: sqlite3.Connection, codes: dict) -> None:
         con.execute("UPDATE ship_classes SET code=? WHERE id=?", (code, cid))
 
     rows = con.execute(
-        "SELECT s.id, s.class_id, c.code, c.affiliation_nation_id, s.ovr_max_g, s.ovr_normal_g, "
-        "s.ovr_max_hyper_band, s.ovr_real_cruise_velocity_c "
+        "SELECT s.id, s.class_id, c.code, c.affiliation_nation_id, s.hull_code, s.ovr_max_g, "
+        "s.ovr_normal_g, s.ovr_max_hyper_band, s.ovr_real_cruise_velocity_c "
         "FROM ships s JOIN ship_classes c ON s.class_id=c.id ORDER BY s.class_id, s.id"
     ).fetchall()
     hull_counter: dict[str, int] = {}
-    for sid, cls, ccode, nat, *ovr in rows:
-        hull = hull_counter.get(cls, 0) + 1
-        hull_counter[cls] = hull
+    for sid, cls, ccode, nat, hull_code, *ovr in rows:
+        # Authored hull_code wins (stable); otherwise auto-assign per class (ad-hoc).
+        if hull_code is not None:
+            hull = hull_code
+        else:
+            hull = hull_counter.get(cls, 0) + 1
+        hull_counter[cls] = max(hull_counter.get(cls, 0), hull)
         modified = 1 if any(o is not None for o in ovr) else 0
         nrow = con.execute("SELECT code FROM nations WHERE id=?", (nat,)).fetchone() if nat else None
         ncode = nrow[0] if nrow and nrow[0] is not None else 0
