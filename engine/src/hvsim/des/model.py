@@ -19,8 +19,11 @@ Segment kinds (Sprint 014 added the two inter-system kinds):
 - ``layover`` — holding station at a body (tracks the moving body).
 - ``hyper_cruise`` — straight-line interstellar leg at a band's apparent velocity,
   expressed in the galactic frame.
-- ``wormhole_transit`` — near-instant junction translation + a fixed buffer;
-  reports arrival in the destination system.
+- ``wormhole_queue`` — waiting in a junction's transit queue (Sprint 019); an
+  open-ended segment fixed by the fleet queue resolver. Reports phase ``queued``
+  with a queue position; the ship holds at the nexus in the origin system.
+- ``wormhole_transit`` — near-instant junction translation; reports arrival in
+  the destination system.
 """
 
 from __future__ import annotations
@@ -34,7 +37,7 @@ from hvsim.kinematics import ZERO, Vec3
 
 # The closed set of segment kinds. Each addition must extend the dispatch below
 # too, or evaluation raises.
-SEGMENT_KINDS = ("transit", "layover", "hyper_cruise", "wormhole_transit")
+SEGMENT_KINDS = ("transit", "layover", "hyper_cruise", "wormhole_queue", "wormhole_transit")
 
 # A position resolver maps (system_id, body_id, when) -> heliocentric Vec3 (m).
 BodyResolver = Callable[[str, str, datetime], Vec3]
@@ -98,9 +101,24 @@ def evaluate(
         assert segment.trajectory is not None
         st = segment.trajectory.state((when - segment.t_start).total_seconds())
         return st.position, st.velocity, "hyper_cruise"
+    if segment.kind == "wormhole_queue":
+        # Holding at the nexus in the origin system, waiting for a transit slot.
+        # Reported at the star centre (origin of the from_system frame); the
+        # queue position is read separately via :func:`queue_position`.
+        return ZERO, ZERO, "queued"
     if segment.kind == "wormhole_transit":
-        # Near-instant translation + buffer; reported at the destination star
-        # centre (origin of the to_system frame). Position precision during the
-        # short buffer is immaterial.
+        # Near-instant translation; reported at the destination star centre
+        # (origin of the to_system frame). Position precision is immaterial.
         return ZERO, ZERO, "wormhole_transit"
     raise UnknownSegmentKind(segment.kind)
+
+
+def queue_position(segment: Any, when: datetime) -> int | None:
+    """Queue position (1 == next to transit) of a resolved ``wormhole_queue`` segment.
+
+    ``#N`` = (transit-opens still ahead at ``when``) + 1; counts down to the pop.
+    Returns None for any other kind or before the resolver has run.
+    """
+    if segment.kind != "wormhole_queue" or segment.queue_ahead is None:
+        return None
+    return sum(1 for t in segment.queue_ahead if t > when) + 1

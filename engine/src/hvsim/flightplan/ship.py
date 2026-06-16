@@ -22,6 +22,7 @@ class Ship:
     max_velocity_c: float
     max_hyper_band: int | None = None
     hyper_cruise_velocity_c: float | None = None
+    mass_tons: float | None = None  # hull displacement; drives wormhole transit tau(M)
 
     @property
     def accel_si(self) -> float:

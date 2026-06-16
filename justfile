@@ -96,6 +96,10 @@ galaxy-summary:
 demo-route:
     cd engine && HVSIM_UNIVERSE_DB=../build/universe.db uv run demo-route
 
+# Two couriers into the Manticore Junction: watch the transit queue count down.
+queue-demo:
+    cd engine && HVSIM_UNIVERSE_DB=../build/universe.db uv run queue-demo
+
 # Plan a route for a ship (nav-planner) and show the engine's clock. Args:
 # `just plan <ship> <from-system> <from-body> <to-system> <to-body>` (defaults to
 # HMS Nike, Sol/earth -> Yeltsin's Star/Grayson).

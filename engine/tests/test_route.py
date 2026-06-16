@@ -16,6 +16,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from hvsim.des import OpenEndedSegment
+from hvsim.des.model import segment_end
 from hvsim.flightplan import Ship
 from hvsim.kinematics import SPEED_OF_LIGHT
 from hvsim.route import (
@@ -25,6 +27,8 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    resolve_fleet,
+    resolve_route,
     ship_from_artifact,
     simulation_for_route,
     to_filed,
@@ -98,12 +102,12 @@ def artifact_path(tmp_path) -> str:
     # A warship class (Eta, 0.6c) + a merchant class (Delta, 0.5c).
     con.execute(
         "INSERT INTO ship_classes (id,name,navy,hull_classification,max_g,max_hyper_band,"
-        "real_cruise_velocity_c,singleton,canon) VALUES "
-        "('warbird','Warbird','TSN','BC',600,7,0.6,0,1)"
+        "real_cruise_velocity_c,mass_tons,singleton,canon) VALUES "
+        "('warbird','Warbird','TSN','BC',600,7,0.6,2500000,0,1)"
     )
     con.execute(
         "INSERT INTO ship_classes (id,name,max_g,max_hyper_band,real_cruise_velocity_c,"
-        "singleton,canon) VALUES ('hauler','Hauler',200,4,0.5,0,1)"
+        "mass_tons,singleton,canon) VALUES ('hauler','Hauler',200,4,0.5,5000000,0,1)"
     )
     # war-1 inherits the class; war-2 has a Theta upgrade override; haul-1 is a merchant.
     con.execute(
@@ -124,7 +128,8 @@ def artifact_path(tmp_path) -> str:
         "canon) VALUES (1,'A*sqrt(M)+B*M^2',0.01684,6.9e-13,300,120,0)"
     )
     con.execute(
-        "INSERT INTO wormhole_junctions (id,name,host_system_id,canon) VALUES ('bj','BJ','beta',1)"
+        "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,canon) "
+        "VALUES ('bj','BJ','beta',3.0,1)"
     )
     con.execute(
         "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
@@ -159,11 +164,13 @@ def _deliverable(ship: Ship) -> Route:
 
 
 def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
-    c = compile_route(_deliverable(WARSHIP), u)
+    # The wormhole leg decomposes into an open-ended queue + the instant transit.
+    c = resolve_route(compile_route(_deliverable(WARSHIP), u), u, "1.1.1")
     kinds = [s.kind for s in c.segments]
     assert kinds == [
         "transit",
         "hyper_cruise",
+        "wormhole_queue",
         "wormhole_transit",
         "transit",
         "hyper_cruise",
@@ -230,16 +237,81 @@ def test_run_to_limit_uses_hyper_limit_from_artifact(u: Universe) -> None:
 # --- Wormhole transit -----------------------------------------------------------
 
 
-def test_wormhole_transit_is_buffer_only(u: Universe) -> None:
+def test_wormhole_leg_is_open_ended_until_resolved(u: Universe) -> None:
+    # compile_route leaves the queue open; the resolver fixes its end.
     c = compile_route(_deliverable(WARSHIP), u)
-    wh = c.segments[2]
-    assert wh.kind == "wormhole_transit"
-    assert wh.from_system == "beta" and wh.to_system == "gamma"
-    assert wh.duration_s == pytest.approx(300.0)
+    q = c.segments[2]
+    assert q.kind == "wormhole_queue"
+    assert q.from_system == "beta" and q.to_system == "gamma" and q.junction == "bj"
+    assert q.t_end is None  # open-ended
+    # The open-ended boundary is the resolver seam: unresolved, segment_end raises.
+    with pytest.raises(OpenEndedSegment):
+        segment_end(q, q.t_start)
+
+
+def test_resolved_wormhole_queue_serialises_through_the_buffer(u: Universe) -> None:
+    c = resolve_route(compile_route(_deliverable(WARSHIP), u), u, "1.1.1")
+    q = c.segments[2]
+    assert q.kind == "wormhole_queue" and q.t_end is not None
+    # bj knob is 3 -> some phantom ahead; each clears at the 300 s buffer (tau << buffer
+    # for these masses), so the wait is a whole number of buffers.
+    wait = q.duration_s
+    assert wait >= 0.0 and wait % 300.0 == pytest.approx(0.0, abs=1e-6)
+    # The instant translation sits right at the transit-open.
+    wh = c.segments[3]
+    assert wh.kind == "wormhole_transit" and wh.duration_s == pytest.approx(0.0)
+    assert wh.t_start == q.t_end
+
+
+def _worm_route(ship: Ship, depart: datetime) -> Route:
+    # A bare junction hop from the junction host system: arrival == depart_at, so
+    # queue interleaving is exercised without hyper-leg timing in the way.
+    return Route(ship, "beta", "beta:p1", [RouteLeg("wormhole", "gamma")], depart)
+
+
+def test_wormhole_queue_position_counts_down(u: Universe) -> None:
+    c = resolve_route(compile_route(_worm_route(WARSHIP, DEPART), u), u, "1.1.1")
+    q = c.segments[0]
+    sim = simulation_for_route(c, u)
+    seen = [
+        sim.state(q.t_start + timedelta(seconds=s)).queue_position
+        for s in range(0, int(q.duration_s), 150)
+    ]
+    assert all(p is not None for p in seen)
+    assert seen == sorted(seen, reverse=True)  # monotonically non-increasing
+    assert seen[0] >= 1
+    # Once the slot opens, the ship has popped through into the destination system.
+    after = sim.state(q.t_end + timedelta(seconds=1))
+    assert after.phase != "queued"
+
+
+def test_two_real_ships_interleave_at_a_junction(u: Universe) -> None:
+    cA = compile_route(_worm_route(WARSHIP, DEPART), u)
+    cB = compile_route(_worm_route(WARSHIP, DEPART), u)
+    rA, rB = resolve_fleet([(cA, "1.1.1"), (cB, "1.1.2")], u)
+    qA, qB = rA.segments[0], rB.segments[0]
+    assert qA.kind == "wormhole_queue" and qB.kind == "wormhole_queue"
+    assert qA.t_start == qB.t_start == DEPART  # both arrive together
+    # A (lower stable key) goes first; B serialises strictly behind it.
+    assert qB.t_end > qA.t_end
+    sa = simulation_for_route(rA, u).state(DEPART).queue_position
+    sb = simulation_for_route(rB, u).state(DEPART).queue_position
+    assert sb > sa  # B is deeper in the queue (behind A)
+
+
+def test_queue_resolution_is_deterministic(u: Universe) -> None:
+    def ends() -> list[datetime]:
+        items = [
+            (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.1"),
+            (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.2"),
+        ]
+        return [r.segments[0].t_end for r in resolve_fleet(items, u)]
+
+    assert ends() == ends()  # same routes + seed -> identical queues
 
 
 def test_state_after_arrival_in_destination_system(u: Universe) -> None:
-    c = compile_route(_deliverable(WARSHIP), u)
+    c = resolve_route(compile_route(_deliverable(WARSHIP), u), u, "1.1.1")
     sim = simulation_for_route(c, u)
     st = sim.state(c.arrival + timedelta(hours=1))
     assert st.phase == "arrived" and st.system == "gamma"

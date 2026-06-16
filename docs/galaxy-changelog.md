@@ -9,6 +9,24 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-16 — Wormhole transit queues (Sprint 019, Phase 2c)
+
+The engine's **first stateful resolver**. A ship reaching a wormhole junction now
+joins a **transit queue** instead of translating instantly: the nexus
+destabilises for `interval = max(tau(M), buffer)` after each transit, so transits
+serialise. A ship reports `queued` with a **position** (`#3 -> #2 -> #1 -> pops`)
+and a transit ETA, counting down as sim time advances — all analytic on the
+discrete-event core, no per-tick loop. Queue depth comes from two sources: a
+fabricated per-junction **`traffic_intensity`** knob (Manticore Junction busy = 6,
+Erewhon quiet = 1) drives a seeded **phantom-traffic** stream (Poisson-drawn, a
+pure function of `(seed, junction, transponder)` — reproducible, never a
+constant), and other filed ships **interleave deterministically** by arrival
+(stable-key tiebreak). Try it: `just queue-demo` (two RMN cruisers into the
+Manticore Junction). **Contract -> v0.4.0** (`wormhole_junctions.traffic_intensity`).
+The deployed `/fleet` queue board is Sprint 020.
+
+---
+
 ## 2026-06-16 — Transponder ship identity (Sprint 017)
 
 A data/identity change (no new astrography). Every ship now has a canonical

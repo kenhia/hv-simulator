@@ -30,6 +30,7 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    resolve_route,
     simulation_for_route,
 )
 from hvsim.universe import Universe, body_positions, inter_system_distance
@@ -203,7 +204,10 @@ def create_app(
 
     def route_compiled(row: RouteRow) -> CompiledRoute:
         u = require_universe()
-        return compile_route(from_filed(json.loads(row.filed_json), u), u)
+        compiled = compile_route(from_filed(json.loads(row.filed_json), u), u)
+        # Resolve this ship's wormhole queue(s) (phantom traffic, seeded by its
+        # transponder). Cross-ship interleaving on the deployed board is Sprint 020.
+        return resolve_route(compiled, u, row.transponder)
 
     def route_state(row: RouteRow, when: datetime) -> StateOut:
         compiled = route_compiled(row)
@@ -224,6 +228,7 @@ def create_app(
             system=st.system,
             frame=st.frame,
             transponder=row.transponder,
+            queue_position=st.queue_position,
         )
 
     def route_out(row: RouteRow) -> RouteOut:

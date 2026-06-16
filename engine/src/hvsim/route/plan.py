@@ -31,13 +31,14 @@ emits a filed route (see `to_filed` / `from_filed`); routes can also be hand-fil
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 
 from hvsim.des import Segment, Simulation
 from hvsim.flightplan import Ship
 from hvsim.kinematics import SPEED_OF_LIGHT, Vec3, solve_intercept
 from hvsim.kinematics.trajectory import Trajectory
+from hvsim.queue import DEFAULT_SHIP_MASS_T, SIM_SEED, JunctionServer
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
 NSPACE, HYPER, WORMHOLE = "nspace", "hyper", "wormhole"
@@ -209,15 +210,30 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
             link = u.wormhole_link_between(system, leg.to_system)
             if link is None:
                 raise ValueError(f"no wormhole link {system} -> {leg.to_system}")
-            model = u.transit_model()
-            buffer_s = (model or {}).get("buffer_normal_s") or 0.0
-            end = when + timedelta(seconds=buffer_s)
+            junction = link.get("junction_id")
+            # Arrival at the junction is `when`. The transit slot depends on the
+            # junction's dynamic state at arrival (phantom + other ships), so the
+            # queue segment is OPEN-ENDED: the fleet resolver fixes its t_end (the
+            # transit-open) and shifts everything downstream by the wait. Until
+            # then, downstream is timed as if the wait were zero.
             add(
                 Segment(
-                    seq, "wormhole_transit", when, end, from_system=system, to_system=leg.to_system
+                    seq,
+                    "wormhole_queue",
+                    when,
+                    None,
+                    from_system=system,
+                    to_system=leg.to_system,
+                    junction=junction,
                 )
             )
-            when, system, pos = end, leg.to_system, Vec3(0.0, 0.0, 0.0)
+            # Instant translation once the slot opens (provisionally at arrival).
+            add(
+                Segment(
+                    seq, "wormhole_transit", when, when, from_system=system, to_system=leg.to_system
+                )
+            )
+            when, system, pos = when, leg.to_system, Vec3(0.0, 0.0, 0.0)
 
         else:
             raise ValueError(f"unknown leg mode: {leg.mode!r}")
@@ -229,6 +245,117 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
 
     final_body = next((leg.to_body for leg in reversed(route.legs) if leg.to_body), None)
     return CompiledRoute(route, segments, final_system=system, final_body=final_body)
+
+
+# -- The fleet queue resolver (Phase 2c) ---------------------------------------
+
+
+def _junction_server(u: Universe, junction_id: str, seed: int) -> JunctionServer | None:
+    """A :class:`JunctionServer` for ``junction_id`` from the artifact, or None.
+
+    None when the junction carries no ``traffic_intensity`` knob (no queue modelled
+    -> transits are instant, the old behaviour minus the unconditional buffer).
+    """
+    j = u.wormhole_junction(junction_id) if junction_id else None
+    if j is None or j.get("traffic_intensity") is None:
+        return None
+    model = u.transit_model() or {}
+    return JunctionServer(
+        junction_id=junction_id,
+        coeff_a=model.get("coeff_a") or 0.0,
+        coeff_b=model.get("coeff_b") or 0.0,
+        buffer_s=model.get("buffer_normal_s") or 0.0,
+        mean_depth=j["traffic_intensity"],
+        seed=seed,
+    )
+
+
+def _shift(segments: list[Segment], start_idx: int, delta: timedelta) -> None:
+    """Shift every segment from ``start_idx`` onward by ``delta`` (in place)."""
+    if not delta:
+        return
+    for i in range(start_idx, len(segments)):
+        s = segments[i]
+        segments[i] = replace(
+            s,
+            t_start=s.t_start + delta,
+            t_end=None if s.t_end is None else s.t_end + delta,
+        )
+
+
+def resolve_fleet(
+    items: list[tuple[CompiledRoute, str]],
+    u: Universe,
+    *,
+    seed: int = SIM_SEED,
+) -> list[CompiledRoute]:
+    """Fix every open-ended ``wormhole_queue`` segment across a set of routes.
+
+    ``items`` pairs each compiled route with its **ship key** (the transponder —
+    the phantom-traffic draw is seeded by it). Junction-transit events are folded
+    in **global arrival order** (tie: ship key): the earliest *ready* queue (all
+    earlier queues in its own route resolved, so its arrival reflects upstream
+    waits) resolves first against its junction's server, then its route's
+    downstream segments shift by the wait. Returns new CompiledRoutes; a route
+    with no wormhole is returned unchanged.
+    """
+    segs: list[list[Segment]] = [list(c.segments) for c, _ in items]
+    keys = [k for _, k in items]
+    masses = [(c.route.ship.mass_tons or DEFAULT_SHIP_MASS_T) for c, _ in items]
+    servers: dict[str, JunctionServer] = {}
+
+    # All wormhole_queue segments, by route, in order.
+    queues: dict[int, list[int]] = {
+        ri: [i for i, s in enumerate(route_segs) if s.kind == "wormhole_queue"]
+        for ri, route_segs in enumerate(segs)
+    }
+    resolved: set[tuple[int, int]] = set()
+    total = sum(len(v) for v in queues.values())
+
+    while len(resolved) < total:
+        # Ready queues: the earliest unresolved queue in each route (its arrival
+        # reflects all prior waits). Pick the globally earliest by (arrival, key).
+        ready: list[tuple[datetime, str, int, int]] = []
+        for ri, idxs in queues.items():
+            nxt = next((i for i in idxs if (ri, i) not in resolved), None)
+            if nxt is not None:
+                ready.append((segs[ri][nxt].t_start, keys[ri], ri, nxt))
+        ready.sort(key=lambda r: (r[0], r[1]))
+        _, _, ri, si = ready[0]
+
+        seg = segs[ri][si]
+        junction_id = seg.junction or ""
+        server = servers.get(junction_id)
+        if junction_id not in servers:
+            server = _junction_server(u, junction_id, seed)
+            servers[junction_id] = server  # may be None
+
+        arrival = seg.t_start
+        if server is None:
+            transit_open, ahead = arrival, ()  # no knob -> instant transit
+        else:
+            res = server.serve(arrival, masses[ri], keys[ri])
+            transit_open, ahead = res.transit_open, res.ahead_opens
+
+        segs[ri][si] = replace(seg, t_end=transit_open, queue_ahead=ahead)
+        _shift(segs[ri], si + 1, transit_open - arrival)
+        resolved.add((ri, si))
+
+    return [
+        CompiledRoute(c.route, route_segs, final_system=c.final_system, final_body=c.final_body)
+        for (c, _), route_segs in zip(items, segs, strict=True)
+    ]
+
+
+def resolve_route(
+    compiled: CompiledRoute, u: Universe, ship_key: str, *, seed: int = SIM_SEED
+) -> CompiledRoute:
+    """Resolve a single route's queues in isolation (phantom traffic only).
+
+    Convenience for one-ship paths; cross-ship interleaving needs
+    :func:`resolve_fleet` over all concurrently filed routes.
+    """
+    return resolve_fleet([(compiled, ship_key)], u, seed=seed)[0]
 
 
 def ship_from_artifact(u: Universe, ship_id: str, *, max_velocity_c: float = 0.6) -> Ship:
@@ -259,6 +386,7 @@ def _ship_from_effective(eff: dict, max_velocity_c: float) -> Ship:
         max_velocity_c=max_velocity_c,
         max_hyper_band=eff["max_hyper_band"],
         hyper_cruise_velocity_c=eff["real_cruise_velocity_c"],
+        mass_tons=eff.get("mass_tons"),
     )
 
 

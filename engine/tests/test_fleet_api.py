@@ -106,6 +106,7 @@ def test_file_route_and_state(client: TestClient) -> None:
     assert [s["kind"] for s in body["segments"]] == [
         "transit",
         "hyper_cruise",
+        "wormhole_queue",
         "wormhole_transit",
         "transit",
         "hyper_cruise",
