@@ -85,6 +85,23 @@ class SegmentRow(Base):
     prof_t_coast: Mapped[float | None] = mapped_column(Float, nullable=True)
 
 
+class RouteRow(Base):
+    """A filed multi-mode galaxy route, addressed by ship transponder.
+
+    Stores the filed-route JSON verbatim; state queries recompile it against the
+    universe artifact (deterministic), so no per-segment rows are needed.
+    """
+
+    __tablename__ = "routes"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_new_id)
+    transponder: Mapped[str] = mapped_column(String, index=True)  # ship identity
+    status: Mapped[str] = mapped_column(String, default="active")  # active|complete|aborted
+    filed_json: Mapped[str] = mapped_column(String)  # the filed-route document
+    depart_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+
+
 def make_engine(database_url: str) -> Engine:
     """Create an engine; for SQLite, allow cross-thread use (uvicorn workers)."""
     connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}

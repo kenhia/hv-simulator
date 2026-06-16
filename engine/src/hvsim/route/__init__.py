@@ -19,6 +19,7 @@ from .plan import (
     fly_filed_route,
     from_filed,
     ship_from_artifact,
+    ship_from_transponder,
     simulation_for_route,
     to_filed,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "fly_filed_route",
     "from_filed",
     "ship_from_artifact",
+    "ship_from_transponder",
     "simulation_for_route",
     "to_filed",
 ]

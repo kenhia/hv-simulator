@@ -63,8 +63,12 @@ def artifact_path(tmp_path) -> str:
         "real_cruise_velocity_c,singleton,canon) VALUES "
         "('warbird','Warbird','TSN','BC',600,7,0.6,0,1),('hauler','Hauler',NULL,NULL,200,4,0.5,0,1)"
     )
-    con.execute("INSERT INTO ships (id,name,class_id,canon) VALUES ('war','War','warbird',1)")
-    con.execute("INSERT INTO ships (id,name,class_id,canon) VALUES ('haul','Haul','hauler',1)")
+    con.execute(
+        "INSERT INTO ships (id,name,class_id,transponder,canon) VALUES ('war','War','warbird','1.1.1',1)"
+    )
+    con.execute(
+        "INSERT INTO ships (id,name,class_id,transponder,canon) VALUES ('haul','Haul','hauler','1.2.1',1)"
+    )
     con.execute(
         "INSERT INTO transit_model (id,formula,coeff_a,coeff_b,buffer_normal_s,buffer_emergency_s,"
         "canon) VALUES (1,'A',0.0,0.0,300,120,0)"
@@ -118,7 +122,7 @@ def test_faster_ship_plans_faster(u: Universe) -> None:
 
 def test_plan_round_trips_and_flies(u: Universe) -> None:
     route = plan_route(u, "war", "home", "home:p", "far", "far:p", DEPART)
-    doc = to_filed(route, "war")
+    doc = to_filed(route, "1.1.1")  # war's transponder
     reloaded = from_filed(doc, u)
     assert compile_route(reloaded, u).arrival == compile_route(route, u).arrival
 

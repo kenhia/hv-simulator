@@ -45,6 +45,28 @@ class ClockUpdate(BaseModel):
     advance_seconds: float | None = None
 
 
+class FiledLegIn(BaseModel):
+    mode: str  # nspace | hyper | wormhole
+    to_system: str
+    to_body: str | None = None
+    layover_s: float = Field(default=0.0, ge=0)
+
+
+class FiledOriginIn(BaseModel):
+    system: str
+    body: str
+
+
+class FiledRouteIn(BaseModel):
+    """A planner-produced filed route (the nav-planner JSON body). Ship by transponder."""
+
+    model_config = {"extra": "ignore"}  # ignore the doc's "schema" marker
+    ship: str  # transponder (nation.class.hull)
+    origin: FiledOriginIn
+    legs: list[FiledLegIn] = Field(min_length=1)
+    depart_at: datetime | None = None
+
+
 # --- responses ------------------------------------------------------------------
 
 
@@ -63,7 +85,8 @@ class VelocityOut(BaseModel):
 
 class StateOut(BaseModel):
     when: datetime
-    phase: str  # idle | predeparture | transit | layover | arrived
+    # idle | predeparture | transit | layover | hyper_cruise | wormhole_transit | arrived
+    phase: str
     segment_seq: int | None
     position: PositionOut
     velocity: VelocityOut
@@ -72,6 +95,10 @@ class StateOut(BaseModel):
     destination: str | None
     distance_to_destination_km: float | None
     subjective_time_delta_s: float | None = None  # reserved (relativity deferred)
+    # Cross-system context (Sprint 018). system is None on an interstellar leg.
+    system: str | None = None
+    frame: str = "heliocentric"  # heliocentric | galactic
+    transponder: str | None = None
 
 
 class ShipOut(BaseModel):
@@ -107,6 +134,31 @@ class FlightPlanOut(BaseModel):
     total_duration_seconds: float
     total_duration_human: str
     segments: list[SegmentOut]
+
+
+class RouteOut(BaseModel):
+    transponder: str
+    status: str
+    origin: FiledOriginIn
+    depart_at: datetime
+    arrival: datetime
+    total_duration_seconds: float
+    total_duration_human: str
+    segments: list[SegmentOut]
+
+
+class FleetEntry(BaseModel):
+    transponder: str
+    ship: str
+    phase: str
+    system: str | None
+    eta: datetime | None
+    percent_complete: float | None
+
+
+class FleetOut(BaseModel):
+    when: datetime
+    ships: list[FleetEntry]
 
 
 class BodyOut(BaseModel):

@@ -241,6 +241,18 @@ def ship_from_artifact(u: Universe, ship_id: str, *, max_velocity_c: float = 0.6
     eff = u.effective_ship(ship_id)
     if eff is None:
         raise ValueError(f"unknown ship {ship_id!r}")
+    return _ship_from_effective(eff, max_velocity_c)
+
+
+def ship_from_transponder(u: Universe, transponder: str, *, max_velocity_c: float = 0.6) -> Ship:
+    """Build a route :class:`Ship` from the hull squawking ``transponder``."""
+    eff = u.effective_ship_by_transponder(transponder)
+    if eff is None:
+        raise ValueError(f"no ship with transponder {transponder!r}")
+    return _ship_from_effective(eff, max_velocity_c)
+
+
+def _ship_from_effective(eff: dict, max_velocity_c: float) -> Ship:
     return Ship(
         name=eff["name"],
         max_accel_g=eff["max_g"] or 200.0,
@@ -273,15 +285,15 @@ class NotAtOrigin(Exception):
     """A planned route was filed for a ship not at the route's origin."""
 
 
-def to_filed(route: Route, ship_id: str) -> dict:
+def to_filed(route: Route, transponder: str) -> dict:
     """Serialize a route to the filed-route document the engine can reload.
 
-    ``ship_id`` is carried explicitly (a :class:`Ship` holds no artifact id); on
-    reload it is resolved back to effective stats via :func:`ship_from_artifact`.
+    The ship is carried by **transponder** (the canonical identity); on reload it
+    resolves back to effective stats via :func:`ship_from_transponder`.
     """
     return {
         "schema": FILED_ROUTE_SCHEMA,
-        "ship": ship_id,
+        "ship": transponder,
         "origin": {"system": route.origin_system, "body": route.origin_body},
         "depart_at": route.depart_at.isoformat(),
         "legs": [
@@ -300,7 +312,7 @@ def from_filed(doc: dict, u: Universe) -> Route:
     """Rebuild a :class:`Route` from a filed-route document (resolving the ship)."""
     if doc.get("schema") != FILED_ROUTE_SCHEMA:
         raise ValueError(f"unexpected filed-route schema: {doc.get('schema')!r}")
-    ship = ship_from_artifact(u, doc["ship"])
+    ship = ship_from_transponder(u, doc["ship"])
     legs = [
         RouteLeg(
             mode=leg["mode"],

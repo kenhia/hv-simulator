@@ -449,13 +449,16 @@ Phase 2b is engine/CLI-level; the deployed HTTP service is still Phase-1 shaped
   (codes / `modified` / transponder + uniqueness validation); `Universe` resolves a
   transponder → effective stats. 33 unique transponders; contract v0.3.0.
 - **Sprint 018 — API integration + deploy + shakedown.** Wire multi-mode routes
-  into the HTTP API: file a planner route (filed-route JSON, persisted as the doc
-  + recompiled on query — deterministic, no segment-row churn), cross-system
-  `/ships/{id}/state` (system + frame + phase + vector), a **fleet board**, the
-  at-origin guard at the boundary (via `navigable_location`, dev-mode bypass), and
-  dev-clock acceleration. Planner stays **client-side** (no `/plan` endpoint — the
-  founding split). Then **deploy to `kubsdb`** and run the 5-ship shakedown live
-  on an accelerated clock. (Engine-level shakedown already passed: 50/50.)
+  into the HTTP API, **addressing ships by transponder** (017): file a planner
+  route (filed-route JSON, persisted as the doc + recompiled on query —
+  deterministic, no segment-row churn), cross-system state (system + frame + phase
+  + vector — the "transponder + vector" squawk), a **fleet board**, the at-origin
+  guard at the boundary (via `navigable_location`, dev-mode bypass), and dev-clock
+  acceleration (reuses `PUT /clock`). Planner stays **client-side** (no `/plan`
+  endpoint — the founding split). Bundle the artifact into the image. Then
+  **deploy to `kubsdb`** and run the 5-ship shakedown live on an accelerated clock.
+  (Engine-level shakedown already passed: 50/50.) Coexists with the Phase-1 Sol
+  user-ship path.
 
 ### Phase 2c — Wormhole queues (the DES payoff)
 

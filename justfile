@@ -15,9 +15,14 @@ remote_dir := "hvsim"     # ~/hvsim on the host holds the deploy compose
 default:
     @just --list
 
-# Build the image locally on this machine (context = engine/).
+# Build the image locally on this machine (context = engine/). Compiles a fresh
+# universe artifact and stages it into the build context (engine/universe.db,
+# gitignored) so the galaxy ships inside the image.
 build:
+    just compile-data
+    cp build/universe.db engine/universe.db
     docker build -t {{image}} engine
+    rm -f engine/universe.db
 
 # Build, ship the image to {{host}}, and bring the stack up (real-time clock).
 deploy: build
@@ -77,6 +82,11 @@ frame:
 # Validate the authored dataset (ship identity / transponder uniqueness, etc.).
 validate-data:
     python3 tools/validate-data.py data
+
+# Plan + file a fleet at a running service and print the board (default localhost).
+# Needs the service up with HVSIM_UNIVERSE_DB + HVSIM_DEV_CLOCK=1.
+shakedown base="http://localhost:4667":
+    cd tools/nav-planner && uv run python ../../tools/shakedown.py {{base}} ../../build/universe.db
 
 # Markdown snapshot of the compiled artifact (seeds galaxy-changelog entries).
 galaxy-summary:

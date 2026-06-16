@@ -8,6 +8,7 @@ For production/Docker, run with uvicorn's factory mode:
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -22,10 +23,20 @@ from hvsim.clock import SimClock
 from hvsim.ephemeris import BODIES, heliocentric_position, list_bodies
 from hvsim.flightplan import FlightPlan, Ship, Waypoint, compile_plan, state_at
 from hvsim.kinematics import ZERO, Vec3
+from hvsim.route import (
+    FILED_ROUTE_SCHEMA,
+    CompiledRoute,
+    NotAtOrigin,
+    compile_route,
+    fly_filed_route,
+    from_filed,
+    simulation_for_route,
+)
 from hvsim.universe import Universe, body_positions, inter_system_distance
 
 from .db import (
     FlightPlanRow,
+    RouteRow,
     SegmentRow,
     ShipRow,
     WaypointRow,
@@ -39,8 +50,12 @@ from .schemas import (
     BodyOut,
     ClockOut,
     ClockUpdate,
+    FiledRouteIn,
+    FleetEntry,
+    FleetOut,
     FlightPlanCreate,
     FlightPlanOut,
+    RouteOut,
     SegmentOut,
     ShipCreate,
     ShipDetail,
@@ -167,6 +182,70 @@ def create_app(
             ship_id=plan_row.ship_id,
             status=plan_row.status,
             origin=plan_row.origin,
+            depart_at=depart,
+            arrival=arrival,
+            total_duration_seconds=total,
+            total_duration_human=human_duration(total),
+            segments=segments,
+        )
+
+    # --- galaxy routes (transponder-addressed, recompiled from the filed doc) ---
+
+    def require_universe() -> Universe:
+        if app.state.universe is None:
+            raise HTTPException(503, "galaxy routes need the universe artifact (HVSIM_UNIVERSE_DB)")
+        return app.state.universe
+
+    def active_route(session: Session, transponder: str) -> RouteRow | None:
+        return session.scalars(
+            select(RouteRow).where(RouteRow.transponder == transponder, RouteRow.status == "active")
+        ).first()
+
+    def route_compiled(row: RouteRow) -> CompiledRoute:
+        u = require_universe()
+        return compile_route(from_filed(json.loads(row.filed_json), u), u)
+
+    def route_state(row: RouteRow, when: datetime) -> StateOut:
+        compiled = route_compiled(row)
+        st = simulation_for_route(compiled, require_universe()).state(when)
+        depart, arrival = compiled.depart_at, compiled.arrival
+        span = (arrival - depart).total_seconds()
+        pct = min(max((when - depart).total_seconds() / span, 0.0), 1.0) if span > 0 else None
+        return StateOut(
+            when=when,
+            phase=st.phase,
+            segment_seq=st.segment_seq,
+            position=position_out(st.position),
+            velocity=velocity_out(st.velocity),
+            eta=arrival,
+            percent_complete=pct,
+            destination=compiled.final_body,
+            distance_to_destination_km=None,  # cross-frame; the fleet board uses phase/eta
+            system=st.system,
+            frame=st.frame,
+            transponder=row.transponder,
+        )
+
+    def route_out(row: RouteRow) -> RouteOut:
+        compiled = route_compiled(row)
+        segments = [
+            SegmentOut(
+                seq=s.seq,
+                kind=s.kind,
+                t_start=s.t_start,
+                t_end=s.t_end,
+                duration_seconds=s.duration_s,
+                duration_human=human_duration(s.duration_s),
+                body=s.body or s.system or s.to_system,
+            )
+            for s in compiled.segments
+        ]
+        depart, arrival = compiled.depart_at, compiled.arrival
+        total = (arrival - depart).total_seconds()
+        return RouteOut(
+            transponder=row.transponder,
+            status=row.status,
+            origin={"system": compiled.route.origin_system, "body": compiled.route.origin_body},
             depart_at=depart,
             arrival=arrival,
             total_duration_seconds=total,
@@ -375,6 +454,89 @@ def create_app(
         ship.status = "idle"
         session.commit()
         return {"id": plan_row.id, "status": "aborted"}
+
+    @app.post("/fleet/routes", response_model=RouteOut, status_code=201)
+    def file_route(body: FiledRouteIn, session: Session = Depends(get_db)) -> RouteOut:
+        u = require_universe()
+        if u.ship_by_transponder(body.ship) is None:
+            raise HTTPException(404, f"no ship with transponder {body.ship!r}")
+        depart = as_utc(body.depart_at) if body.depart_at else app.state.clock.now()
+        doc = {
+            "schema": FILED_ROUTE_SCHEMA,
+            "ship": body.ship,
+            "origin": {"system": body.origin.system, "body": body.origin.body},
+            "depart_at": depart.isoformat(),
+            "legs": [
+                {
+                    "mode": lg.mode,
+                    "to_system": lg.to_system,
+                    "to_body": lg.to_body,
+                    "layover_s": lg.layover_s,
+                }
+                for lg in body.legs
+            ],
+        }
+        existing = active_route(session, body.ship)
+        current = simulation_for_route(route_compiled(existing), u) if existing else None
+        try:
+            fly_filed_route(
+                doc, u, current=current, now=app.state.clock.now(), dev=app.state.dev_clock
+            )
+        except NotAtOrigin as e:
+            raise HTTPException(409, str(e)) from e
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
+        if existing is not None:  # "abort the current plan, accept the new one"
+            existing.status = "superseded"
+        row = RouteRow(
+            transponder=body.ship,
+            status="active",
+            filed_json=json.dumps(doc),
+            depart_at=depart,
+            created_at=datetime.now(UTC),
+        )
+        session.add(row)
+        session.commit()
+        return route_out(row)
+
+    @app.get("/fleet/{transponder}/state", response_model=StateOut)
+    def get_route_state(
+        transponder: str, at: datetime | None = None, session: Session = Depends(get_db)
+    ) -> StateOut:
+        row = active_route(session, transponder)
+        if row is None:
+            raise HTTPException(404, f"no active route for {transponder!r}")
+        return route_state(row, resolve_when(at))
+
+    @app.delete("/fleet/{transponder}/route")
+    def abort_route(transponder: str, session: Session = Depends(get_db)) -> dict[str, str]:
+        row = active_route(session, transponder)
+        if row is None:
+            raise HTTPException(404, f"no active route for {transponder!r}")
+        row.status = "aborted"
+        session.commit()
+        return {"transponder": transponder, "status": "aborted"}
+
+    @app.get("/fleet", response_model=FleetOut)
+    def get_fleet(at: datetime | None = None, session: Session = Depends(get_db)) -> FleetOut:
+        when = resolve_when(at)
+        u = require_universe()
+        rows = session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
+        entries = []
+        for row in rows:
+            st = route_state(row, when)
+            eff = u.effective_ship_by_transponder(row.transponder) or {}
+            entries.append(
+                FleetEntry(
+                    transponder=row.transponder,
+                    ship=eff.get("name") or row.transponder,
+                    phase=st.phase,
+                    system=st.system,
+                    eta=st.eta,
+                    percent_complete=st.percent_complete,
+                )
+            )
+        return FleetOut(when=when, ships=entries)
 
     @app.get("/bodies", response_model=list[BodyOut])
     def get_bodies(at: datetime | None = None) -> list[BodyOut]:

@@ -213,5 +213,16 @@ assigns + validates uniqueness; the engine resolves a transponder → effective
 Slug ids stay primary keys (transponder supplements). False-flag spoofing is
 wartime (deferred). Contract is **v0.3.0**.
 
+**Galaxy fleet API** (Sprint 018) — the deployed service operates galaxy routes,
+**addressed by transponder**, alongside the Phase-1 Sol user-ship endpoints:
+`POST /fleet/routes` (a planner filed-route JSON; persisted as the doc in a
+`RouteRow` and **recompiled on query** — no segment-row churn), `GET
+/fleet/{transponder}/state` (adds `system`/`frame`/vector), `GET /fleet` (the
+board), `DELETE /fleet/{transponder}/route`. The at-origin guard runs at the
+boundary (dev bypass). The artifact is **bundled into the image** (`just build`
+stages `build/universe.db` → `engine/universe.db`; `HVSIM_UNIVERSE_DB` in compose).
+`just shakedown [url]` plans + files a fleet and prints the board (a `?at=` sim-time
+sweep). Planner stays client-side (no `/plan` endpoint).
+
 SI units (m, s) internally; convert to km/AU and human-readable durations only
 at the API boundary.
