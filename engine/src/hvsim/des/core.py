@@ -114,3 +114,23 @@ class Simulation:
         final_body = self.final_body if self.final_body is not None else self.origin_body
         position = self._at(self.final_system, final_body, when)
         return ShipState(when, position, ZERO, "arrived", None, None, self.final_system)
+
+    def navigable_location(self, when: datetime) -> tuple[str | None, str | None] | None:
+        """The ship's current navigable point as ``(system, body)``, or None.
+
+        A ship can file a new route only from a navigable point — at rest at a
+        body. Keyed on **phase**, not raw speed (a ``wormhole_transit`` reports
+        speed 0 yet is mid-transit, so it is *not* navigable):
+
+        - ``predeparture`` → the origin body; ``layover`` → the layover body;
+          ``arrived`` → the final body — all navigable.
+        - ``transit`` / ``hyper_cruise`` / ``wormhole_transit`` → None (in motion).
+        """
+        active = self.advance_to(when)
+        if active is None:
+            return (self.origin_system, self.origin_body)  # predeparture
+        if when >= segment_end(active, when):
+            return (self.final_system, self.final_body)  # arrived
+        if active.kind == "layover":
+            return (active.system, active.body)
+        return None  # transit / hyper_cruise / wormhole_transit — under way

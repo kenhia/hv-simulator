@@ -1,0 +1,28 @@
+[project]
+name = "hvsim-nav-planner"
+version = "0.1.0"
+description = "Honorverse nav route planner — graph search over systems → a filed multi-mode route"
+requires-python = ">=3.12"
+dependencies = ["hvsim"]
+
+[project.scripts]
+nav-plan = "nav_planner:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.uv.sources]
+hvsim = { path = "../../engine", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nav_planner"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
