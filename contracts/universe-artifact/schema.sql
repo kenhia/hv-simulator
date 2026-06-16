@@ -1,4 +1,8 @@
--- Universe artifact — compiled SQLite schema (CONTRACT v0.1.1)
+-- Universe artifact — compiled SQLite schema (CONTRACT v0.2.0)
+-- v0.2.0 (Sprint 015): hyperspace_bands carries Weber's chart (velocity_multiplier
+--   + translation_bleed_off_pct, replacing apparent_velocity_c); new hyperspace_model
+--   globals row; ship_classes gains max_hyper_band/real_cruise_velocity_c/singleton;
+--   ships gain sparse override columns (effective stat = COALESCE(ship.ovr_*, class.*)).
 -- v0.1.1: wormhole_links.to_system_id is nullable (canon termini to unidentified systems).
 --
 -- The read-only artifact the engine loads. Produced by the universe-compiler
@@ -156,14 +160,30 @@ CREATE TABLE transit_model (
     canon            INTEGER NOT NULL DEFAULT 0
 );
 
+-- Hyperspace bands — Weber's "Effective Speed By Hyper Band" chart.
+-- apparent_velocity_c = velocity_multiplier * real_velocity_c (see hyperspace_model).
 CREATE TABLE hyperspace_bands (
     band_order          INTEGER PRIMARY KEY,
     name                TEXT NOT NULL,
     greek               TEXT,
-    entry_velocity_limit_c REAL,
-    apparent_velocity_c REAL,
-    apparent_canon      INTEGER NOT NULL DEFAULT 0,
+    entry_velocity_limit_c REAL,            -- e.g. Alpha 0.3c (fatal above)
+    velocity_multiplier REAL,               -- apparent = multiplier * real velocity
+    multiplier_canon    INTEGER NOT NULL DEFAULT 0,
+    translation_bleed_off_pct REAL,         -- % of relative speed bled climbing INTO this band
+    bleed_off_canon     INTEGER NOT NULL DEFAULT 0,
+    unattainable        INTEGER NOT NULL DEFAULT 0,  -- 1 = needs the streak drive (post-epoch)
     canon               INTEGER NOT NULL DEFAULT 1
+);
+
+-- Hyperspace model globals (single row): the apparent-velocity reference
+-- velocities + translation constants the engine reads.
+CREATE TABLE hyperspace_model (
+    id                          INTEGER PRIMARY KEY CHECK (id = 1),
+    warship_real_velocity_c     REAL NOT NULL,   -- 0.6 (Weber chart reference)
+    merchant_real_velocity_c    REAL NOT NULL,   -- 0.5 (Weber chart reference)
+    non_crash_translation_c     REAL NOT NULL,   -- 0.2 (normal-ops translation velocity)
+    alpha_entry_max_velocity_c  REAL NOT NULL,   -- 0.3 (fatal above)
+    canon                       INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE hyper_limits (             -- by spectral class
@@ -186,20 +206,31 @@ CREATE TABLE ship_classes (
     length_m        REAL,
     crew_total      INTEGER,
     missile_pods    INTEGER,
+    max_hyper_band  INTEGER,            -- band_order the class can safely reach (Weber chart)
+    max_hyper_band_canon INTEGER NOT NULL DEFAULT 0,
+    real_cruise_velocity_c REAL,        -- hyper cruise real velocity (warship 0.6 / merchant 0.5)
+    singleton       INTEGER NOT NULL DEFAULT 0,  -- auto-created class for a one-off hull
     canon           INTEGER NOT NULL DEFAULT 1
 );
 
+-- A ship's tech data lives in its class; these sparse columns let an individual
+-- hull OVERRIDE a class stat (upgrade / modification / damage). Effective value =
+-- COALESCE(ship.ovr_x, ship_classes.x). NULL = inherit the class.
 CREATE TABLE ships (
     id              TEXT PRIMARY KEY,
     name            TEXT NOT NULL,
     prefix          TEXT,
     hull_number     TEXT,
-    class_id        TEXT REFERENCES ship_classes(id),
+    class_id        TEXT NOT NULL REFERENCES ship_classes(id),  -- every ship has a class
     navy            TEXT,
     affiliation_nation_id TEXT REFERENCES nations(id),
     role            TEXT,
     status          TEXT,
     fate_pd         INTEGER,            -- = valid_to_pd for anachronism checks
+    ovr_max_g       REAL,               -- override: emergency accel
+    ovr_normal_g    REAL,               -- override: cruise accel
+    ovr_max_hyper_band INTEGER,         -- override: max safe band
+    ovr_real_cruise_velocity_c REAL,    -- override: hyper cruise real velocity
     canon           INTEGER NOT NULL DEFAULT 1
 );
 

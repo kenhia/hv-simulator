@@ -368,19 +368,29 @@ the core itself doesn't exist yet. Split into three sprints:
   demo-route` flies Sol→Beowulf→Manticore→Grayson (~130-day clock) across hyper +
   wormhole; coast fires on long n-space legs; 90 engine tests green. Contract
   unchanged (v0.1.1).
-- **Sprint 015 — hyperspace band model (supplemental, inserted 2026-06-15).**
-  Correct the FTL model the 014 single-band placeholder stubbed. The Honorverse
-  "climb/descent" is *translating between hyperspace bands* (higher band = higher
-  apparent speed, with an apparent-speed loss on descent) — distinct from the
-  mundane n-space run out to / approach from the hyper limit (014's "run-out"/
-  "approach"). **Affects ship data:** a ship class gets a **max safe hyper band**,
-  and we add a **per-band apparent-speed model** (likely a per-ship factor / a
-  penalty per band climbed). Engine: cruise at `min(ship max band, …)`, enforce
-  the **alpha-translation 0.3c ceiling** (the one canon number; higher-band
-  transitions cite none). Out: crash-translation modelling beyond the 0.3c rule,
-  grav waves / Warshawski sail-riding (still deferred). Touches the data schema +
-  contract (ship_classes). *Done before the planner so it routes on the real
-  band/speed model.*
+- **Sprint 015 — hyperspace band model + ship/class tech-data model
+  (supplemental, inserted 2026-06-15).** Correct the FTL model the 014 single-band
+  placeholder stubbed, using **David Weber's own canon chart** ("Effective Speed
+  By Hyper Band," 2009; recovered from the davidweber.net archive this session):
+  `apparent_c = velocity_multiplier(band) × real_velocity_c`, reference real
+  velocities warship 0.6c / merchant 0.5c, per-band **translation bleed-off**
+  recorded, Alpha entry ≤0.3c, Iota+ needs the streak drive (absent from our data,
+  so Theta is the practical max). The bleed-off is **real** (the Warshawski sail
+  negates it only for grav-wave sailing, not ordinary travel — verified); band-climb
+  time + bleed-off are treated as noise (only the 0.3c translation is enforced; the
+  hyper leg cruises at max-band numbers), with crash/`tactical` routing left as a
+  future combat hook. **No temporal era enforcement** (ALLOW_ANACHRONISMS effectively
+  true); nation/era caps like Grayson's pre-Alliance mid-Gamma are recorded flavor,
+  deferred behind that flag. **Ship data:** tech lives in the **class**; a ship may
+  **override** fields (upgrades/mods/damage), effective stats = class ⊕ override;
+  every ship must have a class (auto-create a `singleton` class for a classless
+  one). Adds `max_hyper_band` per class. Touches the data schema + **contract
+  (→ v0.2.0)**. *Lock the band math first, then apply to classes; done before the
+  planner so it routes on the real model.* ✅ **Done (Sprint 015):** Weber's chart
+  encoded as data (`apparent = multiplier × real`, warship 0.6 / merchant 0.5);
+  `ship_classes.max_hyper_band` + per-ship `ovr_*` overrides (effective = class ⊕
+  override) + singleton classes; `compile_route` flies per-ship band speeds
+  (`demo-route`: Nike/Eta ~10.5 d vs Starhauler/Delta ~24.6 d). Contract → v0.2.0.
 - **Sprint 016 — nav route planner (separate tool).** `tools/nav-planner/` (its
   own pyproject) — graph search over systems + wormhole edges + hyper lanes →
   a filed multi-mode route the engine executes. Per the founding split the

@@ -76,6 +76,26 @@ It does **not** give semi-major axes, eccentricities, inclinations, or the
 mutual orbital period. All of those are `canon: false` placeholders to be
 derived (e.g. via Kepler's third law from the stated masses) or hand-tuned.
 
+## Hyperspace band model — special attribution
+
+The hyper-band speed numbers in [`hyperspace/hyperspace.json`](hyperspace/hyperspace.json)
+(per-band velocity multiplier, translation bleed-off, and the warship/merchant
+effective-times-c columns) come from **David Weber's own chart**, "Effective
+Speed By Hyper Band" (posted 2009-06-03, collected by Joe Buckley):
+
+- Source (archived; the live page is gone):
+  <https://web.archive.org/web/20210507101710/https://davidweber.net/posts/15-hyperband-graph.html>
+- The page marks the chart **"Copyright (c) 2009-21 Word of Weber, LLC - All
+  Rights Reserved"** — i.e. *not* CC BY-SA like the wiki-derived text in this
+  dataset.
+
+These figures are used here as factual canon for a **non-commercial fan
+simulation**. **Once `hv-simulator` reaches v1.0.0 or higher, an effort will be
+made to obtain authorization** to use this data — at which point we can present a
+complete description of the project (with screenshots, etc.). Until then this note
+records the provenance and the rights status. If authorization is declined, these
+specific numbers would be replaced with our own interpolated model.
+
 ## Units & conventions
 
 - Stellar masses in **solar masses** (`mass_solar`).

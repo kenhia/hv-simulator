@@ -1,129 +1,135 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "kind": "hyperspace_model",
-  "retrieved": "2026-06-14",
-  "sources": ["HH2", "HH6", "HH12", "SI1", "CS1", "UHH", "Pearls of Weber (davidweber.net)"],
+  "retrieved": "2026-06-16",
+  "sources": ["HH2", "HH6", "HH12", "SI1", "CS1", "UHH", "Words of Weber (davidweber.net)"],
   "wiki_pages": [
     "https://honorverse.fandom.com/wiki/Hyperspace",
     "https://honorverse.fandom.com/wiki/Hyper_limit"
   ],
   "_scope_note": "Captures the hyper bands (apparent-velocity model), translation mechanics, and the hyper-limit table. DEFERRED for now (per plan): gravity waves, the Tellerman wave, grav-wave sail riding, and dimensional shear beyond the basic hyper-limit rule.",
 
+  "apparent_velocity_model": {
+    "canon": true,
+    "formula": "apparent_velocity_c = velocity_multiplier(band) * real_velocity_c",
+    "reference_real_velocity_c": {"warship": 0.6, "merchant": 0.5},
+    "non_crash_translation_velocity_c": 0.2,
+    "alpha_entry_max_velocity_c": 0.3,
+    "source": "David Weber, 'Effective Speed By Hyper Band' (posted 2009-06-03), collected by Joe Buckley.",
+    "source_url": "https://web.archive.org/web/20210507101710/https://davidweber.net/posts/15-hyperband-graph.html",
+    "copyright": "The source chart is marked 'Copyright (c) 2009-21 Word of Weber, LLC - All Rights Reserved'. Used here as factual canon for a non-commercial fan simulation (see data/README.md). Authorization to be sought at simulator v1.0.0+.",
+    "validation": "Reproduces the in-book datapoints: Epsilon 1442c (merchant 0.5c x 2884), Zeta ~2500c (0.7c x 3589 = 2512c), Theta 3000c/2500c (warship/merchant). The low-Delta book figure of 912c is the band's lower end; the chart's representative Delta merchant is 0.5c x 2178 = 1089c.",
+    "note": "The two 'Effective Times C' columns in Weber's chart are velocity_multiplier x 0.6 (warship) and x 0.5 (merchant). Band-climb time and the translation bleed-off are recorded below but treated as noise for travel-time purposes (v1): only the 0.3c alpha-translation limit is enforced; a ship cruises at its max band's numbers."
+  },
+
   "bands": [
     {
       "order": 1, "name": "Alpha", "greek": "α", "canon": true,
       "entry_velocity_limit_c": 0.3,
-      "apparent_velocity_c": {
-        "nominal_c": 200, "nominal_canon": false,
-        "method": "Interpolated. Geometric extrapolation downward (~1.65x per band) from the canon Delta/Epsilon/Zeta apparent velocities.",
-        "canon_datapoints": []
-      },
+      "velocity_multiplier": 62, "multiplier_canon": true,
+      "translation_bleed_off_pct": 92, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [],
       "typical_users": "The main/lowest travel band; historically the only one used until the hyper log improved.",
-      "danger": "Entry above 0.3c is instantly fatal — a limit that took ~200 years to be accepted.",
-      "source": "HH6"
+      "danger": "Entry above 0.3c is instantly fatal - a limit that took ~200 years to be accepted.",
+      "source": "Weber hyper-band chart (2009); HH6"
     },
     {
       "order": 2, "name": "Beta", "greek": "β", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 335, "nominal_canon": false,
-        "method": "Interpolated (no canon speed given for Beta). Geometric, between Alpha and Gamma.",
-        "canon_datapoints": []
-      },
-      "typical_users": null, "source": "HH6",
-      "notes": "No canon speed figures; one of the 'interpolate now' bands."
+      "velocity_multiplier": 767, "multiplier_canon": true,
+      "translation_bleed_off_pct": 85, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [],
+      "typical_users": null,
+      "source": "Weber hyper-band chart (2009); HH6"
     },
     {
       "order": 3, "name": "Gamma", "greek": "γ", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 550, "nominal_canon": false,
-        "method": "Interpolated. Geometric, between Beta and the canon Delta value.",
-        "canon_datapoints": []
-      },
+      "velocity_multiplier": 1473, "multiplier_canon": true,
+      "translation_bleed_off_pct": 78, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [],
       "typical_users": "A low travel band. Grayson hyper-generator tech was limited to the middle Gamma band before it joined the Manticoran Alliance.",
-      "source": "HH2"
+      "source": "Weber hyper-band chart (2009); HH2"
     },
     {
       "order": 4, "name": "Delta", "greek": "δ", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 912, "nominal_canon": true,
-        "method": "Canon apparent velocity (at 0.5c real, low Delta). Used directly as the band nominal.",
-        "canon_datapoints": [
-          {"real_velocity_c": 0.5, "apparent_velocity_c": 912, "source": "HH6", "note": "Older Manticoran merchant ships, lower end of Delta."}
-        ]
-      },
-      "typical_users": "Older/slower merchant shipping.", "source": "HH6"
+      "velocity_multiplier": 2178, "multiplier_canon": true,
+      "translation_bleed_off_pct": 72, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [
+        {"real_velocity_c": 0.5, "apparent_velocity_c": 912, "source": "HH6", "note": "Older Manticoran merchant ships, lower END of Delta (below the chart's representative 1089c)."}
+      ],
+      "typical_users": "Older/slower merchant shipping.",
+      "source": "Weber hyper-band chart (2009); HH6"
     },
     {
       "order": 5, "name": "Epsilon", "greek": "ε", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 1442, "nominal_canon": true,
-        "method": "Canon apparent velocity (at 0.7c real). Used directly as the band nominal.",
-        "canon_datapoints": [
-          {"real_velocity_c": 0.7, "apparent_velocity_c": 1442, "source": "SI1", "note": "~32% faster than the average merchant; few merchant ships go this fast."}
-        ]
-      },
-      "typical_users": "Faster merchant shipping.", "source": "SI1"
+      "velocity_multiplier": 2884, "multiplier_canon": true,
+      "translation_bleed_off_pct": 66, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [
+        {"real_velocity_c": 0.5, "apparent_velocity_c": 1442, "source": "SI1", "note": "Chart merchant figure (0.5c x 2884 = 1442c); few merchant ships go this fast."}
+      ],
+      "typical_users": "Faster merchant shipping.",
+      "source": "Weber hyper-band chart (2009); SI1"
     },
     {
       "order": 6, "name": "Zeta", "greek": "ζ", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 2500, "nominal_canon": true,
-        "method": "Canon apparent velocity (at 0.7c real). Used directly as the band nominal.",
-        "canon_datapoints": [
-          {"real_velocity_c": 0.7, "apparent_velocity_c": 2500, "source": "HH6", "note": "Faster freighters / some passenger liners."}
-        ]
-      },
-      "typical_users": "Frequently used by warships — good speed with moderate safety.", "source": "HH6"
+      "velocity_multiplier": 3589, "multiplier_canon": true,
+      "translation_bleed_off_pct": 61, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [
+        {"real_velocity_c": 0.7, "apparent_velocity_c": 2500, "source": "HH6", "note": "Faster freighters / passenger liners at 0.7c (0.7 x 3589 = 2512c ~ 2500c)."}
+      ],
+      "typical_users": "Frequently used by warships - good speed with moderate safety.",
+      "source": "Weber hyper-band chart (2009); HH6"
     },
     {
       "order": 7, "name": "Eta", "greek": "η", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 4100, "nominal_canon": false,
-        "method": "Interpolated/extrapolated (no canon speed given for Eta). Geometric, ~1.65x above Zeta and below Theta. THE primary 'interpolate now' band.",
-        "canon_datapoints": []
-      },
-      "typical_users": null, "source": "HH6",
-      "notes": "No canon speed figures; value invented to keep the band sequence monotonic and usable."
+      "velocity_multiplier": 4294, "multiplier_canon": true,
+      "translation_bleed_off_pct": 56, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [],
+      "typical_users": null,
+      "source": "Weber hyper-band chart (2009)"
     },
     {
       "order": 8, "name": "Theta", "greek": "θ", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 6800, "nominal_canon": false,
-        "method": "Extrapolated (~1.65x above Eta). Canon gives only a relative hint (couriers on the 'ragged edge' run ~40% faster than frigates cruising Zeta), which does not cap the band ceiling.",
-        "canon_datapoints": []
-      },
+      "velocity_multiplier": 5000, "multiplier_canon": true,
+      "translation_bleed_off_pct": 52, "bleed_off_canon": true,
+      "unattainable": false,
+      "canon_datapoints": [],
       "typical_users": "The fastest band in normal use; couriers ride its 'ragged edge'.",
-      "danger": "Highest band ever used and the most dangerous to travel.",
-      "source": "CS1"
+      "danger": "Highest band in routine use and the most dangerous to travel.",
+      "source": "Weber hyper-band chart (2009); CS1"
     },
     {
       "order": 9, "name": "Iota", "greek": "ι", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 11000, "nominal_canon": false,
-        "method": "Extrapolated (~1.65x above Theta). Invented; treat as indicative only.",
-        "canon_datapoints": []
-      },
-      "typical_users": "Effectively inaccessible until the early 20th Century PD — no ship entered and returned before then.",
+      "velocity_multiplier": 6000, "multiplier_canon": true,
+      "translation_bleed_off_pct": 48, "bleed_off_canon": true,
+      "unattainable": true,
+      "canon_datapoints": [],
+      "typical_users": "Marked 'currently unattainable' on Weber's chart; reachable only with the streak drive (early 20th Century PD), after this sim's 1890 PD epoch.",
       "danger": "Second-highest known band; extreme.",
-      "source": "HH2, HH12"
+      "source": "Weber hyper-band chart (2009); HH2, HH12"
     },
     {
       "order": 10, "name": "Kappa", "greek": "κ", "canon": true,
       "entry_velocity_limit_c": null,
-      "apparent_velocity_c": {
-        "nominal_c": 18500, "nominal_canon": false,
-        "method": "Extrapolated (~1.65x above Iota). Invented; treat as indicative only.",
-        "canon_datapoints": []
-      },
-      "typical_users": "Only became reachable with the streak drive in the early 20th Century PD.",
+      "velocity_multiplier": null, "multiplier_canon": false,
+      "translation_bleed_off_pct": null, "bleed_off_canon": false,
+      "unattainable": true,
+      "canon_datapoints": [],
+      "typical_users": "Highest known band; only reachable with the streak drive (early 20th Century PD). Beyond Weber's chart (which stops at Iota) - multiplier left unset.",
       "danger": "Highest known band.",
       "source": "HH12"
     }
@@ -135,8 +141,8 @@
     "alpha_entry_max_velocity_c": 0.3,
     "translate_up": {
       "canon": true,
-      "description": "Crossing UP a band boundary bleeds off a percentage of relative velocity (regained by re-accelerating once in the new band) and crosses dangerous gravity-wave surges at the boundary. The Warshawski sail negated both the speed-bleed penalty and the shear danger.",
-      "speed_bleed": "unspecified percentage (canon qualitative only)"
+      "description": "Crossing UP a band boundary bleeds off a percentage of relative velocity (regained by re-accelerating once in the new band; see each band's translation_bleed_off_pct) and crosses dangerous gravity-wave surges at the boundary. The Warshawski sail addresses grav-wave SAILING and shear safety; it does not generally negate the band-translation speed bleed-off for ordinary impeller travel. (The Fandom wiki's 'negated both' wording is grav-wave-specific.)",
+      "speed_bleed": "per-band percentage, from Weber's chart (Alpha 92% down to Iota 48%)"
     },
     "translate_down": {
       "canon": true,
@@ -146,7 +152,7 @@
     },
     "crash_translation": {
       "canon": true,
-      "description": "A high-velocity translation: faster but induces strong nausea/physical distress; naval crews train for it, but it is avoided unless necessary. Merchants prefer low-velocity translations to reduce alpha-node wear and crew distress."
+      "description": "A high-velocity translation: faster but induces strong nausea/physical distress; naval crews train for it, but it is avoided unless necessary. Merchants prefer low-velocity translations to reduce alpha-node wear and crew distress. Modelled later as a 'tactical' flight-plan option; v1 uses the non-crash translation velocity (0.2c)."
     }
   },
 
@@ -172,7 +178,7 @@
       "Red Giant": 5.64
     },
     "anomalies": [
-      "F1 (25.98) exceeds F0 (25.42), breaking the otherwise-monotonic decline from hotter to cooler stars — almost certainly a transcription typo in the source table (F0 likely ~26.4, or F1 ~24.98). Values are captured verbatim from canon; do not silently 'correct' them, but be aware when interpolating around F0-F1.",
+      "F1 (25.98) exceeds F0 (25.42), breaking the otherwise-monotonic decline from hotter to cooler stars - almost certainly a transcription typo in the source table (F0 likely ~26.4, or F1 ~24.98). Values are captured verbatim from canon; do not silently 'correct' them, but be aware when interpolating around F0-F1.",
       "F5 (24.10) is slightly off the steady ~0.44 lm/subclass cadence seen across F2-F9 and all of G/K/M; minor rounding in the source."
     ],
     "interpolation_note": "O, B, and A are given as single representative values (no subclasses). For an O/B/A subclass, interpolate linearly toward the next listed anchor (A -> F0). White dwarfs, giants (other than the one 'Red Giant' entry), and supergiants are not tabulated; invent as needed and flag canon:false. F/G/K/M subclasses are fully tabulated and need no interpolation.",

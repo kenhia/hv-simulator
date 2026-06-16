@@ -10,19 +10,19 @@ distances, and the wormhole buffer **from the artifact** — and emits the DES
   long legs.
 - ``hyper`` — a system→system leg, decomposed into a **run out** past the origin
   star's hyper limit (n-space impeller leg), **hyper_cruise** across the
-  interstellar distance at the band's apparent velocity, and an **approach** in to
-  the target body. (NB: "run out"/"approach" are the mundane n-space legs to and
-  from the hyper limit — *not* the Honorverse band "climb/descent", which is
-  translating between hyperspace bands; that and per-ship max band land in the
-  Sprint 015 hyperspace band-model sprint.)
+  interstellar distance, and an **approach** in to the target body. Cruise speed
+  is Weber's band model: ``apparent = velocity_multiplier(ship.max_hyper_band) *
+  ship.hyper_cruise_velocity_c`` (warship 0.6c / merchant 0.5c). (NB: "run out"/
+  "approach" are the mundane n-space legs to and from the hyper limit — *not* the
+  Honorverse band "climb/descent", which is translating between hyperspace bands.)
 - ``wormhole`` — a junction translation: instant + the fixed safety buffer.
 
 v1 simplifications (documented): the run out to the limit is a brachistochrone
-(arrives at rest, trivially within the alpha-translation 0.3c ceiling); a single
-configured band's apparent velocity is used for every ship (per-ship max band +
-multi-band climb/descent are the Sprint 015 band model); a wormhole leg fires from
-wherever the ship is (no explicit hop to the nexus). Route-*finding* is the
-nav-planner (after the band model); routes here are hand-filed.
+(arrives at rest, trivially within the alpha-translation 0.3c ceiling); band-climb
+time + the per-band translation bleed-off are treated as noise (the ship cruises
+at its max band's numbers immediately); a wormhole leg fires from wherever the
+ship is (no explicit hop to the nexus). Route-*finding* is the nav-planner (next
+sprint); routes here are hand-filed.
 """
 
 from __future__ import annotations
@@ -39,6 +39,12 @@ from hvsim.universe import LMIN_M, LY_M, Universe, inter_system_distance, resolv
 
 NSPACE, HYPER, WORMHOLE = "nspace", "hyper", "wormhole"
 _ZAXIS = Vec3(0.0, 0.0, 1.0)  # arbitrary radial when a position is at the star centre
+
+# Fallbacks when a ship carries no band profile (a plain in-system Ship): a
+# generic merchant — Delta band at 0.5c. Real ships supply their own via the
+# artifact (Universe.effective_ship -> Ship).
+DEFAULT_MAX_BAND = 4
+DEFAULT_CRUISE_VELOCITY_C = 0.5
 
 
 @dataclass(frozen=True)
@@ -60,7 +66,6 @@ class Route:
     origin_body: str
     legs: list[RouteLeg]
     depart_at: datetime
-    band_order: int = 1  # the cruise band (Alpha by default)
 
 
 @dataclass(frozen=True)
@@ -103,10 +108,17 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
     accel, v_cap = route.ship.accel_si, route.ship.v_cap_si
     resolve = body_resolver(u)
 
-    band = u.hyperspace_band(route.band_order)
-    if band is None or band.get("apparent_velocity_c") is None:
-        raise ValueError(f"band {route.band_order} has no apparent velocity")
-    apparent_c = band["apparent_velocity_c"]
+    # Hyper cruise speed (Weber chart): apparent = velocity_multiplier(band) x
+    # real cruise velocity. The cruise band is the ship's max safe band; the real
+    # velocity is the ship's hyper cruise velocity (warship 0.6 / merchant 0.5).
+    cruise_band = route.ship.max_hyper_band or DEFAULT_MAX_BAND
+    real_v = route.ship.hyper_cruise_velocity_c or DEFAULT_CRUISE_VELOCITY_C
+    band = u.hyperspace_band(cruise_band)
+    if band is None or band.get("velocity_multiplier") is None:
+        raise ValueError(f"band {cruise_band} has no velocity multiplier")
+    if band.get("unattainable"):
+        raise ValueError(f"band {band['name']} is unattainable (needs the streak drive)")
+    apparent_c = band["velocity_multiplier"] * real_v
 
     when = route.depart_at
     system = route.origin_system
@@ -207,6 +219,25 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
 
     final_body = next((leg.to_body for leg in reversed(route.legs) if leg.to_body), None)
     return CompiledRoute(route, segments, final_system=system, final_body=final_body)
+
+
+def ship_from_artifact(u: Universe, ship_id: str, *, max_velocity_c: float = 0.6) -> Ship:
+    """Build a route :class:`Ship` from an artifact hull's effective stats.
+
+    Pulls effective `max_g` / `max_hyper_band` / `real_cruise_velocity_c`
+    (class ⊕ overrides). ``max_velocity_c`` is the n-space cap (not tracked per
+    hull; defaults to 0.6c).
+    """
+    eff = u.effective_ship(ship_id)
+    if eff is None:
+        raise ValueError(f"unknown ship {ship_id!r}")
+    return Ship(
+        name=eff["name"],
+        max_accel_g=eff["max_g"] or 200.0,
+        max_velocity_c=max_velocity_c,
+        max_hyper_band=eff["max_hyper_band"],
+        hyper_cruise_velocity_c=eff["real_cruise_velocity_c"],
+    )
 
 
 def simulation_for_route(compiled: CompiledRoute, u: Universe) -> Simulation:

@@ -14,6 +14,7 @@ from .plan import (
     RouteLeg,
     body_resolver,
     compile_route,
+    ship_from_artifact,
     simulation_for_route,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "RouteLeg",
     "body_resolver",
     "compile_route",
+    "ship_from_artifact",
     "simulation_for_route",
 ]
