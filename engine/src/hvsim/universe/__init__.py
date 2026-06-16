@@ -109,11 +109,28 @@ class Universe:
             "id": s["id"],
             "name": s["name"],
             "class_id": s["class_id"],
+            "transponder": s.get("transponder"),
+            "modified": s.get("modified"),
             "max_g": eff("ovr_max_g", "max_g"),
             "normal_g": eff("ovr_normal_g", "normal_g"),
             "max_hyper_band": eff("ovr_max_hyper_band", "max_hyper_band"),
             "real_cruise_velocity_c": eff("ovr_real_cruise_velocity_c", "real_cruise_velocity_c"),
         }
+
+    def transponder(self, ship_id: str) -> str | None:
+        """The ship's display transponder ``nation.class.hull`` (None if unknown)."""
+        s = self.ship(ship_id)
+        return s.get("transponder") if s else None
+
+    def ship_by_transponder(self, transponder: str) -> dict | None:
+        """The ship squawking ``transponder`` (display ``nation.class.hull``)."""
+        r = self.con.execute("SELECT * FROM ships WHERE transponder=?", (transponder,)).fetchone()
+        return dict(r) if r else None
+
+    def effective_ship_by_transponder(self, transponder: str) -> dict | None:
+        """Resolve a transponder straight to its hull's effective technical data."""
+        s = self.ship_by_transponder(transponder)
+        return self.effective_ship(s["id"]) if s else None
 
     def hyper_limit_lmin(self, system_id: str) -> float | None:
         """The primary star's hyper limit (light-minutes).
@@ -146,6 +163,20 @@ class Universe:
             (a, b, b, a),
         ).fetchone()
         return dict(r) if r else None
+
+
+def format_transponder(nation: int, ship_class: int, hull: int) -> str:
+    """The display transponder string ``nation.class.hull`` (modified is engine-only)."""
+    return f"{nation}.{ship_class}.{hull}"
+
+
+def parse_transponder(transponder: str) -> tuple[int, int, int]:
+    """Parse ``nation.class.hull`` into integer components."""
+    parts = transponder.split(".")
+    if len(parts) != 3:
+        raise ValueError(f"malformed transponder {transponder!r} (want nation.class.hull)")
+    nation, ship_class, hull = (int(p) for p in parts)
+    return nation, ship_class, hull
 
 
 def _coords(u: Universe, system_id: str) -> tuple[float, float, float] | None:

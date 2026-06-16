@@ -433,6 +433,30 @@ the core itself doesn't exist yet. Split into three sprints:
   star on near-opposition trips). Note this already exists latently in the Phase 1
   Sol solver.
 
+### Phase 2b.1 — Operate the galaxy (identity + deployed service)
+
+Phase 2b is engine/CLI-level; the deployed HTTP service is still Phase-1 shaped
+(single-system Sol plans, ad-hoc band-less ships). This sub-phase makes the galaxy
+*operable* — and nails ship identity first so the service is built on it.
+
+- **Sprint 017 — transponder ship identity.** A canonical **`nation.class.hull`**
+  transponder (stable integer codes + a formatted display string; engine-only
+  `modified` bit derived from `ovr_*`; nation 0 + a generic class for ad-hoc).
+  Supplements the slug PKs; the engine resolves a transponder → effective (class ⊕
+  override) stats. Identity only — routes/API adopt it in 018. Contract → v0.3.0.
+  (False-flag spoofing deferred to wartime.) Realizes kwi #65. ✅ **Done
+  (Sprint 017):** `transponder-codes.json` + compiler `_assign_transponders`
+  (codes / `modified` / transponder + uniqueness validation); `Universe` resolves a
+  transponder → effective stats. 33 unique transponders; contract v0.3.0.
+- **Sprint 018 — API integration + deploy + shakedown.** Wire multi-mode routes
+  into the HTTP API: file a planner route (filed-route JSON, persisted as the doc
+  + recompiled on query — deterministic, no segment-row churn), cross-system
+  `/ships/{id}/state` (system + frame + phase + vector), a **fleet board**, the
+  at-origin guard at the boundary (via `navigable_location`, dev-mode bypass), and
+  dev-clock acceleration. Planner stays **client-side** (no `/plan` endpoint — the
+  founding split). Then **deploy to `kubsdb`** and run the 5-ship shakedown live
+  on an accelerated clock. (Engine-level shakedown already passed: 50/50.)
+
 ### Phase 2c — Wormhole queues (the DES payoff)
 
 - **Wormhole queue resolver:** the dataset's `transit_model`

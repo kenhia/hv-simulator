@@ -1,4 +1,7 @@
--- Universe artifact — compiled SQLite schema (CONTRACT v0.2.0)
+-- Universe artifact — compiled SQLite schema (CONTRACT v0.3.0)
+-- v0.3.0 (Sprint 017): transponder identity — nations.code + ship_classes.code +
+--   ships.hull_code give each ship a dotted nation.class.hull transponder (stored
+--   on ships.transponder); ships.modified (engine-only, derived from ovr_*).
 -- v0.2.0 (Sprint 015): hyperspace_bands carries Weber's chart (velocity_multiplier
 --   + translation_bleed_off_pct, replacing apparent_velocity_c); new hyperspace_model
 --   globals row; ship_classes gains max_hyper_band/real_cruise_velocity_c/singleton;
@@ -34,6 +37,7 @@ CREATE TABLE nations (
     capital_city      TEXT,
     founded_pd        INTEGER,
     succeeded_by      TEXT,
+    code              INTEGER,      -- transponder nation code (0=unaffiliated; stable, non-sequential)
     canon             INTEGER NOT NULL DEFAULT 1
 );
 
@@ -210,6 +214,7 @@ CREATE TABLE ship_classes (
     max_hyper_band_canon INTEGER NOT NULL DEFAULT 0,
     real_cruise_velocity_c REAL,        -- hyper cruise real velocity (warship 0.6 / merchant 0.5)
     singleton       INTEGER NOT NULL DEFAULT 0,  -- auto-created class for a one-off hull
+    code            INTEGER,            -- transponder class code (unique within its nation)
     canon           INTEGER NOT NULL DEFAULT 1
 );
 
@@ -231,6 +236,9 @@ CREATE TABLE ships (
     ovr_normal_g    REAL,               -- override: cruise accel
     ovr_max_hyper_band INTEGER,         -- override: max safe band
     ovr_real_cruise_velocity_c REAL,    -- override: hyper cruise real velocity
+    hull_code       INTEGER,            -- transponder hull code (unique within class)
+    modified        INTEGER NOT NULL DEFAULT 0,  -- engine-only: 1 if any ovr_* set
+    transponder     TEXT,               -- display id "nation.class.hull"
     canon           INTEGER NOT NULL DEFAULT 1
 );
 

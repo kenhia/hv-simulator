@@ -96,6 +96,19 @@ complete description of the project (with screenshots, etc.). Until then this no
 records the provenance and the rights status. If authorization is declined, these
 specific numbers would be replaced with our own interpolated model.
 
+## Transponder codes
+
+[`transponder-codes.json`](transponder-codes.json) holds the **stable** integer
+codes behind each ship's transponder (`nation.class.hull`, + an engine-only
+`modified` bit). **Never renumber an assigned code** — transponders are
+identities; new entities take a new, unused code. Nation codes are deliberately
+**non-sequential**: `0` unaffiliated, `1` Sol (Solarian League), `2` Beowulf
+(reserved for the Republic of Beowulf), all others a hand-picked random-ish value
+in `[42, 999]`. Class codes are unique within a nation; **hull codes are authored
+per ship** in `ships/ships.json` (unique within class, so the `nation.class.hull`
+triple is unique). `just validate-data` (in `just check`) enforces that. (False-flag
+/ spoofing is a wartime feature — deferred.)
+
 ## Units & conventions
 
 - Stellar masses in **solar masses** (`mass_solar`).

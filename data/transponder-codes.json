@@ -1,0 +1,29 @@
+{
+  "_doc": "Stable transponder codes (Sprint 017). A ship's transponder is the dotted nation.class.hull of these codes, plus an engine-only 'modified' bit (derived from ovr_* overrides, never displayed). NEVER renumber an assigned code — transponders are identities; new entities take a new code. Nation codes are deliberately non-sequential: 0 = unaffiliated, 1 = Sol (Solarian League homeworld), 2 = Beowulf (RESERVED for the Republic of Beowulf, not yet a nation record — see kwi #66), all others a hand-picked random-ish value in [42, 999] for a lived-in feel (revisit the range once >~50% full). Class codes are unique within their nation. Hull codes are assigned per class by the compiler (sorted ship id).",
+  "nations": {
+    "solarian-league": 1,
+    "republic-of-beowulf": 2,
+    "protectorate-of-grayson": 213,
+    "star-kingdom-of-manticore": 347,
+    "star-empire-of-manticore": 419,
+    "masada": 489,
+    "silesia": 555,
+    "republic-of-haven": 618
+  },
+  "classes": {
+    "honor-harrington": 1,
+    "raoul-courvosier-ii": 2,
+    "sultan": 1,
+    "warlord": 2,
+    "starhauler": 1,
+    "dromedary": 1,
+    "nevada": 2,
+    "atlas-manticore": 1,
+    "courageous": 2,
+    "edward-saganami": 3,
+    "invictus": 4,
+    "nike": 5,
+    "reliant": 6,
+    "star-knight": 7
+  }
+}

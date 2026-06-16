@@ -60,6 +60,7 @@ check:
     cd tools/orbit-derive && uv run pytest -q
     cd tools/coordinate-frame && uv run pytest -q
     cd tools/nav-planner && uv run pytest -q
+    python3 tools/validate-data.py data
 
 # Validate the boundary contracts (build sample artifact from DDL + lint OpenAPI).
 contracts:
@@ -72,6 +73,10 @@ derive-orbits:
 # Fabricate the galactic coordinate frame into data/ JSON. Commit the result.
 frame:
     cd tools/coordinate-frame && uv run hvsim-frame --data ../../data
+
+# Validate the authored dataset (ship identity / transponder uniqueness, etc.).
+validate-data:
+    python3 tools/validate-data.py data
 
 # Markdown snapshot of the compiled artifact (seeds galaxy-changelog entries).
 galaxy-summary:
