@@ -177,6 +177,37 @@ class JunctionQueue(BaseModel):
     entries: list[JunctionQueueEntry]
 
 
+class StarOut(BaseModel):
+    id: str
+    name: str | None
+    role: str | None
+    spectral_type: str | None
+    mass_solar: float | None
+    hyper_limit_lmin: float | None
+
+
+class SystemDetail(BaseModel):
+    id: str
+    name: str
+    star_nation_id: str | None
+    is_binary: bool
+    distance_ly: float | None
+    coordinates: dict | None  # {x_ly,y_ly,z_ly} or null (unplaced)
+    primary_hyper_limit_lmin: float | None
+    primary_hyper_limit_au: float | None  # the ring radius the system view draws
+    stars: list[StarOut]
+    binary: dict | None  # separation/period (binaries row) or null
+
+
+class PlaceOut(BaseModel):
+    id: str
+    name: str | None
+    type: str | None
+    rides_on_body_id: str | None
+    # Position (km+AU) when the place rides a body; null for free-floating / nexus.
+    position: PositionOut | None = None
+
+
 class BodyOut(BaseModel):
     name: str
     kind: str

@@ -92,6 +92,10 @@ def artifact_path(tmp_path) -> str:
         "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
         "transit,canon) VALUES ('wl','bj','beta','gamma',31,'instant',1)"
     )
+    con.execute(
+        "INSERT INTO places (id,system_id,name,type,rides_on_body_id,canon) "
+        "VALUES ('beta:station','beta','Beta Station','naval_station','beta:p1',1)"
+    )
     con.commit()
     con.close()
     return str(db)
@@ -240,3 +244,24 @@ def test_junction_queue_metrics(artifact_path: str, tmp_path) -> None:
     prefix = 'hvsim_junction_queue_depth{junction="bj"}'
     line = next(ln for ln in metrics.splitlines() if ln.startswith(prefix))
     assert float(line.rsplit(" ", 1)[1]) == 2.0  # both real ships queued now
+
+
+# --- Sprint 022: system detail + places (the system-zoom data) ----------------
+
+
+def test_system_detail(client: TestClient) -> None:
+    d = client.get("/systems/beta").json()
+    assert d["id"] == "beta" and d["is_binary"] is False
+    assert [s["hyper_limit_lmin"] for s in d["stars"]] == [20.0]
+    assert d["primary_hyper_limit_lmin"] == 20.0
+    assert d["primary_hyper_limit_au"] > 0  # the ring radius the system view draws
+    assert client.get("/systems/nope").status_code == 404
+
+
+def test_system_places(client: TestClient) -> None:
+    pl = client.get("/systems/beta/places").json()
+    assert [p["id"] for p in pl] == ["beta:station"]
+    p = pl[0]
+    assert p["rides_on_body_id"] == "beta:p1"
+    assert p["position"] is not None  # rides on a body -> co-located with it
+    assert client.get("/systems/nope/places").status_code == 404
