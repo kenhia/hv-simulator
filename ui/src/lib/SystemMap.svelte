@@ -3,6 +3,7 @@
   import {
     fetchSystemBodies,
     fetchSystemPlaces,
+    type Junction,
     type Place,
     type SystemBody,
     type SystemDetail
@@ -28,21 +29,25 @@
   let {
     systemId,
     detail = null,
+    junctions = [],
     zoneMode = false,
     fitSignal = 0,
     ships,
     onselect,
     onexit,
-    onsummary
+    onsummary,
+    onjunction
   }: {
     systemId: string;
     detail?: SystemDetail | null;
+    junctions?: Junction[];
     zoneMode?: boolean;
     fitSignal?: number;
     ships?: () => LiveShip[];
     onselect?: (d: Detail, bodyName: string | null) => void;
     onexit?: () => void;
     onsummary?: (s: SystemSummary) => void;
+    onjunction?: (id: string) => void;
   } = $props();
 
   let wrap: HTMLDivElement;
@@ -57,7 +62,16 @@
 
   const NODE_R = 3;
   const HIT_PX = 14;
+  const NEXUS_AU = 50; // fabricated nexus radius (≈ Manticore's canon 7 light-hours)
   const ringAu = $derived(detail?.primary_hyper_limit_au ?? null);
+  const hostJunctions = $derived(junctions.filter((j) => j.host_system_id === systemId));
+
+  // Fabricated in-system nexus point (canon gives a radius, not a bearing): place
+  // junctions on distinct bearings at NEXUS_AU.
+  function nexusWorld(i: number): Vec2 {
+    const a = i * 0.7; // first one "north" (+y = up), then fan out
+    return { x: NEXUS_AU * Math.sin(a), y: NEXUS_AU * Math.cos(a) };
+  }
 
   function bodyWorld(b: SystemBody): Vec2 {
     return { x: b.position.au.x, y: b.position.au.y };
@@ -90,6 +104,7 @@
   function doFit() {
     const pts = bodies.map(bodyWorld);
     if (ringAu) pts.push({ x: ringAu, y: 0 }, { x: -ringAu, y: 0 }); // keep the ring in frame
+    hostJunctions.forEach((_, i) => pts.push(nexusWorld(i))); // keep the nexus in frame
     cam = pts.length ? fit(pts, width, height) : { cx: 0, cy: 0, scale: 40 };
     fitScale = cam.scale;
     fitted = true;
@@ -158,6 +173,22 @@
       ctx.fillRect(p.x - 2, p.y - 6, 4, 4);
     }
 
+    // Wormhole-junction nexus (fabricated in-system position): a gold ring glyph.
+    hostJunctions.forEach((j, i) => {
+      const p = worldToScreen(nexusWorld(i), cam, width, height);
+      ctx.strokeStyle = '#ffcf6b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffcf6b';
+      ctx.fill();
+      ctx.fillStyle = '#e0c98a';
+      ctx.fillText(`⚲ ${j.name}`, p.x + 10, p.y);
+    });
+
     drawShips(ctx);
   }
 
@@ -204,6 +235,7 @@
     }
     const d = detail;
     if (d) consider({ x: 0, y: 0 }, () => onselect?.(systemDetailRows(d), null));
+    hostJunctions.forEach((j, i) => consider(nexusWorld(i), () => onjunction?.(j.id)));
     return best;
   }
 

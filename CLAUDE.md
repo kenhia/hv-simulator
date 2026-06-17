@@ -59,9 +59,14 @@ Engine gained `GET /fleet/{transponder}/route` (the timeline's segments); `/cloc
 + `/fleet/{tp}/state` (position + velocity vector) feed the live view. The engine
 serves the built SPA same-origin at **`/ui`** (`HVSIM_UI_DIST`; multi-stage Docker
 bundles it); the legacy Sol map stays at `/`. `just ui-dev` / `ui-build` /
-`ui-check` (folded into `just check`). Remaining slice: junction queue panels (024)
-→ polish (025). Grafana dashboards are a deferred parallel track. A UI/lore glossary
-lives in `docs/terminology.md`.
+`ui-check` (folded into `just check`). Sprint 024 added **junction queue panels**:
+a nexus marker in the host system opens a live board (consuming 020's
+`/junctions/{id}/queue`) — ordered real + phantom entries counting down
+`transit in MM:SS` off the shared sim clock, `Esc` backing out progressively. That
+closes the Phase-2c loop visually (resolver 019 → endpoint/metrics 020 → board 024).
+Remaining slice: polish (025 — faction colours, main menu, dev time scrubber).
+Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
+`docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
