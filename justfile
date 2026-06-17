@@ -20,9 +20,7 @@ default:
 # gitignored) so the galaxy ships inside the image.
 build:
     just compile-data
-    cp build/universe.db engine/universe.db
-    docker build -t {{image}} engine
-    rm -f engine/universe.db
+    docker build -f engine/Dockerfile -t {{image}} .
 
 # Build, ship the image to {{host}}, and bring the stack up (real-time clock).
 deploy: build
@@ -60,7 +58,7 @@ fleet:
 queue-board junction="manticore-junction" at="":
     ./deploy/queue-board.sh {{junction}} http://{{host}}:{{port}} "{{at}}"
 
-# Run the validation gate: engine (tests + lint + format) and the tools' tests.
+# Run the validation gate: engine (tests + lint + format), the tools, and the UI.
 check:
     cd engine && uv run pytest
     cd engine && uv run ruff check .
@@ -70,6 +68,21 @@ check:
     cd tools/coordinate-frame && uv run pytest -q
     cd tools/nav-planner && uv run pytest -q
     python3 tools/validate-data.py data
+    just ui-check
+
+# UI dev server (Vite); proxies the API to http://{{host}}:{{port}}.
+ui-dev:
+    cd ui && HVSIM_API=http://{{host}}:{{port}} npm run dev
+
+# Build the galaxy SPA to ui/build (consumed by the engine + the image).
+ui-build:
+    cd ui && npm run build
+
+# UI gate: types (svelte-check) + format + unit tests.
+ui-check:
+    cd ui && npm run check
+    cd ui && npm run lint
+    cd ui && npm test
 
 # Validate the boundary contracts (build sample artifact from DDL + lint OpenAPI).
 contracts:
