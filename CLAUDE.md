@@ -44,11 +44,17 @@ Prometheus/Grafana. Design is in `planning/006`. **Phase 2.5 (first-class UI) is
 underway** (`planning/007`): a SvelteKit (Svelte 5) + Canvas-2D map app in `ui/`.
 Sprint 021 landed the foundation + **galaxy graph** — placed systems as nodes in
 the galactic frame, wormhole links as edges, pan/zoom, click → Side Data Panel,
-At-a-glance + legend. The engine serves the built SPA same-origin at **`/ui`**
-(`HVSIM_UI_DIST`; multi-stage Docker bundles it); the legacy Sol map stays at `/`.
-`just ui-dev` / `ui-build` / `ui-check` (folded into `just check`). Remaining slice:
-system zoom (022) → live ships + Fleet Board (023) → junction queue panels (024) →
-polish (025). Grafana dashboards are a deferred parallel track.
+At-a-glance + legend. Sprint 022 added the **LOD spine**: double-click / `Enter` /
+zoom-in drills from the galaxy graph into a **per-system heliocentric top-down**
+(star, planets/moons at live positions, hyper-limit ring, ride-on stations);
+`Esc`/zoom-out leaves; a growing breadcrumb (`Galaxy → Sol → Sol / Earth`), zone
+mode (`z`), fit (`f`), and a reserved `keymap`. Engine gained `GET /systems/{id}`
+(hyper limit + stars + binary), `GET /systems/{id}/places`, and a Sol-bodies
+delegate (Sol's JPL planets via `/systems/sol/bodies`). The engine serves the built
+SPA same-origin at **`/ui`** (`HVSIM_UI_DIST`; multi-stage Docker bundles it); the
+legacy Sol map stays at `/`. `just ui-dev` / `ui-build` / `ui-check` (folded into
+`just check`). Remaining slice: live ships + Fleet Board (023) → junction queue
+panels (024) → polish (025). Grafana dashboards are a deferred parallel track.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,

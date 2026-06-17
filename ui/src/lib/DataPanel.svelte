@@ -1,45 +1,18 @@
 <script lang="ts">
-  import type { Junction, System } from './api';
+  import type { Detail } from './detail';
 
-  let {
-    system,
-    junctions = [],
-    onclose
-  }: {
-    system: System;
-    junctions?: Junction[];
-    onclose?: () => void;
-  } = $props();
-
-  const host = $derived(junctions.find((j) => j.host_system_id === system.id) ?? null);
-
-  function coords(s: System): string {
-    const c = s.coordinates;
-    return c ? `${c.x_ly.toFixed(1)}, ${c.y_ly.toFixed(1)}, ${c.z_ly.toFixed(1)} ly` : '—';
-  }
+  let { detail, onclose }: { detail: Detail; onclose?: () => void } = $props();
 </script>
 
 <aside class="overlay panel">
   <button class="close" onclick={() => onclose?.()} aria-label="close">×</button>
-  <div class="title">SYSTEM</div>
-  <h2>{system.name}</h2>
+  <div class="title">{detail.kind.toUpperCase()}</div>
+  <h2>{detail.title}</h2>
   <dl>
-    <dt>id</dt>
-    <dd>{system.id}</dd>
-    <dt>nation</dt>
-    <dd>{system.star_nation_id ?? '—'}</dd>
-    <dt>type</dt>
-    <dd>{system.is_binary ? 'binary' : 'single star'}</dd>
-    <dt>distance</dt>
-    <dd>{system.distance_ly != null ? `${system.distance_ly.toFixed(1)} ly` : '—'}</dd>
-    <dt>galactic</dt>
-    <dd>{coords(system)}</dd>
-    {#if host}
-      <dt>junction</dt>
-      <dd>
-        {host.name}{host.traffic_intensity != null ? ` (knob ${host.traffic_intensity})` : ''}
-      </dd>
-    {/if}
+    {#each detail.rows as [k, v] (k)}
+      <dt>{k}</dt>
+      <dd>{v}</dd>
+    {/each}
   </dl>
 </aside>
 

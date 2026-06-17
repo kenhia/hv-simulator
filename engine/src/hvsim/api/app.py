@@ -21,7 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hvsim.clock import SimClock
-from hvsim.ephemeris import BODIES, heliocentric_position, list_bodies
+from hvsim.ephemeris import AU_M, BODIES, heliocentric_position, list_bodies
 from hvsim.flightplan import FlightPlan, Ship, Waypoint, compile_plan, state_at
 from hvsim.kinematics import ZERO, Vec3
 from hvsim.route import (
@@ -35,7 +35,7 @@ from hvsim.route import (
     resolve_route,
     simulation_for_route,
 )
-from hvsim.universe import Universe, body_positions, inter_system_distance
+from hvsim.universe import LMIN_M, Universe, body_positions, inter_system_distance
 
 from .db import (
     FlightPlanRow,
@@ -60,12 +60,15 @@ from .schemas import (
     FlightPlanOut,
     JunctionQueue,
     JunctionQueueEntry,
+    PlaceOut,
     RouteOut,
     SegmentOut,
     ShipCreate,
     ShipDetail,
     ShipOut,
+    StarOut,
     StateOut,
+    SystemDetail,
 )
 from .serialize import as_utc, load_compiled, segment_to_row
 from .units import human_duration, position_out, velocity_out
@@ -408,6 +411,64 @@ def create_app(
             raise HTTPException(404, "no universe loaded")
         return {"from": a, "to": b, **inter_system_distance(u, a, b)}
 
+    @app.get("/systems/{system_id}", response_model=SystemDetail)
+    def system_detail(system_id: str) -> SystemDetail:
+        """One system's catalog detail: stars, hyper-limit ring radius, binary."""
+        u = require_universe()
+        s = u.system(system_id)
+        if s is None:
+            raise HTTPException(404, f"unknown system {system_id!r}")
+        hl = u.hyper_limit_lmin(system_id)
+        coords = (
+            None
+            if s["coord_x_ly"] is None
+            else {"x_ly": s["coord_x_ly"], "y_ly": s["coord_y_ly"], "z_ly": s["coord_z_ly"]}
+        )
+        return SystemDetail(
+            id=s["id"],
+            name=s["name"],
+            star_nation_id=s["star_nation_id"],
+            is_binary=bool(s["is_binary"]),
+            distance_ly=s["distance_ly"],
+            coordinates=coords,
+            primary_hyper_limit_lmin=hl,
+            primary_hyper_limit_au=(hl * LMIN_M / AU_M) if hl is not None else None,
+            stars=[
+                StarOut(
+                    id=st["id"],
+                    name=st.get("name"),
+                    role=st.get("role"),
+                    spectral_type=st.get("spectral_type"),
+                    mass_solar=st.get("mass_solar"),
+                    hyper_limit_lmin=st.get("hyper_limit_lmin"),
+                )
+                for st in u.stars(system_id)
+            ],
+            binary=u.binary(system_id),
+        )
+
+    @app.get("/systems/{system_id}/places", response_model=list[PlaceOut])
+    def system_places(system_id: str, at: datetime | None = None) -> list[PlaceOut]:
+        """Stations / forts / nexus in a system; ride-on places carry a position."""
+        u = app.state.universe
+        if u is None or u.system(system_id) is None:
+            raise HTTPException(404, f"unknown system {system_id!r}")
+        positions = body_positions(u, system_id, resolve_when(at))
+        out = []
+        for p in u.places(system_id):
+            ride = p.get("rides_on_body_id")
+            pos = positions.get(ride) if ride else None
+            out.append(
+                PlaceOut(
+                    id=p["id"],
+                    name=p.get("name"),
+                    type=p.get("type"),
+                    rides_on_body_id=ride,
+                    position=position_out(pos) if pos is not None else None,
+                )
+            )
+        return out
+
     @app.get("/systems/{system_id}/bodies")
     def system_bodies(system_id: str, at: datetime | None = None) -> list[dict]:
         """Placeable body positions in a system at a time (km + AU)."""
@@ -415,6 +476,20 @@ def create_app(
         if u is None or u.system(system_id) is None:
             raise HTTPException(404, f"unknown system {system_id!r}")
         when = resolve_when(at)
+        if system_id == "sol":
+            # Sol keeps the JPL ephemeris (no artifact bodies); mirror /bodies so the
+            # generalized system view shows Earth, Mars, … at their real positions.
+            return [
+                {
+                    "id": f"sol:{info['name']}",
+                    "name": info["name"].title(),
+                    "type": info["kind"],
+                    "position": position_out(
+                        Vec3(*heliocentric_position(info["name"], when))
+                    ).model_dump(),
+                }
+                for info in list_bodies()
+            ]
         names = {b["id"]: b for b in u.bodies(system_id)}
         out = []
         for bid, vec in sorted(body_positions(u, system_id, when).items()):

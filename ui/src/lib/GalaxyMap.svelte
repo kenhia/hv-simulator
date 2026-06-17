@@ -16,13 +16,17 @@
     links = [],
     junctions = [],
     selectedId = null,
-    onselect
+    fitSignal = 0,
+    onselect,
+    onenter
   }: {
     systems?: System[];
     links?: WormholeLink[];
     junctions?: Junction[];
     selectedId?: string | null;
+    fitSignal?: number;
     onselect?: (s: System) => void;
+    onenter?: (s: System) => void;
   } = $props();
 
   let wrap: HTMLDivElement;
@@ -31,6 +35,7 @@
   let height = $state(600);
   let cam = $state<Camera>({ cx: 0, cy: 0, scale: 1 });
   let fitted = false;
+  let fitScale = 1; // baseline from the initial fit; zooming far past it enters a system
 
   const placed = $derived(systems.filter((s) => s.coordinates !== null));
   const byId = $derived(new Map(systems.map((s) => [s.id, s])));
@@ -110,9 +115,9 @@
     }
   }
 
-  function nearest(sx: number, sy: number): System | null {
+  function nearest(sx: number, sy: number, maxPx = HIT_PX): System | null {
     let best: System | null = null;
-    let bestD = HIT_PX * HIT_PX;
+    let bestD = maxPx * maxPx;
     for (const s of placed) {
       const p = worldToScreen(world(s), cam, width, height);
       const d = screenDist2({ x: sx, y: sy }, p);
@@ -155,7 +160,21 @@
   function onwheel(e: WheelEvent) {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-    cam = zoomAbout(cam, e.offsetX, e.offsetY, factor, width, height);
+    const next = zoomAbout(cam, e.offsetX, e.offsetY, factor, width, height);
+    // Zooming deep past the framing scale, with a system near centre, drills in.
+    if (next.scale > fitScale * 8) {
+      const hit = nearest(width / 2, height / 2, 80);
+      if (hit) {
+        onenter?.(hit);
+        return;
+      }
+    }
+    cam = next;
+  }
+
+  function ondblclick(e: MouseEvent) {
+    const hit = nearest(e.offsetX, e.offsetY);
+    if (hit) onenter?.(hit);
   }
 
   onMount(() => {
@@ -169,7 +188,18 @@
   $effect(() => {
     if (!fitted && placed.length > 0 && width > 1) {
       cam = fit(placed.map(world), width, height);
+      fitScale = cam.scale;
       fitted = true;
+    }
+  });
+
+  // `f` (fit/reset): the page bumps fitSignal.
+  let lastFit = 0;
+  $effect(() => {
+    if (fitSignal !== lastFit && placed.length > 0 && width > 1) {
+      lastFit = fitSignal;
+      cam = fit(placed.map(world), width, height);
+      fitScale = cam.scale;
     }
   });
 
@@ -181,7 +211,8 @@
 </script>
 
 <div class="map" bind:this={wrap}>
-  <canvas bind:this={canvas} {onpointerdown} {onpointermove} {onpointerup} {onwheel}></canvas>
+  <canvas bind:this={canvas} {onpointerdown} {onpointermove} {onpointerup} {onwheel} {ondblclick}
+  ></canvas>
 </div>
 
 <style>

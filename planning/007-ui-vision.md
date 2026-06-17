@@ -234,7 +234,7 @@ surface and unblocks the UI queue view later).
 |---|---|---|
 | **020** ✅ | **engine: junction queue endpoint** — implemented the contracted `GET /junctions/{id}/queue` (`JunctionQueue`); deployed `/fleet` board resolves the whole fleet together (real-ship interleaving) + surfaces `queue_position`; per-junction queue depth/wait metrics for Grafana; `just queue-board`. | engine |
 | 021 ✅ | UI foundation + galaxy graph — scaffolded `ui/` (SvelteKit 5 + Canvas-2D), build wired into `just`, served same-origin at `/ui` (multi-stage image). Galaxy graph (`/systems`+`/wormholes`+`/junctions`), pan/zoom, click → Side Data Panel, At-a-glance + legend. | ui |
-| 022 | LOD spine: zoom into systems — generalize the Sol map to any system (live bodies, hyper-limit ring, nexus, stations); breadcrumb; zone mode. | ui |
+| 022 ✅ | LOD spine: zoom into systems — galaxy↔system scenes (double-click / `Enter` / zoom-in to enter, `Esc`/zoom-out to leave); heliocentric top-down (star, planets/moons live, hyper-limit ring, ride-on stations); breadcrumb; zone mode (`z`), fit (`f`); reserved `keymap`. Engine: `GET /systems/{id}` (+hyper limit/stars/binary), `/systems/{id}/places`, Sol-bodies delegate. | ui |
 | 023 | Live ships + Fleet Board — board rail (filterable), ships on the map (galactic motes + in-system), dead-reckoning, Ship Timeline widget, Locate-a-ship. | ui |
 | 024 | Junction queue panels — click a nexus → live queue (consumes 020); the `#3 -> pops` countdown, visualized. | ui |
 | 025 | Detail views + dev time controls + polish — ship itinerary, dev-only time scrubber, layer toggles, faction colors, leader-line de-collision. | ui |

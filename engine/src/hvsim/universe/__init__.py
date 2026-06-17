@@ -55,6 +55,15 @@ class Universe:
             for r in self.con.execute("SELECT * FROM bodies WHERE system_id=?", (system_id,))
         ]
 
+    def places(self, system_id: str) -> list[dict]:
+        """Stations / forts / nexus in a system (places table)."""
+        return [
+            dict(r)
+            for r in self.con.execute(
+                "SELECT * FROM places WHERE system_id=? ORDER BY id", (system_id,)
+            )
+        ]
+
     def wormhole_junctions(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_junctions ORDER BY id")]
 

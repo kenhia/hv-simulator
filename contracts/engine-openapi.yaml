@@ -60,6 +60,17 @@ paths:
       responses:
         "200": { description: body positions, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/BodyState" } } } } }
 
+  /systems/{system_id}/places:
+    get:
+      summary: Stations / forts / nexus in a system (ride-on places carry a position)
+      operationId: getSystemPlaces
+      parameters:
+        - { $ref: "#/components/parameters/SystemId" }
+        - { $ref: "#/components/parameters/At" }
+      responses:
+        "200": { description: places, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Place" } } } } }
+        "404": { description: unknown system }
+
   /bodies/{body_id}/state:
     get:
       summary: Heliocentric/system position of one body at a time
@@ -214,6 +225,15 @@ components:
         system_id: { type: string }
         position_au: { $ref: "#/components/schemas/Vector3" }
         position_km: { $ref: "#/components/schemas/Vector3" }
+
+    Place:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: [string, "null"] }
+        type: { type: [string, "null"], description: station / fort / wormhole_junction / … }
+        rides_on_body_id: { type: [string, "null"] }
+        position: { description: km+AU when the place rides a body; null for free-floating / nexus }
 
     ShipCreate:
       type: object
