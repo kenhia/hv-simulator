@@ -485,9 +485,19 @@ def _stub_missing_refs(con: sqlite3.Connection) -> dict[str, int]:
     for nid in sorted(stub_n):
         con.execute("INSERT INTO nations (id,name,canon) VALUES (?,?,1)", (nid, nid))
     for sid in sorted(stub_s):
-        con.execute(
-            "INSERT INTO star_systems (id,name,canon,is_binary) VALUES (?,?,1,0)", (sid, sid)
-        )
+        if sid == "sol":
+            # Sol is the galactic frame's origin by definition (it has no system
+            # file -- it keeps the JPL ephemeris). Place the stub at (0,0,0) so it
+            # appears on the galaxy map; coord_canon=0 (the frame is fabricated).
+            con.execute(
+                "INSERT INTO star_systems "
+                "(id,name,canon,is_binary,coord_x_ly,coord_y_ly,coord_z_ly,coord_canon) "
+                "VALUES ('sol','Sol',1,0,0.0,0.0,0.0,0)"
+            )
+        else:
+            con.execute(
+                "INSERT INTO star_systems (id,name,canon,is_binary) VALUES (?,?,1,0)", (sid, sid)
+            )
     return {"nations": len(stub_n), "systems": len(stub_s)}
 
 

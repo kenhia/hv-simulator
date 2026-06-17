@@ -39,8 +39,10 @@
   const NODE_R = 4;
   const HIT_PX = 14;
 
+  // Top-down view of the galactic plane: X = galactic east (right), Z = galactic
+  // north (up). The frame reserves Y (out-of-plane) ~ 0, so we project X-Z.
   function world(s: System): Vec2 {
-    return { x: s.coordinates!.x_ly, y: s.coordinates!.y_ly };
+    return { x: s.coordinates!.x_ly, y: s.coordinates!.z_ly };
   }
 
   function resize() {
