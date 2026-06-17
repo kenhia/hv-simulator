@@ -17,6 +17,7 @@
   import DataPanel from '$lib/DataPanel.svelte';
   import FleetBoard from '$lib/FleetBoard.svelte';
   import GalaxyMap from '$lib/GalaxyMap.svelte';
+  import JunctionQueuePanel from '$lib/JunctionQueuePanel.svelte';
   import Legend from '$lib/Legend.svelte';
   import SystemMap from '$lib/SystemMap.svelte';
 
@@ -39,6 +40,7 @@
   let tracked = $state(new Set<string>());
   let selectedShip = $state<string | null>(null);
   let selectedRoute = $state<RouteOut | null>(null);
+  let junctionQueueId = $state<string | null>(null);
   const ships = () => live.ships();
 
   const placed = $derived(galaxy.systems.filter((s) => s.coordinates !== null).length);
@@ -57,6 +59,7 @@
     summary = null;
     selectedShip = null;
     selectedRoute = null;
+    junctionQueueId = null;
     try {
       systemDetail = await fetchSystemDetail(s.id);
     } catch {
@@ -72,11 +75,18 @@
     panel = null;
     selectedShip = null;
     selectedRoute = null;
+    junctionQueueId = null;
+  }
+
+  function openQueue(id: string) {
+    panel = null; // one right-side panel at a time
+    junctionQueueId = id;
   }
 
   async function selectShip(tp: string) {
     const entry = roster.find((e) => e.transponder === tp);
     if (!entry) return;
+    junctionQueueId = null;
     // Fly to it: into its system, or out to the galaxy if it's in hyper.
     if (entry.system) {
       const sys = galaxy.systems.find((s) => s.id === entry.system);
@@ -110,8 +120,10 @@
       enterSystem(selectedSystem);
     } else if (action === 'exit') {
       e.preventDefault();
-      if (scene.kind === 'system') exitToGalaxy();
-      else panel = null;
+      // Progressive back-out: queue panel -> data panel -> exit the system.
+      if (junctionQueueId) junctionQueueId = null;
+      else if (panel) panel = null;
+      else if (scene.kind === 'system') exitToGalaxy();
     } else if (action === 'zone') {
       e.preventDefault();
       zoneMode = !zoneMode;
@@ -162,15 +174,18 @@
       <SystemMap
         {systemId}
         detail={systemDetail}
+        junctions={galaxy.junctions}
         {zoneMode}
         {fitSignal}
         {ships}
         onselect={(d, body) => {
+          junctionQueueId = null;
           panel = d;
           focusedBody = body;
         }}
         onexit={exitToGalaxy}
         onsummary={(s) => (summary = s)}
+        onjunction={openQueue}
       />
     {/key}
   {/if}
@@ -205,7 +220,15 @@
     {/if}
   </div>
 
-  {#if panel}
+  {#if junctionQueueId}
+    {#key junctionQueueId}
+      <JunctionQueuePanel
+        junctionId={junctionQueueId}
+        simNow={() => live.simNowMs()}
+        onclose={() => (junctionQueueId = null)}
+      />
+    {/key}
+  {:else if panel}
     <DataPanel detail={panel} onclose={() => (panel = null)} />
   {/if}
 </main>

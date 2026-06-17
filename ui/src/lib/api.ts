@@ -166,6 +166,25 @@ export const fetchFleet = () => getJSON<{ when: string; ships: FleetEntry[] }>('
 export const fetchShipState = (tp: string) => getJSON<ShipState>(`/fleet/${tp}/state`);
 export const fetchShipRoute = (tp: string) => getJSON<RouteOut>(`/fleet/${tp}/route`);
 
+// --- Junction transit queue (Sprint 024; engine endpoint from 020) -----------
+
+export interface JunctionQueueEntry {
+  transponder: string | null; // null = phantom (background) traffic
+  position: number; // 1 = next to transit
+  mass_tons: number;
+  transit_eta: string;
+}
+
+export interface JunctionQueue {
+  junction_id: string;
+  when: string;
+  traffic_intensity: number | null;
+  entries: JunctionQueueEntry[];
+}
+
+export const fetchJunctionQueue = (id: string, at?: string) =>
+  getJSON<JunctionQueue>(`/junctions/${id}/queue${at ? `?at=${encodeURIComponent(at)}` : ''}`);
+
 export interface Galaxy {
   systems: System[];
   links: WormholeLink[];
