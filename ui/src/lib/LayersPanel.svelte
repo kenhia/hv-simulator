@@ -14,10 +14,6 @@
 </div>
 
 <style>
-  .layers {
-    right: 12px;
-    bottom: 96px; /* clears the bottom-right Legend (galaxy scene) */
-  }
   .row {
     display: flex;
     align-items: center;

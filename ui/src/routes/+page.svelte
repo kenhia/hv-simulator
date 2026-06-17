@@ -217,7 +217,6 @@
       }}
       onenter={enterSystem}
     />
-    <Legend />
   {:else}
     {#key systemId}
       <SystemMap
@@ -294,9 +293,14 @@
     />
   {/if}
 
-  {#if showLayers}
-    <LayersPanel {layers} ontoggle={toggleLayer} />
-  {/if}
+  <div class="right-col">
+    {#if showLayers}
+      <LayersPanel {layers} ontoggle={toggleLayer} />
+    {/if}
+    {#if systemId === null}
+      <Legend />
+    {/if}
+  </div>
 
   {#if showHelp}
     <HelpOverlay onclose={() => (showHelp = false)} />
@@ -316,6 +320,20 @@
     max-height: calc(100vh - 24px);
   }
   .left-col :global(.overlay) {
+    position: static;
+  }
+  /* Stack the Layers panel + Legend in a bottom-right column (no overlap). */
+  .right-col {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    max-height: calc(100vh - 24px);
+  }
+  .right-col :global(.overlay) {
     position: static;
   }
   .hints {
