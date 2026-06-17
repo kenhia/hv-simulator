@@ -58,6 +58,8 @@ interface ShipSample {
 
 export class LiveFleet {
   clock: SimClockModel | null = null;
+  rate = 1; // current sim-clock rate (0 = paused)
+  dev = false; // /clock dev_controls_enabled — gates the time scrubber
   roster: FleetEntry[] = [];
   tracked = new Set<string>();
   onchange: (() => void) | null = null;
@@ -106,6 +108,11 @@ export class LiveFleet {
     return out;
   }
 
+  // Re-fetch the clock (call after a scrubber PUT so the view tracks it at once).
+  async resyncClock(): Promise<void> {
+    await this.pollClock();
+  }
+
   private async pollClock(): Promise<void> {
     try {
       const c = await fetchClock();
@@ -114,6 +121,9 @@ export class LiveFleet {
         realEpochMs: Date.parse(c.real_epoch),
         rate: c.rate
       };
+      this.rate = c.rate;
+      this.dev = c.dev_controls_enabled;
+      this.onchange?.();
     } catch {
       /* keep the last clock; the local wall clock still advances */
     }

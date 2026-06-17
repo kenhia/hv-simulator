@@ -64,8 +64,14 @@ a nexus marker in the host system opens a live board (consuming 020's
 `/junctions/{id}/queue`) — ordered real + phantom entries counting down
 `transit in MM:SS` off the shared sim clock, `Esc` backing out progressively. That
 closes the Phase-2c loop visually (resolver 019 → endpoint/metrics 020 → board 024).
-Remaining slice: polish (025 — faction colours, main menu, dev time scrubber).
-Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
+Sprint 025 polished + **completed the Observer**: a dev-gated **time scrubber**
+(play/pause via `rate 0`, rate presets, step, jump — `Space`/`,`/`.`), **faction
+colours** (by transponder nation code), **layer toggles** (`l`), a **help overlay**
+(`?`, rendering the keymap). Engine: `ClockUpdate.rate` now allows `0` (frozen).
+**Phase 2.5 Observer is complete**; the **Controller** (file/route from the UI —
+needs a `/plan` endpoint) is the next arc. Open polish lives in KWIs #69 (binary
+geometry) / #70 (label clicks) / #71 (scale bar) / #72 (rich ship popup). Grafana
+dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just

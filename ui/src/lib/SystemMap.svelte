@@ -18,6 +18,8 @@
     type Vec2
   } from './camera';
   import { bodyRows, placeRows, systemDetailRows, type Detail } from './detail';
+  import { factionColor } from './factions';
+  import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToAu, type LiveShip } from './live';
 
   export interface SystemSummary {
@@ -33,6 +35,7 @@
     zoneMode = false,
     fitSignal = 0,
     ships,
+    layers = DEFAULT_LAYERS,
     onselect,
     onexit,
     onsummary,
@@ -44,6 +47,7 @@
     zoneMode?: boolean;
     fitSignal?: number;
     ships?: () => LiveShip[];
+    layers?: Layers;
     onselect?: (d: Detail, bodyName: string | null) => void;
     onexit?: () => void;
     onsummary?: (s: SystemSummary) => void;
@@ -131,7 +135,7 @@
     const origin = worldToScreen({ x: 0, y: 0 }, cam, width, height);
 
     // Hyper-limit ring around the primary star.
-    if (ringAu) {
+    if (ringAu && layers.ring) {
       ctx.strokeStyle = '#3a5a44';
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -149,8 +153,10 @@
     ctx.beginPath();
     ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#cabf7a';
-    ctx.fillText(starLabel(), origin.x + 9, origin.y);
+    if (layers.labels) {
+      ctx.fillStyle = '#cabf7a';
+      ctx.fillText(starLabel(), origin.x + 9, origin.y);
+    }
 
     // Planets / moons.
     for (const b of bodies) {
@@ -160,20 +166,25 @@
       ctx.beginPath();
       ctx.arc(p.x, p.y, moon ? NODE_R - 1 : NODE_R, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#8da2c0';
-      ctx.fillText(b.name, p.x + NODE_R + 4, p.y);
+      if (layers.labels) {
+        ctx.fillStyle = '#8da2c0';
+        ctx.fillText(b.name, p.x + NODE_R + 4, p.y);
+      }
     }
 
     // Stations / forts that ride a body (square markers offset from the body).
-    ctx.fillStyle = '#caa64a';
-    for (const pl of places) {
-      const w = placeWorld(pl);
-      if (!w) continue;
-      const p = worldToScreen(w, cam, width, height);
-      ctx.fillRect(p.x - 2, p.y - 6, 4, 4);
+    if (layers.stations) {
+      ctx.fillStyle = '#caa64a';
+      for (const pl of places) {
+        const w = placeWorld(pl);
+        if (!w) continue;
+        const p = worldToScreen(w, cam, width, height);
+        ctx.fillRect(p.x - 2, p.y - 6, 4, 4);
+      }
     }
 
     // Wormhole-junction nexus (fabricated in-system position): a gold ring glyph.
+    // Always drawn — it's the queue-panel interaction target.
     hostJunctions.forEach((j, i) => {
       const p = worldToScreen(nexusWorld(i), cam, width, height);
       ctx.strokeStyle = '#ffcf6b';
@@ -185,11 +196,13 @@
       ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
       ctx.fillStyle = '#ffcf6b';
       ctx.fill();
-      ctx.fillStyle = '#e0c98a';
-      ctx.fillText(`⚲ ${j.name}`, p.x + 10, p.y);
+      if (layers.labels) {
+        ctx.fillStyle = '#e0c98a';
+        ctx.fillText(`⚲ ${j.name}`, p.x + 10, p.y);
+      }
     });
 
-    drawShips(ctx);
+    if (layers.ships) drawShips(ctx);
   }
 
   // Tracked ships currently in this system: a dot + a short heading vector
@@ -199,8 +212,9 @@
       if (sh.system !== systemId || sh.frame !== 'heliocentric') continue;
       const p = worldToScreen({ x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) }, cam, width, height);
       const speed = Math.hypot(sh.velKmS.x, sh.velKmS.y);
-      ctx.strokeStyle = '#ff6b6b';
-      ctx.fillStyle = '#ff6b6b';
+      const color = factionColor(sh.transponder);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
       if (speed > 1) {
         const ux = sh.velKmS.x / speed;
         const uy = -sh.velKmS.y / speed; // screen y is down
@@ -212,8 +226,10 @@
       ctx.beginPath();
       ctx.arc(p.x, p.y, speed > 1 ? 2.5 : 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffb3b3';
-      ctx.fillText(sh.transponder, p.x + 6, p.y - 6);
+      if (layers.labels) {
+        ctx.fillStyle = color;
+        ctx.fillText(sh.transponder, p.x + 6, p.y - 6);
+      }
     }
   }
 

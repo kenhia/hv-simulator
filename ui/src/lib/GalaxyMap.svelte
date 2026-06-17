@@ -10,6 +10,8 @@
     type Camera,
     type Vec2
   } from './camera';
+  import { factionColor } from './factions';
+  import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToLy, type LiveShip } from './live';
 
   let {
@@ -19,6 +21,7 @@
     selectedId = null,
     fitSignal = 0,
     ships,
+    layers = DEFAULT_LAYERS,
     onselect,
     onenter
   }: {
@@ -28,6 +31,7 @@
     selectedId?: string | null;
     fitSignal?: number;
     ships?: () => LiveShip[]; // dead-reckoned each frame
+    layers?: Layers;
     onselect?: (s: System) => void;
     onenter?: (s: System) => void;
   } = $props();
@@ -75,6 +79,7 @@
     ctx.strokeStyle = '#33476b';
     ctx.lineWidth = 1;
     for (const link of links) {
+      if (!layers.wormholes) break;
       if (link.transit !== 'instant' || !link.to_system_id) continue;
       const a = byId.get(link.from_system_id);
       const b = byId.get(link.to_system_id);
@@ -113,17 +118,21 @@
         ctx.arc(p.x, p.y, NODE_R + 6, 0, Math.PI * 2);
         ctx.stroke();
       }
-      ctx.fillStyle = isSel ? '#ffd9b0' : '#8da2c0';
-      ctx.fillText(s.name, p.x + NODE_R + 4, p.y);
+      if (layers.labels) {
+        ctx.fillStyle = isSel ? '#ffd9b0' : '#8da2c0';
+        ctx.fillText(s.name, p.x + NODE_R + 4, p.y);
+      }
     }
 
-    drawShips(ctx);
+    if (layers.ships) drawShips(ctx);
   }
 
   // Tracked ships: in-hyper ones at their galactic position (km -> ly, X-Z), the
-  // rest parked at their system's node. A dot + leader line to the transponder.
+  // rest parked at their system's node. A dot + leader line to the transponder,
+  // with a best-effort nudge so labels don't stack.
   function drawShips(ctx: CanvasRenderingContext2D) {
     const list = ships?.() ?? [];
+    const placed: { x: number; y: number }[] = [];
     for (const sh of list) {
       let w: Vec2 | null = null;
       if (sh.frame === 'galactic') {
@@ -134,17 +143,24 @@
       }
       if (!w) continue;
       const p = worldToScreen(w, cam, width, height);
-      ctx.strokeStyle = '#ff6b6b';
+      const color = factionColor(sh.transponder);
+      ctx.strokeStyle = color;
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x + 10, p.y - 10);
       ctx.stroke();
-      ctx.fillStyle = '#ff6b6b';
+      ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffb3b3';
-      ctx.fillText(sh.transponder, p.x + 12, p.y - 11);
+      if (layers.labels) {
+        const lx = p.x + 12;
+        let ly = p.y - 11;
+        while (placed.some((s) => Math.abs(s.x - lx) < 70 && Math.abs(s.y - ly) < 11)) ly -= 11;
+        placed.push({ x: lx, y: ly });
+        ctx.fillStyle = color;
+        ctx.fillText(sh.transponder, lx, ly);
+      }
     }
   }
 

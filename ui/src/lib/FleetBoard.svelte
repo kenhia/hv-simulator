@@ -63,6 +63,9 @@
         </div>
         {#if e.transponder === selected && selectedRoute}
           <ShipTimeline route={selectedRoute} percent={e.percent_complete} />
+          <div class="itin muted">
+            {selectedRoute.origin.body} → {selectedRoute.segments.at(-1)?.body ?? '—'}
+          </div>
         {/if}
       {/each}
       {#if shown.length === 0}

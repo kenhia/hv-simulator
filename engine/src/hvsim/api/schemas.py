@@ -40,7 +40,7 @@ class FlightPlanCreate(BaseModel):
 
 
 class ClockUpdate(BaseModel):
-    rate: float | None = Field(default=None, gt=0)
+    rate: float | None = Field(default=None, ge=0)  # 0 = frozen (dev pause)
     jump_to: datetime | None = None
     advance_seconds: float | None = None
 
