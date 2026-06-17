@@ -16,6 +16,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -71,6 +72,22 @@ from .units import human_duration, position_out, velocity_out
 
 DEFAULT_DB_URL = "sqlite:///hvsim.db"
 _MAP_HTML = Path(__file__).parent / "static" / "index.html"
+
+
+def _ui_dir() -> Path | None:
+    """Locate the built Phase 2.5 SPA (galaxy app), or None if not built.
+
+    ``HVSIM_UI_DIST`` wins (the bundled image sets it); otherwise fall back to the
+    repo's ``ui/build`` for local `just ui-build` + run. Returns None when absent,
+    so the API runs fine without the front-end built.
+    """
+    env = os.environ.get("HVSIM_UI_DIST")
+    candidates = [Path(env)] if env else []
+    candidates.append(Path(__file__).resolve().parents[4] / "ui" / "build")  # repo ui/build
+    for c in candidates:
+        if (c / "index.html").is_file():
+            return c
+    return None
 
 
 def create_app(
@@ -660,5 +677,10 @@ def create_app(
         if body.advance_seconds is not None:
             c.advance(timedelta(seconds=body.advance_seconds))
         return clock_out()
+
+    # Phase 2.5 galaxy SPA (if built): served same-origin at /ui; legacy / map stays.
+    ui_dir = _ui_dir()
+    if ui_dir is not None:
+        app.mount("/ui", StaticFiles(directory=ui_dir, html=True), name="ui")
 
     return app

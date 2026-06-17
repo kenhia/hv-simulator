@@ -41,9 +41,14 @@ interleaving on the board), surfaces `queue_position` on `/fleet`, implements th
 contracted `GET /junctions/{id}/queue` (the "you are #3" board — real ships +
 phantom, `just queue-board`), and emits per-junction queue-depth/wait metrics for
 Prometheus/Grafana. Design is in `planning/006`. **Phase 2.5 (first-class UI) is
-designed** (`planning/007`): a Svelte + Canvas-2D map app; the sprint slice is
-021 (foundation + galaxy graph) → 025 (polish). Grafana dashboards are a deferred
-parallel track.
+underway** (`planning/007`): a SvelteKit (Svelte 5) + Canvas-2D map app in `ui/`.
+Sprint 021 landed the foundation + **galaxy graph** — placed systems as nodes in
+the galactic frame, wormhole links as edges, pan/zoom, click → Side Data Panel,
+At-a-glance + legend. The engine serves the built SPA same-origin at **`/ui`**
+(`HVSIM_UI_DIST`; multi-stage Docker bundles it); the legacy Sol map stays at `/`.
+`just ui-dev` / `ui-build` / `ui-check` (folded into `just check`). Remaining slice:
+system zoom (022) → live ships + Fleet Board (023) → junction queue panels (024) →
+polish (025). Grafana dashboards are a deferred parallel track.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
@@ -120,7 +125,7 @@ engine/      the hvsim engine — Python package + FastAPI service (MIT)
 tools/       standalone tools, each its own pyproject (universe-compiler, etc.)
 data/        Honorverse dataset, JSON source of truth — SEPARATE license (CC BY-SA)
 contracts/   the language-agnostic seam: universe-artifact SQL DDL + engine OpenAPI
-ui/          Phase 2.5 front-end (placeholder)
+ui/          Phase 2.5 front-end — SvelteKit + Canvas-2D galaxy app (Sprint 021)
 deploy/ grafana/ planning/ sprints/   ops, observability, design docs
 justfile     workspace orchestration
 ```

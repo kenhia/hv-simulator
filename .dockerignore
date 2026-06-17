@@ -1,0 +1,21 @@
+# Build context is the repo root (see engine/Dockerfile). Keep it lean: ship only
+# engine/src, engine pyproject/lock/readme, ui/ source, and build/universe.db.
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+.git
+.github
+.scratch
+ui/build
+ui/.svelte-kit
+ui/dist
+engine/universe.db
+engine/.pytest_cache
+**/.ruff_cache
+docs
+grafana
+deploy
+planning
+sprints
+data

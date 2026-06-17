@@ -1,0 +1,52 @@
+:root {
+  --bg: #0a0e17;
+  --panel: #121a2b;
+  --panel-border: #25324d;
+  --text: #dfe6f0;
+  --muted: #8da2c0;
+  --accent: #ff9d4d;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    13px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+main {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  backdrop-filter: blur(2px);
+}
+
+.overlay .title {
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.muted {
+  color: var(--muted);
+}
