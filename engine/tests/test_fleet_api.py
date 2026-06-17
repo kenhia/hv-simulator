@@ -265,3 +265,17 @@ def test_system_places(client: TestClient) -> None:
     assert p["rides_on_body_id"] == "beta:p1"
     assert p["position"] is not None  # rides on a body -> co-located with it
     assert client.get("/systems/nope/places").status_code == 404
+
+
+# --- Sprint 023: route segments for the Ship Timeline -------------------------
+
+
+def test_fleet_route_segments(client: TestClient) -> None:
+    client.post("/fleet/routes", json=ROUTE)
+    r = client.get("/fleet/1.1.1/route")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["transponder"] == "1.1.1"
+    kinds = [s["kind"] for s in body["segments"]]
+    assert "hyper_cruise" in kinds and "wormhole_queue" in kinds
+    assert client.get("/fleet/9.9.9/route").status_code == 404

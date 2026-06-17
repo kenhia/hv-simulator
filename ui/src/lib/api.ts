@@ -99,6 +99,73 @@ export const fetchSystemBodies = (id: string, at?: string) =>
 export const fetchSystemPlaces = (id: string, at?: string) =>
   getJSON<Place[]>(`/systems/${id}/places${at ? `?at=${encodeURIComponent(at)}` : ''}`);
 
+// --- Live fleet (Sprint 023) -------------------------------------------------
+
+export interface ClockOut {
+  now: string;
+  rate: number;
+  sim_epoch: string;
+  real_epoch: string;
+  dev_controls_enabled: boolean;
+}
+
+export interface Velocity {
+  km_s: Vec3;
+  speed_km_s: number;
+  fraction_c: number;
+}
+
+export interface ShipState {
+  when: string;
+  phase: string;
+  segment_seq: number | null;
+  position: Position;
+  velocity: Velocity;
+  eta: string | null;
+  percent_complete: number | null;
+  destination: string | null;
+  system: string | null;
+  frame: 'heliocentric' | 'galactic';
+  transponder: string | null;
+  queue_position: number | null;
+}
+
+export interface FleetEntry {
+  transponder: string;
+  ship: string;
+  phase: string;
+  system: string | null;
+  eta: string | null;
+  percent_complete: number | null;
+  queue_position: number | null;
+}
+
+export interface RouteSegment {
+  seq: number;
+  kind: string;
+  t_start: string;
+  t_end: string;
+  duration_seconds: number;
+  duration_human: string;
+  body: string | null;
+}
+
+export interface RouteOut {
+  transponder: string;
+  status: string;
+  origin: Record<string, string>;
+  depart_at: string;
+  arrival: string;
+  total_duration_seconds: number;
+  total_duration_human: string;
+  segments: RouteSegment[];
+}
+
+export const fetchClock = () => getJSON<ClockOut>('/clock');
+export const fetchFleet = () => getJSON<{ when: string; ships: FleetEntry[] }>('/fleet');
+export const fetchShipState = (tp: string) => getJSON<ShipState>(`/fleet/${tp}/state`);
+export const fetchShipRoute = (tp: string) => getJSON<RouteOut>(`/fleet/${tp}/route`);
+
 export interface Galaxy {
   systems: System[];
   links: WormholeLink[];

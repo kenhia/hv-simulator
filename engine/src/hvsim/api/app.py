@@ -678,6 +678,14 @@ def create_app(
         by_tp, _ = resolved_fleet(session)
         return state_out(by_tp[transponder], transponder, resolve_when(at))
 
+    @app.get("/fleet/{transponder}/route", response_model=RouteOut)
+    def get_fleet_route(transponder: str, session: Session = Depends(get_db)) -> RouteOut:
+        """The active route's compiled segments (for the UI's Ship Timeline)."""
+        row = active_route(session, transponder)
+        if row is None:
+            raise HTTPException(404, f"no active route for {transponder!r}")
+        return route_out(row)
+
     @app.delete("/fleet/{transponder}/route")
     def abort_route(transponder: str, session: Session = Depends(get_db)) -> dict[str, str]:
         row = active_route(session, transponder)

@@ -50,11 +50,18 @@ zoom-in drills from the galaxy graph into a **per-system heliocentric top-down**
 `Esc`/zoom-out leaves; a growing breadcrumb (`Galaxy → Sol → Sol / Earth`), zone
 mode (`z`), fit (`f`), and a reserved `keymap`. Engine gained `GET /systems/{id}`
 (hyper limit + stars + binary), `GET /systems/{id}/places`, and a Sol-bodies
-delegate (Sol's JPL planets via `/systems/sol/bodies`). The engine serves the built
-SPA same-origin at **`/ui`** (`HVSIM_UI_DIST`; multi-stage Docker bundles it); the
-legacy Sol map stays at `/`. `just ui-dev` / `ui-build` / `ui-check` (folded into
-`just check`). Remaining slice: live ships + Fleet Board (023) → junction queue
-panels (024) → polish (025). Grafana dashboards are a deferred parallel track.
+delegate (Sol's JPL planets via `/systems/sol/bodies`). Sprint 023 made it **live**:
+a sim-clock model + dead-reckoning render loop (rAF) animates ships on both scenes
+(galactic motes in hyper, in-system dots with heading vectors), a **Fleet Board**
+rail (collapsible, search, click-to-fly) shows the roster with a **Ship Timeline**,
+and **Locate-a-ship** (search + per-ship show/hide) drives which ships render.
+Engine gained `GET /fleet/{transponder}/route` (the timeline's segments); `/clock`
++ `/fleet/{tp}/state` (position + velocity vector) feed the live view. The engine
+serves the built SPA same-origin at **`/ui`** (`HVSIM_UI_DIST`; multi-stage Docker
+bundles it); the legacy Sol map stays at `/`. `just ui-dev` / `ui-build` /
+`ui-check` (folded into `just check`). Remaining slice: junction queue panels (024)
+→ polish (025). Grafana dashboards are a deferred parallel track. A UI/lore glossary
+lives in `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
