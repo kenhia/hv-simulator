@@ -17,6 +17,7 @@
     type Vec2
   } from './camera';
   import { bodyRows, placeRows, systemDetailRows, type Detail } from './detail';
+  import { kmToAu, type LiveShip } from './live';
 
   export interface SystemSummary {
     planets: number;
@@ -29,6 +30,7 @@
     detail = null,
     zoneMode = false,
     fitSignal = 0,
+    ships,
     onselect,
     onexit,
     onsummary
@@ -37,6 +39,7 @@
     detail?: SystemDetail | null;
     zoneMode?: boolean;
     fitSignal?: number;
+    ships?: () => LiveShip[];
     onselect?: (d: Detail, bodyName: string | null) => void;
     onexit?: () => void;
     onsummary?: (s: SystemSummary) => void;
@@ -154,6 +157,33 @@
       const p = worldToScreen(w, cam, width, height);
       ctx.fillRect(p.x - 2, p.y - 6, 4, 4);
     }
+
+    drawShips(ctx);
+  }
+
+  // Tracked ships currently in this system: a dot + a short heading vector
+  // (fatter dot at rest), at their dead-reckoned heliocentric position (km -> AU).
+  function drawShips(ctx: CanvasRenderingContext2D) {
+    for (const sh of ships?.() ?? []) {
+      if (sh.system !== systemId || sh.frame !== 'heliocentric') continue;
+      const p = worldToScreen({ x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) }, cam, width, height);
+      const speed = Math.hypot(sh.velKmS.x, sh.velKmS.y);
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.fillStyle = '#ff6b6b';
+      if (speed > 1) {
+        const ux = sh.velKmS.x / speed;
+        const uy = -sh.velKmS.y / speed; // screen y is down
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + ux * 12, p.y + uy * 12);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, speed > 1 ? 2.5 : 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffb3b3';
+      ctx.fillText(sh.transponder, p.x + 6, p.y - 6);
+    }
   }
 
   function nearest(sx: number, sy: number): (() => void) | null {
@@ -223,9 +253,16 @@
     resize();
     load();
     const poll = setInterval(load, 5000);
+    let raf = 0;
+    const loop = () => {
+      if (!document.hidden) draw();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
     return () => {
       ro.disconnect();
       clearInterval(poll);
+      cancelAnimationFrame(raf);
     };
   });
 
@@ -235,11 +272,6 @@
       lastFit = fitSignal;
       doFit();
     }
-  });
-
-  $effect(() => {
-    void [bodies, places, cam, width, height, ringAu, detail];
-    draw();
   });
 </script>
 

@@ -10,6 +10,7 @@
     type Camera,
     type Vec2
   } from './camera';
+  import { kmToLy, type LiveShip } from './live';
 
   let {
     systems = [],
@@ -17,6 +18,7 @@
     junctions = [],
     selectedId = null,
     fitSignal = 0,
+    ships,
     onselect,
     onenter
   }: {
@@ -25,6 +27,7 @@
     junctions?: Junction[];
     selectedId?: string | null;
     fitSignal?: number;
+    ships?: () => LiveShip[]; // dead-reckoned each frame
     onselect?: (s: System) => void;
     onenter?: (s: System) => void;
   } = $props();
@@ -113,6 +116,36 @@
       ctx.fillStyle = isSel ? '#ffd9b0' : '#8da2c0';
       ctx.fillText(s.name, p.x + NODE_R + 4, p.y);
     }
+
+    drawShips(ctx);
+  }
+
+  // Tracked ships: in-hyper ones at their galactic position (km -> ly, X-Z), the
+  // rest parked at their system's node. A dot + leader line to the transponder.
+  function drawShips(ctx: CanvasRenderingContext2D) {
+    const list = ships?.() ?? [];
+    for (const sh of list) {
+      let w: Vec2 | null = null;
+      if (sh.frame === 'galactic') {
+        w = { x: kmToLy(sh.posKm.x), y: kmToLy(sh.posKm.z) };
+      } else if (sh.system) {
+        const sys = byId.get(sh.system);
+        if (sys?.coordinates) w = { x: sys.coordinates.x_ly, y: sys.coordinates.z_ly };
+      }
+      if (!w) continue;
+      const p = worldToScreen(w, cam, width, height);
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + 10, p.y - 10);
+      ctx.stroke();
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffb3b3';
+      ctx.fillText(sh.transponder, p.x + 12, p.y - 11);
+    }
   }
 
   function nearest(sx: number, sy: number, maxPx = HIT_PX): System | null {
@@ -181,7 +214,16 @@
     const ro = new ResizeObserver(() => resize());
     ro.observe(wrap);
     resize();
-    return () => ro.disconnect();
+    let raf = 0;
+    const loop = () => {
+      if (!document.hidden) draw();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
   });
 
   // Frame the galaxy once data + a real viewport are available.
@@ -201,12 +243,6 @@
       cam = fit(placed.map(world), width, height);
       fitScale = cam.scale;
     }
-  });
-
-  // Redraw whenever inputs, camera, selection, or size change.
-  $effect(() => {
-    void [placed, links, hostSystems, cam, selectedId, width, height];
-    draw();
   });
 </script>
 

@@ -1,7 +1,23 @@
 // Builds the rows the Side Data Panel shows for any selectable entity (system,
 // body, place). Pure — keeps the panel a dumb renderer and the shaping testable.
 
-import type { Place, System, SystemBody, SystemDetail } from './api';
+import type { FleetEntry, Place, System, SystemBody, SystemDetail } from './api';
+
+function whenShort(iso: string | null): string {
+  return iso ? iso.replace('T', ' ').slice(0, 16) : '—';
+}
+
+export function shipRows(e: FleetEntry): Detail {
+  const rows: [string, string][] = [
+    ['transponder', e.transponder],
+    ['phase', e.phase],
+    ['location', e.system ?? '(interstellar)'],
+    ['ETA', whenShort(e.eta)],
+    ['progress', e.percent_complete != null ? `${Math.round(e.percent_complete * 100)}%` : '—']
+  ];
+  if (e.queue_position != null) rows.push(['queue', `#${e.queue_position}`]);
+  return { title: e.ship, kind: 'ship', rows };
+}
 
 export interface Detail {
   title: string;
