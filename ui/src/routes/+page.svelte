@@ -175,25 +175,27 @@
     {/key}
   {/if}
 
-  <AtAGlance
-    breadcrumb={crumb}
-    {placed}
-    {stubbed}
-    links={linkCount}
-    inGalaxy={systemId === null}
-    {summary}
-    {loading}
-    {error}
-  />
+  <div class="left-col">
+    <AtAGlance
+      breadcrumb={crumb}
+      {placed}
+      {stubbed}
+      links={linkCount}
+      inGalaxy={systemId === null}
+      {summary}
+      {loading}
+      {error}
+    />
 
-  <FleetBoard
-    {roster}
-    {tracked}
-    selected={selectedShip}
-    {selectedRoute}
-    onselect={selectShip}
-    ontoggle={toggleTrack}
-  />
+    <FleetBoard
+      {roster}
+      {tracked}
+      selected={selectedShip}
+      {selectedRoute}
+      onselect={selectShip}
+      ontoggle={toggleTrack}
+    />
+  </div>
 
   <div class="overlay hints">
     {#if systemId === null}
@@ -209,6 +211,20 @@
 </main>
 
 <style>
+  /* Stack At-a-glance + the Fleet Board in one top-left column so they never
+     overlap (their own top/left become inert once positioned statically here). */
+  .left-col {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 24px);
+  }
+  .left-col :global(.overlay) {
+    position: static;
+  }
   .hints {
     left: 12px;
     bottom: 12px;
