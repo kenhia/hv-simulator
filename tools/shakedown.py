@@ -54,6 +54,14 @@ def main(argv: list[str] | None = None) -> int:
     for ship_id, fs, fb, ts, tb in FLEET:
         route = plan_route(u, ship_id, fs, fb, ts, tb, T0)
         doc = to_filed(route, u.transponder(ship_id))
+        # Clear any prior route first so a re-run isn't blocked by the at-origin
+        # guard (a mid-flight ship is not at the new route's origin -> 409). An
+        # idle ship is accepted. 404 = nothing to clear.
+        try:
+            _req("DELETE", f"{base}/fleet/{doc['ship']}/route")
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                raise
         out = _req("POST", f"{base}/fleet/routes", doc)
         legs = " -> ".join(s["kind"] for s in out["segments"])
         print(f"  {out['transponder']:>10s}  {ship_id:30s} {out['total_duration_human']:>10s}  [{legs}]")
