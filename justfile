@@ -100,9 +100,11 @@ frame:
 validate-data:
     python3 tools/validate-data.py data
 
-# Plan + file a fleet at a running service and print the board (default localhost).
-# Needs the service up with HVSIM_UNIVERSE_DB + HVSIM_DEV_CLOCK=1.
-shakedown base="http://localhost:4667":
+# Plan + file a fleet at a running service and print the board. Defaults to the
+# deployed host (HVSIM_HOST:PORT, like `fleet`/`health`); pass a base to override
+# (e.g. `just shakedown http://localhost:4667` for a local dev server). The target
+# needs HVSIM_UNIVERSE_DB; the `?at=` clock sweep needs HVSIM_DEV_CLOCK=1 (403s in prod).
+shakedown base=("http://" + host + ":" + port):
     cd tools/nav-planner && uv run python ../../tools/shakedown.py {{base}} ../../build/universe.db
 
 # Markdown snapshot of the compiled artifact (seeds galaxy-changelog entries).
