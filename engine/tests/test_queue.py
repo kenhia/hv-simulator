@@ -96,3 +96,25 @@ def test_second_ship_serialises_behind_the_first() -> None:
     assert second.transit_open > first.transit_open
     # At the shared arrival, the second ship sees a deeper queue (it's behind #1).
     assert second.position(T0) > first.position(T0)
+
+
+def test_snapshot_orders_and_includes_real_and_phantom() -> None:
+    server = _server(6.0)
+    server.serve(T0, 2.5e6, "ship-1")
+    snap = server.snapshot(T0)
+    assert snap, "a busy junction should have a queue at arrival"
+    assert [t.transit_open for t in snap] == sorted(t.transit_open for t in snap)
+    assert any(t.transponder == "ship-1" for t in snap)  # the real ship
+    assert any(t.transponder is None for t in snap)  # phantom ahead
+    # After the last slot opens, the ship has transited out of the queue.
+    last = max(t.transit_open for t in snap)
+    assert all(t.transponder != "ship-1" for t in server.snapshot(last + timedelta(seconds=1)))
+
+
+def test_snapshot_excludes_not_yet_arrived() -> None:
+    server = _server(6.0)
+    server.serve(T0, 2.5e6, "ship-1")  # arrives now
+    server.serve(T0 + timedelta(hours=10), 2.5e6, "ship-2")  # arrives in 10 h
+    snap = server.snapshot(T0)
+    assert all(t.arrival <= T0 for t in snap)  # ship-2 + its phantom not present yet
+    assert all(t.transponder != "ship-2" for t in snap)

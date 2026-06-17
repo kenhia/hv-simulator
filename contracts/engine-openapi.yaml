@@ -295,12 +295,13 @@ components:
       properties:
         junction_id: { type: string }
         when: { type: string, format: date-time }
+        traffic_intensity: { type: [number, "null"], description: mean-queue-depth knob }
         entries:
           type: array
           items:
             type: object
             properties:
-              ship_id: { type: [string, "null"], description: null = phantom traffic }
-              position: { type: integer }
+              transponder: { type: [string, "null"], description: null = phantom traffic }
+              position: { type: integer, description: 1 = next to transit }
               mass_tons: { type: number }
               transit_eta: { type: string, format: date-time }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pathlib
 import sqlite3
+import urllib.parse
 
 import pytest
 from fastapi.testclient import TestClient
@@ -68,18 +69,24 @@ def artifact_path(tmp_path) -> str:
     )
     con.execute(
         "INSERT INTO ship_classes (id,name,navy,hull_classification,max_g,max_hyper_band,"
-        "real_cruise_velocity_c,code,canon) VALUES ('warbird','Warbird','TSN','BC',600,7,0.6,1,1)"
+        "real_cruise_velocity_c,mass_tons,code,canon) "
+        "VALUES ('warbird','Warbird','TSN','BC',600,7,0.6,2500000,1,1)"
     )
     con.execute(
         "INSERT INTO ships (id,name,class_id,hull_code,transponder,canon) "
         "VALUES ('war-1','HMS War','warbird',1,'1.1.1',1)"
     )
     con.execute(
+        "INSERT INTO ships (id,name,class_id,hull_code,transponder,canon) "
+        "VALUES ('war-2','HMS Two','warbird',2,'1.1.2',1)"
+    )
+    con.execute(
         "INSERT INTO transit_model (id,formula,coeff_a,coeff_b,buffer_normal_s,buffer_emergency_s,"
         "canon) VALUES (1,'A',0.0,0.0,300,120,0)"
     )
     con.execute(
-        "INSERT INTO wormhole_junctions (id,name,host_system_id,canon) VALUES ('bj','BJ','beta',1)"
+        "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,canon) "
+        "VALUES ('bj','BJ','beta',3.0,1)"
     )
     con.execute(
         "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
@@ -162,3 +169,74 @@ def test_routes_need_artifact(tmp_path) -> None:
     bare = TestClient(create_app(database_url=f"sqlite:///{tmp_path / 'bare.db'}"))
     assert bare.post("/fleet/routes", json=ROUTE).status_code == 503
     assert bare.get("/health").status_code == 200
+
+
+# --- Sprint 020: deployed queue board + junction queue endpoint ---------------
+
+WORM_AT = "1890-01-01T00:00:00+00:00"
+
+
+def _file_wormhole(client: TestClient, transponder: str) -> None:
+    """File a bare beta -> gamma junction hop (arrival == depart, so queues interleave)."""
+    r = client.post(
+        "/fleet/routes",
+        json={
+            "schema": "hvsim.filed-route/v1",
+            "ship": transponder,
+            "origin": {"system": "beta", "body": "beta:p1"},
+            "depart_at": WORM_AT,
+            "legs": [{"mode": "wormhole", "to_system": "gamma"}],
+        },
+    )
+    assert r.status_code == 201, r.text
+
+
+def _q(when: str) -> str:
+    return urllib.parse.quote(when)
+
+
+def test_fleet_board_interleaves_queue(client: TestClient) -> None:
+    _file_wormhole(client, "1.1.1")
+    _file_wormhole(client, "1.1.2")
+    ships = {s["transponder"]: s for s in client.get(f"/fleet?at={_q(WORM_AT)}").json()["ships"]}
+    a, b = ships["1.1.1"], ships["1.1.2"]
+    assert a["phase"] == b["phase"] == "queued"
+    # Real-ship interleaving: B (higher transponder) sits strictly behind A.
+    assert a["queue_position"] is not None and b["queue_position"] > a["queue_position"]
+
+
+def test_junction_queue_endpoint(client: TestClient) -> None:
+    _file_wormhole(client, "1.1.1")
+    _file_wormhole(client, "1.1.2")
+    q = client.get(f"/junctions/bj/queue?at={_q(WORM_AT)}").json()
+    assert q["junction_id"] == "bj" and q["traffic_intensity"] == 3.0
+    entries = q["entries"]
+    # Positions are 1..N, front-first, with non-decreasing transit ETAs.
+    assert [e["position"] for e in entries] == list(range(1, len(entries) + 1))
+    etas = [e["transit_eta"] for e in entries]
+    assert etas == sorted(etas)
+    # Both real ships appear (by transponder), plus phantom (null) traffic ahead.
+    tps = [e["transponder"] for e in entries]
+    assert "1.1.1" in tps and "1.1.2" in tps
+    assert None in tps  # phantom traffic
+
+
+def test_junction_queue_unknown_404(client: TestClient) -> None:
+    assert client.get("/junctions/nope/queue").status_code == 404
+
+
+def test_junction_queue_metrics(artifact_path: str, tmp_path) -> None:
+    dev = TestClient(
+        create_app(
+            database_url=f"sqlite:///{tmp_path / 'm.db'}",
+            universe_db=artifact_path,
+            dev_clock=True,
+        )
+    )
+    _file_wormhole(dev, "1.1.1")
+    _file_wormhole(dev, "1.1.2")
+    dev.put("/clock", json={"jump_to": WORM_AT})  # freeze "now" inside the queue window
+    metrics = dev.get("/metrics").text
+    prefix = 'hvsim_junction_queue_depth{junction="bj"}'
+    line = next(ln for ln in metrics.splitlines() if ln.startswith(prefix))
+    assert float(line.rsplit(" ", 1)[1]) == 2.0  # both real ships queued now

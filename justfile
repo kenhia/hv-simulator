@@ -56,6 +56,10 @@ seed:
 fleet:
     ./deploy/fleet.sh http://{{host}}:{{port}}
 
+# Print a junction's live transit queue (the "you are #3" board). Args: [junction] [at]
+queue-board junction="manticore-junction" at="":
+    ./deploy/queue-board.sh {{junction}} http://{{host}}:{{port}} "{{at}}"
+
 # Run the validation gate: engine (tests + lint + format) and the tools' tests.
 check:
     cd engine && uv run pytest

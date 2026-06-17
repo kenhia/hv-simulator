@@ -94,6 +94,22 @@ def phantom_masses(seed: int, junction_id: str, ship_key: str, mean_depth: float
     ]
 
 
+@dataclass(frozen=True)
+class Transit:
+    """One occupant of a junction's serialised timeline (real ship or phantom).
+
+    ``transponder`` is the real ship's id, or ``None`` for phantom traffic. The
+    occupant is "present in the queue" over ``[arrival, transit_open)`` — for a
+    phantom, ``arrival`` is the real ship it was drawn ahead of, so phantom only
+    surface while that ship is actually queued.
+    """
+
+    transponder: str | None
+    mass_tons: float
+    arrival: datetime
+    transit_open: datetime
+
+
 @dataclass
 class TransitResolution:
     """The resolved slot for one ship at a junction."""
@@ -123,6 +139,7 @@ class JunctionServer:
     seed: int = SIM_SEED
     busy_until: datetime | None = None
     _opens: list[datetime] = field(default_factory=list)  # all transit-opens so far, sorted
+    transits: list[Transit] = field(default_factory=list)  # every occupant (real + phantom)
 
     def serve(self, arrival: datetime, mass_tons: float, ship_key: str) -> TransitResolution:
         """Resolve a ship arriving at ``arrival``; advance the server past it.
@@ -134,11 +151,13 @@ class JunctionServer:
         free = arrival if self.busy_until is None else max(arrival, self.busy_until)
         ahead = [t for t in self._opens if t < free]  # earlier reals + their phantom
 
-        # Phantom ships this ship finds ahead, serialised from `free`.
+        # Phantom ships this ship finds ahead, serialised from `free`. They share
+        # this ship's arrival so they only surface while the ship is actually queued.
         for m in phantom_masses(self.seed, self.junction_id, ship_key, self.mean_depth):
             p_open = free
             ahead.append(p_open)
             self._opens.append(p_open)
+            self.transits.append(Transit(None, m, arrival, p_open))
             step = interval(m, self.coeff_a, self.coeff_b, self.buffer_s)
             free = p_open + timedelta(seconds=step)
 
@@ -146,8 +165,19 @@ class JunctionServer:
         transit_open = free
         self._opens.append(transit_open)
         self._opens.sort()
+        self.transits.append(Transit(ship_key, mass_tons, arrival, transit_open))
         self.busy_until = transit_open + timedelta(
             seconds=interval(mass_tons, self.coeff_a, self.coeff_b, self.buffer_s)
         )
         ahead.sort()
         return TransitResolution(transit_open=transit_open, ahead_opens=tuple(ahead))
+
+    def snapshot(self, when: datetime) -> list[Transit]:
+        """The queue present at ``when``: occupants with arrival <= when < transit_open.
+
+        Ordered by transit-open (front of the queue first); the caller assigns
+        positions (``#1`` = next to transit).
+        """
+        present = [t for t in self.transits if t.arrival <= when < t.transit_open]
+        present.sort(key=lambda t: t.transit_open)
+        return present

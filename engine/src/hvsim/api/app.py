@@ -30,6 +30,7 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    resolve_fleet_junctions,
     resolve_route,
     simulation_for_route,
 )
@@ -56,6 +57,8 @@ from .schemas import (
     FleetOut,
     FlightPlanCreate,
     FlightPlanOut,
+    JunctionQueue,
+    JunctionQueueEntry,
     RouteOut,
     SegmentOut,
     ShipCreate,
@@ -205,12 +208,27 @@ def create_app(
     def route_compiled(row: RouteRow) -> CompiledRoute:
         u = require_universe()
         compiled = compile_route(from_filed(json.loads(row.filed_json), u), u)
-        # Resolve this ship's wormhole queue(s) (phantom traffic, seeded by its
-        # transponder). Cross-ship interleaving on the deployed board is Sprint 020.
+        # Single-route resolve (phantom traffic only) for the POST echo + the
+        # at-origin guard. The read paths use resolved_fleet() for real interleaving.
         return resolve_route(compiled, u, row.transponder)
 
-    def route_state(row: RouteRow, when: datetime) -> StateOut:
-        compiled = route_compiled(row)
+    def resolved_fleet(session: Session):
+        """Resolve every active route together (real-ship interleaving, Sprint 020).
+
+        Returns ``(by_transponder, junction_servers)`` — the resolved CompiledRoute
+        per ship and the per-junction servers backing the queue board. One fold per
+        request; deterministic in the active fleet + seed.
+        """
+        u = require_universe()
+        rows = session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
+        items = [
+            (compile_route(from_filed(json.loads(r.filed_json), u), u), r.transponder) for r in rows
+        ]
+        routes, servers = resolve_fleet_junctions(items, u)
+        by_tp = {tp: rt for (_, tp), rt in zip(items, routes, strict=True)}
+        return by_tp, servers
+
+    def state_out(compiled: CompiledRoute, transponder: str, when: datetime) -> StateOut:
         st = simulation_for_route(compiled, require_universe()).state(when)
         depart, arrival = compiled.depart_at, compiled.arrival
         span = (arrival - depart).total_seconds()
@@ -227,9 +245,28 @@ def create_app(
             distance_to_destination_km=None,  # cross-frame; the fleet board uses phase/eta
             system=st.system,
             frame=st.frame,
-            transponder=row.transponder,
+            transponder=transponder,
             queue_position=st.queue_position,
         )
+
+    def junction_queue_metrics(session: Session, when: datetime) -> list[tuple[str, int, float]]:
+        """(junction_id, real-ship queue depth, longest wait s) per knobbed junction."""
+        u = app.state.universe
+        if u is None:
+            return []
+        _, servers = resolved_fleet(session)
+        out: list[tuple[str, int, float]] = []
+        for j in u.wormhole_junctions():
+            if j.get("traffic_intensity") is None:
+                continue
+            server = servers.get(j["id"])
+            depth, wait = 0, 0.0
+            if server is not None:
+                reals = [t for t in server.snapshot(when) if t.transponder is not None]
+                depth = len(reals)
+                wait = max((t.transit_open - when).total_seconds() for t in reals) if reals else 0.0
+            out.append((j["id"], depth, wait))
+        return out
 
     def route_out(row: RouteRow) -> RouteOut:
         compiled = route_compiled(row)
@@ -306,6 +343,41 @@ def create_app(
         u = app.state.universe
         return [] if u is None else u.wormhole_junctions()
 
+    @app.get("/junctions/{junction_id}/queue", response_model=JunctionQueue)
+    def get_junction_queue(
+        junction_id: str, at: datetime | None = None, session: Session = Depends(get_db)
+    ) -> JunctionQueue:
+        """The transit queue at a junction (the "you are #3" board).
+
+        Folds the whole active fleet, then snapshots the junction's occupants at
+        ``at``: real ships (by transponder) and the phantom traffic ahead of them
+        (``transponder == null``), ordered front-first with positions + transit ETAs.
+        """
+        when = resolve_when(at)
+        u = require_universe()
+        junction = u.wormhole_junction(junction_id)
+        if junction is None:
+            raise HTTPException(404, f"unknown junction {junction_id!r}")
+        _, servers = resolved_fleet(session)
+        server = servers.get(junction_id)
+        entries = []
+        if server is not None:
+            for position, t in enumerate(server.snapshot(when), start=1):
+                entries.append(
+                    JunctionQueueEntry(
+                        transponder=t.transponder,
+                        position=position,
+                        mass_tons=t.mass_tons,
+                        transit_eta=t.transit_open,
+                    )
+                )
+        return JunctionQueue(
+            junction_id=junction_id,
+            when=when,
+            traffic_intensity=junction.get("traffic_intensity"),
+            entries=entries,
+        )
+
     @app.get("/wormholes")
     def list_wormholes() -> list[dict]:
         """Wormhole links (the route-graph edges)."""
@@ -345,7 +417,8 @@ def create_app(
         when = app.state.clock.now()
         ships = session.scalars(select(ShipRow)).all()
         states = [(s.id, s.name, ship_state(session, s, when)) for s in ships]
-        body = render_metrics(states, when, app.state.clock.rate, len(BODIES))
+        junctions = junction_queue_metrics(session, when)
+        body = render_metrics(states, when, app.state.clock.rate, len(BODIES), junctions)
         return Response(body, media_type=CONTENT_TYPE_LATEST)
 
     @app.post("/ships", response_model=ShipOut, status_code=201)
@@ -508,10 +581,10 @@ def create_app(
     def get_route_state(
         transponder: str, at: datetime | None = None, session: Session = Depends(get_db)
     ) -> StateOut:
-        row = active_route(session, transponder)
-        if row is None:
+        if active_route(session, transponder) is None:
             raise HTTPException(404, f"no active route for {transponder!r}")
-        return route_state(row, resolve_when(at))
+        by_tp, _ = resolved_fleet(session)
+        return state_out(by_tp[transponder], transponder, resolve_when(at))
 
     @app.delete("/fleet/{transponder}/route")
     def abort_route(transponder: str, session: Session = Depends(get_db)) -> dict[str, str]:
@@ -526,19 +599,20 @@ def create_app(
     def get_fleet(at: datetime | None = None, session: Session = Depends(get_db)) -> FleetOut:
         when = resolve_when(at)
         u = require_universe()
-        rows = session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
+        by_tp, _ = resolved_fleet(session)  # fleet-level resolve -> real interleaving
         entries = []
-        for row in rows:
-            st = route_state(row, when)
-            eff = u.effective_ship_by_transponder(row.transponder) or {}
+        for transponder, compiled in by_tp.items():
+            st = state_out(compiled, transponder, when)
+            eff = u.effective_ship_by_transponder(transponder) or {}
             entries.append(
                 FleetEntry(
-                    transponder=row.transponder,
-                    ship=eff.get("name") or row.transponder,
+                    transponder=transponder,
+                    ship=eff.get("name") or transponder,
                     phase=st.phase,
                     system=st.system,
                     eta=st.eta,
                     percent_complete=st.percent_complete,
+                    queue_position=st.queue_position,
                 )
             )
         return FleetOut(when=when, ships=entries)

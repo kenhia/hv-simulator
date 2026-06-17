@@ -25,8 +25,13 @@ def render(
     when: datetime,
     rate: float,
     bodies_total: int,
+    junctions: list[tuple[str, int, float]] = (),
 ) -> bytes:
-    """Render Prometheus exposition for the fleet. ``states`` is (ship_id, name, state)."""
+    """Render Prometheus exposition for the fleet. ``states`` is (ship_id, name, state).
+
+    ``junctions`` is (junction_id, queue_depth, longest_wait_s) per junction with a
+    traffic knob — the Sprint-020 queue time-series for Grafana.
+    """
     reg = CollectorRegistry()
     ship_labels = ["ship_id", "name"]
 
@@ -74,5 +79,21 @@ def render(
     bodies.set(bodies_total)
     clock_rate.set(rate)
     sim_time.set(when.timestamp())
+
+    queue_depth = Gauge(
+        "hvsim_junction_queue_depth",
+        "Real ships currently queued at a wormhole junction",
+        ["junction"],
+        registry=reg,
+    )
+    queue_wait = Gauge(
+        "hvsim_junction_queue_wait_seconds",
+        "Longest current queue wait at a wormhole junction (s)",
+        ["junction"],
+        registry=reg,
+    )
+    for junction_id, depth, wait_s in junctions:
+        queue_depth.labels(junction_id).set(depth)
+        queue_wait.labels(junction_id).set(wait_s)
 
     return generate_latest(reg)

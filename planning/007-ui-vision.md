@@ -232,7 +232,7 @@ surface and unblocks the UI queue view later).
 
 | # | Sprint | Track |
 |---|---|---|
-| **020** | **engine: junction queue endpoint** — implement the already-contracted `GET /junctions/{id}/queue` (`JunctionQueue`); deployed `/fleet` board resolves the whole fleet together (real-ship interleaving) + surfaces `queue_position`. **Grafana forethought:** expose per-junction queue depth/wait as scrapeable time-series. | engine |
+| **020** ✅ | **engine: junction queue endpoint** — implemented the contracted `GET /junctions/{id}/queue` (`JunctionQueue`); deployed `/fleet` board resolves the whole fleet together (real-ship interleaving) + surfaces `queue_position`; per-junction queue depth/wait metrics for Grafana; `just queue-board`. | engine |
 | 021 | UI foundation + galaxy graph — scaffold `ui/` (SvelteKit + Canvas-2D), wire the build into `just`, serve bundled, **deploy**. Static galaxy graph (`/systems`+`/wormholes`), pan/zoom, At-a-glance + legend, basic Side Data Panel. | ui |
 | 022 | LOD spine: zoom into systems — generalize the Sol map to any system (live bodies, hyper-limit ring, nexus, stations); breadcrumb; zone mode. | ui |
 | 023 | Live ships + Fleet Board — board rail (filterable), ships on the map (galactic motes + in-system), dead-reckoning, Ship Timeline widget, Locate-a-ship. | ui |
