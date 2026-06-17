@@ -155,11 +155,26 @@ class FleetEntry(BaseModel):
     system: str | None
     eta: datetime | None
     percent_complete: float | None
+    queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
 
 
 class FleetOut(BaseModel):
     when: datetime
     ships: list[FleetEntry]
+
+
+class JunctionQueueEntry(BaseModel):
+    transponder: str | None  # None = phantom (background) traffic
+    position: int  # 1 == next to transit
+    mass_tons: float
+    transit_eta: datetime
+
+
+class JunctionQueue(BaseModel):
+    junction_id: str
+    when: datetime
+    traffic_intensity: float | None = None  # the junction's mean-queue-depth knob
+    entries: list[JunctionQueueEntry]
 
 
 class BodyOut(BaseModel):

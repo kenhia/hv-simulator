@@ -283,13 +283,17 @@ def _shift(segments: list[Segment], start_idx: int, delta: timedelta) -> None:
         )
 
 
-def resolve_fleet(
+def resolve_fleet_junctions(
     items: list[tuple[CompiledRoute, str]],
     u: Universe,
     *,
     seed: int = SIM_SEED,
-) -> list[CompiledRoute]:
-    """Fix every open-ended ``wormhole_queue`` segment across a set of routes.
+) -> tuple[list[CompiledRoute], dict[str, JunctionServer]]:
+    """Resolve the fleet's queues *and* return the per-junction servers.
+
+    Same fold as :func:`resolve_fleet`, but also yields the
+    ``junction_id -> JunctionServer`` map (only junctions with a traffic knob),
+    whose ``.transits`` / ``.snapshot(when)`` back the junction queue board.
 
     ``items`` pairs each compiled route with its **ship key** (the transponder —
     the phantom-traffic draw is seeded by it). Junction-transit events are folded
@@ -302,7 +306,7 @@ def resolve_fleet(
     segs: list[list[Segment]] = [list(c.segments) for c, _ in items]
     keys = [k for _, k in items]
     masses = [(c.route.ship.mass_tons or DEFAULT_SHIP_MASS_T) for c, _ in items]
-    servers: dict[str, JunctionServer] = {}
+    built: dict[str, JunctionServer | None] = {}  # cache incl. knob-less (None) junctions
 
     # All wormhole_queue segments, by route, in order.
     queues: dict[int, list[int]] = {
@@ -325,10 +329,9 @@ def resolve_fleet(
 
         seg = segs[ri][si]
         junction_id = seg.junction or ""
-        server = servers.get(junction_id)
-        if junction_id not in servers:
-            server = _junction_server(u, junction_id, seed)
-            servers[junction_id] = server  # may be None
+        if junction_id not in built:
+            built[junction_id] = _junction_server(u, junction_id, seed)  # may be None
+        server = built[junction_id]
 
         arrival = seg.t_start
         if server is None:
@@ -341,10 +344,26 @@ def resolve_fleet(
         _shift(segs[ri], si + 1, transit_open - arrival)
         resolved.add((ri, si))
 
-    return [
+    routes = [
         CompiledRoute(c.route, route_segs, final_system=c.final_system, final_body=c.final_body)
         for (c, _), route_segs in zip(items, segs, strict=True)
     ]
+    servers = {jid: s for jid, s in built.items() if s is not None}
+    return routes, servers
+
+
+def resolve_fleet(
+    items: list[tuple[CompiledRoute, str]],
+    u: Universe,
+    *,
+    seed: int = SIM_SEED,
+) -> list[CompiledRoute]:
+    """Fix every open-ended ``wormhole_queue`` segment across a set of routes.
+
+    The queue-only view of :func:`resolve_fleet_junctions` (drops the junction
+    servers). See it for the folding semantics.
+    """
+    return resolve_fleet_junctions(items, u, seed=seed)[0]
 
 
 def resolve_route(

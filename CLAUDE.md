@@ -35,8 +35,15 @@ Sprint 019 landed the engine's **first stateful resolver** — wormhole transit
 `wormhole_queue` segment the fleet resolver fixes at arrival) and reports `queued`
 with a counting-down position + ETA (`just queue-demo`); depth comes from a
 seeded per-junction phantom-traffic knob (`traffic_intensity`, contract v0.4.0)
-plus deterministic real-ship interleaving. Engine/CLI-level; the deployed `/fleet`
-queue board is Sprint 020. Design is in `planning/006`.
+plus deterministic real-ship interleaving. Sprint 020 brought the queue to the
+**deployed** service: it resolves the whole active fleet together (real-ship
+interleaving on the board), surfaces `queue_position` on `/fleet`, implements the
+contracted `GET /junctions/{id}/queue` (the "you are #3" board — real ships +
+phantom, `just queue-board`), and emits per-junction queue-depth/wait metrics for
+Prometheus/Grafana. Design is in `planning/006`. **Phase 2.5 (first-class UI) is
+designed** (`planning/007`): a Svelte + Canvas-2D map app; the sprint slice is
+021 (foundation + galaxy graph) → 025 (polish). Grafana dashboards are a deferred
+parallel track.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
