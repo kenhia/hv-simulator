@@ -16,7 +16,13 @@
     type Camera,
     type Vec2
   } from './camera';
-  import { bodyRows, placeRows, type Detail } from './detail';
+  import { bodyRows, placeRows, systemDetailRows, type Detail } from './detail';
+
+  export interface SystemSummary {
+    planets: number;
+    moons: number;
+    stations: number;
+  }
 
   let {
     systemId,
@@ -24,7 +30,8 @@
     zoneMode = false,
     fitSignal = 0,
     onselect,
-    onexit
+    onexit,
+    onsummary
   }: {
     systemId: string;
     detail?: SystemDetail | null;
@@ -32,6 +39,7 @@
     fitSignal?: number;
     onselect?: (d: Detail, bodyName: string | null) => void;
     onexit?: () => void;
+    onsummary?: (s: SystemSummary) => void;
   } = $props();
 
   let wrap: HTMLDivElement;
@@ -56,6 +64,11 @@
     return p.position ? { x: p.position.au.x, y: p.position.au.y } : null;
   }
 
+  function starLabel(): string {
+    const primary = detail?.stars?.[0]?.name;
+    return primary ?? detail?.name ?? systemId;
+  }
+
   async function load() {
     const [b, p] = await Promise.all([
       fetchSystemBodies(systemId),
@@ -63,6 +76,12 @@
     ]);
     bodies = b;
     places = p;
+    onsummary?.({
+      planets: b.filter((x) => x.type === 'planet').length,
+      moons: b.filter((x) => x.type === 'moon').length,
+      stations: p.length
+    });
+    if (!fitted && width > 1) doFit(); // frame the system once its bodies arrive
   }
 
   function doFit() {
@@ -103,19 +122,17 @@
       ctx.setLineDash([]);
     }
 
-    // Star(s) at the origin (companion offset is cosmetic for binaries).
+    ctx.font = '11px ui-monospace, monospace';
+    ctx.textBaseline = 'middle';
+
+    // Primary star at the origin, labelled. (Binary companion placement at its
+    // real barycenter offset is deferred — see the system-geometry follow-up.)
     ctx.fillStyle = '#ffd86b';
     ctx.beginPath();
     ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
     ctx.fill();
-    if (detail?.is_binary) {
-      ctx.beginPath();
-      ctx.arc(origin.x + 9, origin.y, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.font = '11px ui-monospace, monospace';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#cabf7a';
+    ctx.fillText(starLabel(), origin.x + 9, origin.y);
 
     // Planets / moons.
     for (const b of bodies) {
@@ -155,6 +172,8 @@
       const w = placeWorld(pl);
       if (w) consider(w, () => onselect?.(placeRows(pl), pl.name ?? null));
     }
+    const d = detail;
+    if (d) consider({ x: 0, y: 0 }, () => onselect?.(systemDetailRows(d), null));
     return best;
   }
 
@@ -208,10 +227,6 @@
       ro.disconnect();
       clearInterval(poll);
     };
-  });
-
-  $effect(() => {
-    if (!fitted && bodies.length >= 0 && width > 1) doFit();
   });
 
   let lastFit = 0;

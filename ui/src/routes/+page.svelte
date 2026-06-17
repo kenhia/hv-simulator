@@ -27,6 +27,7 @@
   let focusedBody = $state<string | null>(null);
   let zoneMode = $state(false);
   let fitSignal = $state(0);
+  let summary = $state<{ planets: number; moons: number; stations: number } | null>(null);
 
   const placed = $derived(galaxy.systems.filter((s) => s.coordinates !== null).length);
   const stubbed = $derived(galaxy.systems.length - placed);
@@ -41,6 +42,7 @@
     panel = null;
     focusedBody = null;
     zoneMode = false;
+    summary = null;
     try {
       systemDetail = await fetchSystemDetail(s.id);
     } catch {
@@ -71,6 +73,7 @@
     } else if (action === 'zone') {
       e.preventDefault();
       zoneMode = !zoneMode;
+      if (zoneMode) fitSignal++; // entering zone mode recenters + frames the system
     } else if (action === 'fit') {
       e.preventDefault();
       fitSignal++;
@@ -114,6 +117,7 @@
           focusedBody = body;
         }}
         onexit={exitToGalaxy}
+        onsummary={(s) => (summary = s)}
       />
     {/key}
   {/if}
@@ -124,6 +128,7 @@
     {stubbed}
     links={linkCount}
     inGalaxy={systemId === null}
+    {summary}
     {loading}
     {error}
   />

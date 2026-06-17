@@ -1,12 +1,30 @@
 // Builds the rows the Side Data Panel shows for any selectable entity (system,
 // body, place). Pure — keeps the panel a dumb renderer and the shaping testable.
 
-import type { Place, System, SystemBody } from './api';
+import type { Place, System, SystemBody, SystemDetail } from './api';
 
 export interface Detail {
   title: string;
   kind: string;
   rows: [string, string][];
+}
+
+export function systemDetailRows(d: SystemDetail): Detail {
+  return {
+    title: d.name,
+    kind: 'system',
+    rows: [
+      ['id', d.id],
+      ['nation', d.star_nation_id ?? '—'],
+      ['type', d.is_binary ? 'binary' : 'single star'],
+      ['stars', d.stars.map((s) => s.name ?? s.id).join(', ') || '—'],
+      [
+        'hyper limit',
+        d.primary_hyper_limit_au != null ? `${d.primary_hyper_limit_au.toFixed(2)} AU` : '—'
+      ],
+      ['distance', d.distance_ly != null ? `${d.distance_ly.toFixed(1)} ly` : '—']
+    ]
+  };
 }
 
 export function systemRows(s: System): Detail {
