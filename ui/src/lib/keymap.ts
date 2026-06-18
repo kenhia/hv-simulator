@@ -7,10 +7,11 @@ export type Action =
   | 'exit' // back out of the system scene / dismiss panel
   | 'zone' // toggle zone mode (center + clamp)
   | 'fit' // fit / reset view
+  | 'help' // toggle the shortcut overlay
   | 'search' // focus locate-a-ship (023)
-  | 'layers' // layer toggles (023/025)
-  | 'menu' // main menu (025)
-  | 'playPause' // dev time scrubber (025)
+  | 'layers' // layer toggles
+  | 'menu' // main menu (later)
+  | 'playPause' // dev time scrubber
   | 'stepBack'
   | 'stepForward';
 
@@ -27,12 +28,13 @@ export const KEYMAP: Binding[] = [
   { key: 'Escape', action: 'exit', label: 'back out / dismiss', sprint: '022', active: true },
   { key: 'z', action: 'zone', label: 'toggle zone mode', sprint: '022', active: true },
   { key: 'f', action: 'fit', label: 'fit / reset view', sprint: '022', active: true },
+  { key: '?', action: 'help', label: 'show shortcuts', sprint: '025', active: true },
+  { key: 'l', action: 'layers', label: 'layer toggles', sprint: '025', active: true },
+  { key: ' ', action: 'playPause', label: 'play/pause clock (dev)', sprint: '025', active: true },
+  { key: ',', action: 'stepBack', label: 'step clock back (dev)', sprint: '025', active: true },
+  { key: '.', action: 'stepForward', label: 'step clock fwd (dev)', sprint: '025', active: true },
   { key: '/', action: 'search', label: 'locate a ship', sprint: '023', active: false },
-  { key: 'l', action: 'layers', label: 'layer toggles', sprint: '023/025', active: false },
-  { key: 'm', action: 'menu', label: 'main menu', sprint: '025', active: false },
-  { key: ' ', action: 'playPause', label: 'play/pause clock', sprint: '025', active: false },
-  { key: ',', action: 'stepBack', label: 'step clock back', sprint: '025', active: false },
-  { key: '.', action: 'stepForward', label: 'step clock forward', sprint: '025', active: false }
+  { key: 'm', action: 'menu', label: 'main menu', sprint: 'later', active: false }
 ];
 
 // Minimal shape so this is unit-testable without a DOM KeyboardEvent.

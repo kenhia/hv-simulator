@@ -237,3 +237,13 @@ def test_put_clock_jump_moves_state(make_client) -> None:
 
     client.put("/clock", json={"jump_to": "2026-01-03T00:00:00Z"})
     assert client.get(f"/ships/{ship_id}/state").json()["phase"] == "arrived"
+
+
+def test_put_clock_rate_zero_pauses(make_client) -> None:
+    # rate 0 is accepted (frozen clock) — the dev scrubber's pause (Sprint 025).
+    client = make_client(dev_clock=True)
+    client.put("/clock", json={"jump_to": "2026-01-01T00:00:00Z"})
+    assert client.put("/clock", json={"rate": 0}).status_code == 200
+    a = client.get("/clock").json()["now"]
+    b = client.get("/clock").json()["now"]
+    assert a == b  # frozen: sim time does not advance

@@ -162,6 +162,22 @@ export interface RouteOut {
 }
 
 export const fetchClock = () => getJSON<ClockOut>('/clock');
+
+export interface ClockUpdate {
+  rate?: number;
+  jump_to?: string;
+  advance_seconds?: number;
+}
+
+export async function putClock(body: ClockUpdate): Promise<ClockOut> {
+  const res = await fetch('/clock', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`PUT /clock -> ${res.status}`);
+  return (await res.json()) as ClockOut;
+}
 export const fetchFleet = () => getJSON<{ when: string; ships: FleetEntry[] }>('/fleet');
 export const fetchShipState = (tp: string) => getJSON<ShipState>(`/fleet/${tp}/state`);
 export const fetchShipRoute = (tp: string) => getJSON<RouteOut>(`/fleet/${tp}/route`);

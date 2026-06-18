@@ -9,17 +9,22 @@
     type System,
     type SystemDetail
   } from '$lib/api';
+  import { putClock } from '$lib/api';
   import { actionForKey } from '$lib/keymap';
   import { breadcrumb, GALAXY, type Scene } from '$lib/scene';
   import { shipRows, systemRows, type Detail } from '$lib/detail';
+  import { DEFAULT_LAYERS, type Layers } from '$lib/layers';
   import { LiveFleet } from '$lib/live';
   import AtAGlance from '$lib/AtAGlance.svelte';
   import DataPanel from '$lib/DataPanel.svelte';
   import FleetBoard from '$lib/FleetBoard.svelte';
   import GalaxyMap from '$lib/GalaxyMap.svelte';
+  import HelpOverlay from '$lib/HelpOverlay.svelte';
   import JunctionQueuePanel from '$lib/JunctionQueuePanel.svelte';
+  import LayersPanel from '$lib/LayersPanel.svelte';
   import Legend from '$lib/Legend.svelte';
   import SystemMap from '$lib/SystemMap.svelte';
+  import TimeScrubber from '$lib/TimeScrubber.svelte';
 
   let galaxy = $state<Galaxy>({ systems: [], links: [], junctions: [] });
   let error = $state<string | null>(null);
@@ -42,6 +47,32 @@
   let selectedRoute = $state<RouteOut | null>(null);
   let junctionQueueId = $state<string | null>(null);
   const ships = () => live.ships();
+
+  let layers = $state<Layers>({ ...DEFAULT_LAYERS });
+  let showHelp = $state(false);
+  let showLayers = $state(false);
+  let dev = $state(false); // /clock dev_controls_enabled -> show the time scrubber
+  let clockRate = $state(1);
+  let scrubRate = $state(3600);
+
+  function toggleLayer(key: keyof Layers) {
+    layers = { ...layers, [key]: !layers[key] };
+  }
+  async function scrubPut(body: { rate?: number; jump_to?: string; advance_seconds?: number }) {
+    try {
+      await putClock(body);
+      await live.resyncClock();
+    } catch {
+      /* clock controls disabled (prod) — ignore */
+    }
+  }
+  const togglePlay = () => scrubPut({ rate: clockRate > 0 ? 0 : scrubRate });
+  const stepClock = (seconds: number) => scrubPut({ advance_seconds: seconds });
+  function setScrubRate(r: number) {
+    scrubRate = r;
+    if (clockRate > 0) scrubPut({ rate: r });
+  }
+  const jumpNow = () => scrubPut({ jump_to: new Date().toISOString() });
 
   const placed = $derived(galaxy.systems.filter((s) => s.coordinates !== null).length);
   const stubbed = $derived(galaxy.systems.length - placed);
@@ -131,6 +162,21 @@
     } else if (action === 'fit') {
       e.preventDefault();
       fitSignal++;
+    } else if (action === 'help') {
+      e.preventDefault();
+      showHelp = !showHelp;
+    } else if (action === 'layers') {
+      e.preventDefault();
+      showLayers = !showLayers;
+    } else if (action === 'playPause' && dev) {
+      e.preventDefault();
+      togglePlay();
+    } else if (action === 'stepBack' && dev) {
+      e.preventDefault();
+      stepClock(-3600);
+    } else if (action === 'stepForward' && dev) {
+      e.preventDefault();
+      stepClock(3600);
     }
   }
 
@@ -142,6 +188,8 @@
     live.onchange = () => {
       roster = [...live.roster];
       tracked = new Set(live.tracked);
+      dev = live.dev;
+      clockRate = live.rate;
     };
     live.start();
     window.addEventListener('keydown', onkey);
@@ -161,6 +209,7 @@
       selectedId={selectedSystem?.id ?? null}
       {fitSignal}
       {ships}
+      {layers}
       onselect={(s) => {
         selectedSystem = s;
         selectedShip = null;
@@ -168,7 +217,6 @@
       }}
       onenter={enterSystem}
     />
-    <Legend />
   {:else}
     {#key systemId}
       <SystemMap
@@ -178,6 +226,7 @@
         {zoneMode}
         {fitSignal}
         {ships}
+        {layers}
         onselect={(d, body) => {
           junctionQueueId = null;
           panel = d;
@@ -231,6 +280,31 @@
   {:else if panel}
     <DataPanel detail={panel} onclose={() => (panel = null)} />
   {/if}
+
+  {#if dev}
+    <TimeScrubber
+      simNow={() => live.simNowMs()}
+      {clockRate}
+      {scrubRate}
+      ontogglePlay={togglePlay}
+      onrate={setScrubRate}
+      onstep={stepClock}
+      onjumpnow={jumpNow}
+    />
+  {/if}
+
+  <div class="right-col">
+    {#if showLayers}
+      <LayersPanel {layers} ontoggle={toggleLayer} />
+    {/if}
+    {#if systemId === null}
+      <Legend />
+    {/if}
+  </div>
+
+  {#if showHelp}
+    <HelpOverlay onclose={() => (showHelp = false)} />
+  {/if}
 </main>
 
 <style>
@@ -246,6 +320,20 @@
     max-height: calc(100vh - 24px);
   }
   .left-col :global(.overlay) {
+    position: static;
+  }
+  /* Stack the Layers panel + Legend in a bottom-right column (no overlap). */
+  .right-col {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    max-height: calc(100vh - 24px);
+  }
+  .right-col :global(.overlay) {
     position: static;
   }
   .hints {
