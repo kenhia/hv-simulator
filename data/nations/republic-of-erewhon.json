@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "republic-of-erewhon",
+  "name": "Republic of Erewhon",
+  "government": "Republic",
+  "capital_system_id": "erewhon",
+  "capital_planet": "Erewhon",
+  "capital_city": null,
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH1, HH3, Crown of Slaves",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Republic_of_Erewhon"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A small but strategically and commercially significant single-system republic in the galactic east, governed from Erewhon and originally founded by organized-crime families who went legitimate. It controls the Erewhon Wormhole Junction, sat as a member of the Manticoran Alliance, and is known for first-rate shipyards and a pragmatic, fiercely independent streak.",
+    "official_language": "Standard English",
+    "note": "Authored as a minimal record because Sprint 030 builds the Erewhon system; expand later."
+  },
+
+  "territory": {
+    "member_systems": [
+      {"system_id": "erewhon", "name": "Erewhon System", "role": "capital", "member_worlds": ["Erewhon"], "canon": true, "source": "HH1"}
+    ]
+  }
+}

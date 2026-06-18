@@ -26,24 +26,43 @@ _AXIS = {
 
 # Artistic license (canon:false): canon gives only a coarse compass bearing, so we
 # treat each cardinal as a wedge and spread systems within it. "Galactic north" =
-# anywhere in the NW-NE arc, i.e. +-22.5 deg about due north (the 90 deg NW-NE arc,
-# halved). Without this every pure-cardinal system lands on one axis (X=0 for
-# north) and the galaxy map renders as a vertical column. The offset is a
-# deterministic function of the system id -- reproducible, hand-tunable, never
-# random per run -- and is a pure in-plane (X-Z) rotation, so canon distance is
+# anywhere in the NW-NE arc about due north. Without this every pure-cardinal
+# system lands on one axis (X=0 for north) and the galaxy map renders as a vertical
+# column. The offset is a pure in-plane (X-Z) rotation, so canon distance is
 # preserved and Y stays reserved (~0).
-_ARC_HALF_DEG = 22.5
+#
+# The deflection magnitude is bounded to [_ARC_MIN, _ARC_MAX]: a >=3 deg floor so no
+# system ever sits ~on the cardinal (looks unplaced), capped at 22.5 deg (half the
+# 90 deg NW-NE wedge). Per Ken's #79 note: vary it per system and never repeat a
+# constant angle (a fixed repeated offset looks as unnatural as all-90 deg). A new
+# system stores its chosen deflection (`location.bearing_offset_deg`, random at
+# incorporation, then frozen for stable coords); absent that, a stable per-id hash
+# is the fallback (still varied + floored, reproducible across runs).
+_ARC_MIN_DEG = 3.0
+_ARC_MAX_DEG = 22.5
 
 
 def _jitter_rad(system_id: str) -> float:
-    """Deterministic in-plane bearing offset in [-22.5 deg, +22.5 deg] for a system.
+    """Fallback in-plane bearing deflection for a system with no stored offset.
 
-    Uses a stable hash (not Python's per-process-salted ``hash()``) so re-running
-    the frame tool yields identical coordinates.
+    Stable hash of the id (not Python's per-process-salted ``hash()``) -> a signed
+    magnitude in [3 deg, 22.5 deg], so it is varied per system, never ~on-axis, and
+    reproducible across runs. Independent hash slices drive sign and magnitude.
     """
-    h = int(hashlib.sha256(system_id.encode()).hexdigest()[:8], 16)
-    frac = h / 0xFFFFFFFF  # [0, 1]
-    return math.radians((frac * 2.0 - 1.0) * _ARC_HALF_DEG)
+    h = int(hashlib.sha256(system_id.encode()).hexdigest()[:16], 16)
+    mag_frac = (h & 0xFFFFFFFF) / 0xFFFFFFFF  # [0, 1]
+    sign = -1.0 if (h >> 32) & 1 else 1.0
+    mag = _ARC_MIN_DEG + mag_frac * (_ARC_MAX_DEG - _ARC_MIN_DEG)
+    return math.radians(sign * mag)
+
+
+def _deflection_rad(system_id: str, loc: dict) -> float:
+    """The system's in-plane deflection: a stored ``bearing_offset_deg`` (the random-
+    at-incorporation pick, frozen in data) if present, else the floored hash; plus an
+    optional additive ``bearing_nudge_deg`` hand-tune. Both canon:false, +CCW."""
+    base = loc.get("bearing_offset_deg")
+    theta = math.radians(float(base)) if base is not None else _jitter_rad(system_id)
+    return theta + math.radians(float(loc.get("bearing_nudge_deg") or 0.0))
 
 
 def _rotate_in_plane(unit: tuple[float, float, float], theta: float) -> tuple[float, float, float]:
@@ -78,11 +97,10 @@ def solve_frame(systems: dict[str, dict]) -> dict[str, tuple[float, float, float
             ref = (loc.get("reference") or "Sol").lower()
             if ref not in positions:
                 continue
-            # Auto arc-jitter + an optional hand-tune: ``bearing_nudge_deg`` rotates a
-            # system's placement about its reference in the galactic plane (+CCW: east
-            # toward north), additive to the jitter. Hand-tuning hook for cases where
-            # the seeded spread reads wrong against canon/aesthetics.
-            theta = _jitter_rad(sid) + math.radians(float(loc.get("bearing_nudge_deg") or 0.0))
+            # Deflect the placement about its reference within the bearing arc
+            # (stored per-system offset or floored hash, + optional nudge); see
+            # _deflection_rad. A pure in-plane rotation, so canon distance holds.
+            theta = _deflection_rad(sid, loc)
             ux, uy, uz = _rotate_in_plane(_direction_unit(loc.get("direction") or "north"), theta)
             dist = float(loc.get("distance_ly") or 0.0)
             rx, ry, rz = positions[ref]

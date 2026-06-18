@@ -113,6 +113,15 @@ novel.
 ### 5. Write the files and wire up references
 
 - Write `systems/<id>-system.json` (`<id>` = lowercase-hyphen, e.g. `basilisk`).
+- **`location` block** — `reference` (chains back to `sol`) + `distance_ly` +
+  `direction` (compass tokens: `north/south/east/west`, e.g. `galactic north-east`;
+  prefer a *specific* canon bearing over a bare cardinal). The
+  `coordinate-frame` tool fabricates absolute XYZ from this (`canon: false`); **do
+  not** hand-write a `coordinates` block. Add a **`bearing_offset_deg`**: the
+  system's deflection from the cardinal, **+CCW**, picked **varied within ±[3°,
+  22.5°]** (never ~0° = on-axis, never a repeated constant — both look unnatural).
+  Choose a fresh non-round value per system (`+7.4`, `-16.2`, …); it freezes in
+  data for reproducible coords. (`bearing_nudge_deg` adds a later hand-tune.)
 - If the system belongs to a star nation, add/confirm its reference in the
   relevant `nations/*.json` (member system, terminus, naval station, or
   protectorate) by `system_id`. A station in an uninhabited system (e.g. Hancock

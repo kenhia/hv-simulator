@@ -2,7 +2,6 @@
   "schema_version": "0.1.0",
   "kind": "ship_registry",
   "retrieved": "2026-06-13",
-
   "ships": [
     {
       "id": "gns-raoul-courvosier-ii-bc-44",
@@ -20,7 +19,6 @@
       "source": "HH11, Companion",
       "lore": "Lead ship of the first pod-laying battlecruiser class built by any navy."
     },
-
     {
       "id": "gns-honor-harrington",
       "name": "GNS Honor Harrington",
@@ -35,7 +33,7 @@
       "fate_pd": null,
       "canon": true,
       "source": "HH9",
-      "lore": "Name ship of the class, commissioned personally by Allison Chou Harrington, Honor's mother. (Wiki uses the 'GNS' prefix for this ship and 'GSNS' for others in the class — preserved as written; the inconsistency is unresolved in canon.)"
+      "lore": "Name ship of the class, commissioned personally by Allison Chou Harrington, Honor's mother. (Wiki uses the 'GNS' prefix for this ship and 'GSNS' for others in the class \u2014 preserved as written; the inconsistency is unresolved in canon.)"
     },
     {
       "id": "gsns-andrew-massengil",
@@ -67,7 +65,6 @@
       "canon": true,
       "source": "HH9"
     },
-
     {
       "id": "hms-star-knight",
       "name": "HMS Star Knight",
@@ -115,7 +112,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "hms-reliant",
       "name": "HMS Reliant",
@@ -146,7 +142,7 @@
       "renamed_to": "HMS Hancock Station",
       "canon": true,
       "source": "Companion",
-      "lore": "Later recommissioned as HMS Hancock Station — a name that ties to the Hancock System naval base referenced in nations/star-kingdom-of-manticore.json."
+      "lore": "Later recommissioned as HMS Hancock Station \u2014 a name that ties to the Hancock System naval base referenced in nations/star-kingdom-of-manticore.json."
     },
     {
       "id": "hms-achilles-reliant",
@@ -163,7 +159,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "hms-nike-bc-562",
       "name": "HMS Nike",
@@ -210,7 +205,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "hms-edward-saganami",
       "name": "HMS Edward Saganami",
@@ -256,7 +250,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "hms-invictus",
       "name": "HMS Invictus",
@@ -304,7 +297,6 @@
       "canon": true,
       "source": "HH11"
     },
-
     {
       "id": "pns-sultan",
       "name": "PNS Sultan",
@@ -352,9 +344,8 @@
       "canon": true,
       "source": "HH2, Companion",
       "lore": "Covertly transferred to Masada as the flagship MNS Thunder of God for the 1903 PD invasion of Yeltsin's Star; destroyed at the Second Battle of Yeltsin's Star. Ties to systems/endicott-system.json (Masada).",
-      "notes": "A Havenite hull operated under Masadan colors — affiliation reflects its build navy; see renamed_to and lore for the Masadan service."
+      "notes": "A Havenite hull operated under Masadan colors \u2014 affiliation reflects its build navy; see renamed_to and lore for the Masadan service."
     },
-
     {
       "id": "pns-tepes",
       "name": "PNS Tepes",
@@ -370,9 +361,8 @@
       "canon": true,
       "source": "HH7, HH8",
       "lore": "A modified Warlord (extra boat bays, 600-Marine capacity) operated by State Security. Transported the captured Honor Harrington to the Cerberus System (Hades); destroyed in 1913 PD during her escape.",
-      "notes": "Ties to systems — Cerberus/Hades not yet built as a system file."
+      "notes": "Ties to systems \u2014 Cerberus/Hades not yet built as a system file."
     },
-
     {
       "id": "hms-courageous",
       "name": "HMS Courageous",
@@ -405,7 +395,6 @@
       "lore": "Honor Harrington's first hyper-capable command (On Basilisk Station), assigned to the Basilisk System picket. The earlier, lighter namesake of the Star Knight-class HMS Fearless (CA-286) she later commanded at Yeltsin's Star.",
       "notes": "Ties to systems/basilisk-system.json."
     },
-
     {
       "id": "cms-starhauler",
       "name": "CMS Starhauler",
@@ -421,7 +410,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "emerald-dawn",
       "name": "Emerald Dawn",
@@ -437,7 +425,6 @@
       "canon": true,
       "source": "Companion"
     },
-
     {
       "id": "rmms-atlas",
       "name": "RMMS Atlas",
@@ -534,6 +521,54 @@
       "canon": true,
       "source": "SI",
       "lore": "Nevada-class battlecruiser serving as flagship of Task Group 3021."
+    },
+    {
+      "id": "pns-barbarossa",
+      "name": "PNS Barbarossa",
+      "prefix": "PNS",
+      "hull_number": null,
+      "class_id": "sultan",
+      "hull_code": 4,
+      "navy": "People's Navy",
+      "affiliation_nation_id": "republic-of-haven",
+      "role": "battlecruiser",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "Companion",
+      "lore": "A Sultan-class battlecruiser of the People's Navy (the class's conqueror-themed naming: Barbarossa, Mehmed, Murad)."
+    },
+    {
+      "id": "pns-mehmed",
+      "name": "PNS Mehmed",
+      "prefix": "PNS",
+      "hull_number": null,
+      "class_id": "sultan",
+      "hull_code": 5,
+      "navy": "People's Navy",
+      "affiliation_nation_id": "republic-of-haven",
+      "role": "battlecruiser",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "Companion",
+      "lore": "A Sultan-class battlecruiser of the People's Navy."
+    },
+    {
+      "id": "pns-murad",
+      "name": "PNS Murad",
+      "prefix": "PNS",
+      "hull_number": null,
+      "class_id": "sultan",
+      "hull_code": 6,
+      "navy": "People's Navy",
+      "affiliation_nation_id": "republic-of-haven",
+      "role": "battlecruiser",
+      "status": "active",
+      "fate_pd": null,
+      "canon": true,
+      "source": "Companion",
+      "lore": "A Sultan-class battlecruiser of the People's Navy."
     }
   ]
 }

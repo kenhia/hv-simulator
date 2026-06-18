@@ -3,8 +3,16 @@
 from __future__ import annotations
 
 import math
+import pytest
 
-from coordinate_frame import _ARC_HALF_DEG, _direction_unit, _jitter_rad, solve_frame
+from coordinate_frame import (
+    _ARC_MAX_DEG,
+    _ARC_MIN_DEG,
+    _deflection_rad,
+    _direction_unit,
+    _jitter_rad,
+    solve_frame,
+)
 
 
 def test_direction_unit() -> None:
@@ -35,13 +43,25 @@ def test_reference_chain_placement() -> None:
     assert math.isclose(d, 31.0, abs_tol=1e-6)
 
 
-def test_jitter_is_deterministic_and_bounded() -> None:
+def test_jitter_is_deterministic_and_floored() -> None:
     # Stable across calls/processes (sha256-based, not salted hash()).
     assert _jitter_rad("manticore") == _jitter_rad("manticore")
     assert _jitter_rad("manticore") != _jitter_rad("basilisk")
-    limit = math.radians(_ARC_HALF_DEG)
-    for sid in ("sol", "manticore", "basilisk", "sigma-draconis", "trevors-star"):
-        assert -limit <= _jitter_rad(sid) <= limit
+    # Magnitude always in [3 deg, 22.5 deg]: varied, but never ~on the cardinal.
+    lo, hi = math.radians(_ARC_MIN_DEG), math.radians(_ARC_MAX_DEG)
+    for sid in ("sol", "manticore", "basilisk", "sigma-draconis", "trevors-star", "haven", "gregor"):
+        assert lo <= abs(_jitter_rad(sid)) <= hi
+
+
+def test_stored_offset_overrides_hash_with_additive_nudge() -> None:
+    # An explicit bearing_offset_deg (the random-at-incorporation pick) is used
+    # verbatim; bearing_nudge_deg adds on top. Both +CCW degrees.
+    assert _deflection_rad("haven", {"bearing_offset_deg": 12}) == pytest.approx(math.radians(12))
+    assert _deflection_rad(
+        "haven", {"bearing_offset_deg": 12, "bearing_nudge_deg": 3}
+    ) == pytest.approx(math.radians(15))
+    # No stored offset -> the floored hash fallback.
+    assert _deflection_rad("haven", {}) == _jitter_rad("haven")
 
 
 def test_pure_north_systems_are_spread_off_axis() -> None:

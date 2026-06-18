@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "republic-of-haven",
+  "name": "Republic of Haven",
+  "government": "Republic",
+  "capital_system_id": "haven",
+  "capital_planet": "Haven",
+  "capital_city": "Nouveau Paris",
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH1, HH3, Companion",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Republic_of_Haven"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A major interstellar power and Manticore's principal antagonist through the long war. Founded as a prosperous representative republic, it decayed across the 19th Century PD into the bankrupt, expansionist People's Republic of Haven (PRH) — a welfare state driven by the DuQuesne Plan of serial conquest, ruled first by the hereditary Legislaturalists and then, after the 1905 PD coup, by Rob S. Pierre's Committee of Public Safety and its secret police (State Security). In 1915 PD Thomas Theisman overthrew the Committee and restored the original constitution as the Republic of Haven under President Eloise Pritchart.",
+    "official_language": "Standard English",
+    "head_of_state": "President of the Republic of Haven",
+    "legislature": "Congress (Senate + House of Representatives)",
+    "military": ["Republic of Haven Navy", "Republic of Haven Marine Corps", "Republic of Haven Army"],
+    "predecessor_regime": "People's Republic of Haven (PRH), to 1915 PD",
+    "navy_note": "Wartime fleet known as the People's Navy (PN) under the PRH; restored as the Republic of Haven Navy (RHN) from 1915 PD."
+  },
+
+  "territory": {
+    "note": "The Haven Sector and its many conquered/associated systems. Only the capital system (Haven) is built so far; member ids are placeholders to be filled as system files are created.",
+    "member_systems": [
+      {"system_id": "haven", "name": "Haven System", "role": "capital", "member_worlds": ["Haven"], "canon": true, "source": "HH1"}
+    ]
+  }
+}

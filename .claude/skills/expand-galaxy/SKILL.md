@@ -65,6 +65,20 @@ the scribe's job, not this skill's.
     Choose a bearing consistent with canon distances to *other* anchors when you
     can (e.g. Sigma Draconis is 40 ly from Sol and ~475 from Manticore → roughly
     on the Sol-Manticore line → `reference: sol, direction: galactic north`).
+    Prefer a **specific** canon bearing (an intercardinal like `north-east`, or a
+    terminus direction) over a bare cardinal when canon supports it — the more
+    specific, the less the frame has to fabricate.
+  - **Natural placement (canon:false).** Canon gives only a coarse compass bearing,
+    so the frame spreads systems within a wedge about it. Give each new system a
+    **`location.bearing_offset_deg`** — its deflection from the cardinal, **+CCW in
+    the galactic plane**, picked **varied per system within ±[3°, 22.5°]** (never
+    ~0° → looks on-axis/unplaced; never a *repeated* constant → looks as unnatural
+    as all-90°; ≤22.5° keeps it inside the wedge). Pick it freshly when you add the
+    system (e.g. `+7.4`, `-16.2`, `+12.8` — avoid round/repeating values) and it
+    stays **frozen** in data for reproducible coords. (Omit it and the frame falls
+    back to a stable per-id hash, also floored to ≥3° — fine, but an explicit value
+    is clearer and hand-tunable.) `location.bearing_nudge_deg` adds on top for a
+    later tweak. Distance is always preserved (deflection is a pure rotation).
   - **Do not** hand-write `orbit` or `coordinates` blocks — the pipeline fills
     them. Bodies only need `type` (`planet` for gas giants too, with
     `subtype: gas_giant`), `orbit_index`, `habitable`, and lore.
@@ -91,6 +105,12 @@ just compile-data    # data/ JSON -> build/universe.db (read-only artifact)
 
 Watch the output: `frame` prints each system's XYZ (new systems should appear
 with sane coordinates); `compile-data` prints the row counts.
+
+**Eyeball the spread** after `just frame`: no two placed systems should share an
+axis (collinear stack) or sit ~on a pure cardinal, and new systems shouldn't
+collide with neighbours on the map. If one reads wrong, adjust its
+`bearing_offset_deg` (or add a `bearing_nudge_deg`) and re-run `just frame` — it's
+cheap and deterministic. Distance to the reference never changes (pure rotation).
 
 ### 4. Verify the engine sees it
 

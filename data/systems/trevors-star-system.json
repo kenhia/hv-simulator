@@ -25,10 +25,10 @@
     "reference": "manticore",
     "distance_ly": 210,
     "direction": "galactic east",
-    "bearing_nudge_deg": 10,
+    "bearing_offset_deg": 12,
     "galactic_coordinates": null,
     "source": "HH2, HH3",
-    "notes": "Canon places Trevor's Star to the galactic east of Manticore, in former Havenite territory. Distance set to the canon Trevor's Star Terminus span of the Manticore Wormhole Junction (210 ly); the absolute bearing along galactic-east is fabricated. No absolute galactic coordinates in canon. bearing_nudge_deg (canon:false) hand-tunes the placement ~10 deg counter-clockwise about Manticore for a more natural map layout."
+    "notes": "Canon places Trevor's Star to the galactic east of Manticore, in former Havenite territory. Distance set to the canon Trevor's Star Terminus span of the Manticore Wormhole Junction (210 ly); the absolute bearing along galactic-east is fabricated. No absolute galactic coordinates in canon. bearing_offset_deg (canon:false, +CCW) deflects the placement ~12 deg counter-clockwise of due-east about Manticore for a more natural layout (an explicit, stable offset, decoupled from the per-id hash)."
   },
   "stars": [
     {
@@ -121,9 +121,9 @@
   "coordinates": {
     "canon": false,
     "frame": "sol-galactic-north",
-    "x_ly": 136.09,
+    "x_ly": 61.711,
     "y_ly": 0.0,
-    "z_ly": 539.976,
+    "z_ly": 535.082,
     "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
   }
 }
