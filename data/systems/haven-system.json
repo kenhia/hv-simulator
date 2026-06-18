@@ -93,6 +93,58 @@
         "period_days": 1550.244,
         "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
       }
+    },
+    {
+      "id": "haven-ii",
+      "name": "Haven II",
+      "designation": null,
+      "parent_star": "haven-a",
+      "orbit_index": 2,
+      "type": "planet",
+      "subtype": "rocky",
+      "habitable": false,
+      "canon": false,
+      "source": null,
+      "lore": "Fabricated inner rocky world (canon:false).",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.64,
+        "e": 0.02,
+        "i_deg": 0.8,
+        "L_deg": 84.0,
+        "long_peri_deg": 194.0,
+        "long_node_deg": 106.0,
+        "period_days": 187.008,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
+      }
+    },
+    {
+      "id": "haven-vii",
+      "name": "Haven VII",
+      "designation": null,
+      "parent_star": "haven-a",
+      "orbit_index": 7,
+      "type": "planet",
+      "subtype": "gas_giant",
+      "habitable": false,
+      "canon": false,
+      "source": null,
+      "lore": "Fabricated far-outer gas giant (canon:false).",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 6.710886,
+        "e": 0.025,
+        "i_deg": 0.8,
+        "L_deg": 196.0,
+        "long_peri_deg": 319.0,
+        "long_node_deg": 11.0,
+        "period_days": 6349.8,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
+      }
     }
   ],
   "belts": [],

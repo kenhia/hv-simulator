@@ -83,9 +83,11 @@ non-host systems (⇄ → the host junction's queue panel, from `to_terminus_nam
 #71/#74/#75/#70. The post-027 arc is **demo-first** (027 closed the Controller's
 core). Sprint 030 (**living galaxy**) expanded the dataset via `expand-galaxy`:
 **Haven** (Republic of Haven capital), **Gregor** (binary, a Manticore-Junction
-terminus), and **Erewhon** (host of the second junction) — 14 systems / 9 built —
-plus real **nation** records (Haven, Grayson, Beowulf, Solarian League, Erewhon, no
-longer stubs, #66) and more People's Navy hulls (36 ships). The frame tool's
+terminus), **Erewhon** (host of the second junction), and the **Andermani Empire**
+cluster (**New Berlin** + **Durandel**, placed galactic-west/left of Manticore to
+balance the map per a reference fan map) — 16 systems / 11 built — plus real
+**nation** records (Haven, Grayson, Beowulf, Solarian League, Erewhon, Andermani
+Empire, no longer stubs, #66) and more People's Navy hulls (36 ships). The frame tool's
 bearing-arc gained a **3° floor + per-system `bearing_offset_deg`** (random-at-
 incorporation, frozen) so new systems land naturally; `expand-galaxy`/the
 system-scribe now document the model (#79). Next: 031 repeating routes (#59).

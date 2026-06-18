@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "andermani-empire",
+  "name": "Andermani Empire",
+  "government": "Autocratic Empire",
+  "capital_system_id": "new-berlin",
+  "capital_planet": "Potsdam",
+  "capital_city": null,
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH2, HH3, HH6, Companion",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Andermani_Empire"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A powerful, prosperous interstellar empire to the galactic east of the Star Kingdom, founded by the mercenary-turned-warlord Gustav Anderman (who believed himself a reincarnation of Frederick the Great). Ruled by the hereditary Anderman dynasty from Potsdam in the New Berlin System, with a strong Prussian/Germanic and Chinese cultural blend. Its first-rate Imperial Andermani Navy long sparred with Manticore over the Silesian Confederacy before the two became wartime allies.",
+    "official_language": "Standard English (German and Chinese cultural heritage)",
+    "head_of_state": "Emperor of the Andermani (House of Anderman)",
+    "military": ["Imperial Andermani Navy", "Imperial Andermani Army"]
+  },
+
+  "territory": {
+    "note": "Built systems so far: New Berlin (capital) and Durandel. Gregor-B is also Andermani (the system's Junction terminus, Gregor-A, is Manticoran).",
+    "member_systems": [
+      {"system_id": "new-berlin", "name": "New Berlin System", "role": "capital", "member_worlds": ["Potsdam"], "canon": true, "source": "HH2"},
+      {"system_id": "durandel", "name": "Durandel System", "canon": true, "source": "HH3"}
+    ]
+  }
+}

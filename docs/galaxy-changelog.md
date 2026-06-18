@@ -14,21 +14,33 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 A demo-weighted expansion. Three systems added/resolved, five nations made real
 (no longer compiler stubs), and the Havenite fleet grown.
 
-**Systems** (13 → 14; built 6 → 9):
+**Systems** (13 → 16; built 6 → 11):
 - **Haven** (new) — capital system of the Republic of Haven (capital world Haven,
-  city Nouveau Paris); 667 ly from Earth, ~300 ly from Manticore (HH1/HH3). A
-  fabricated outer gas giant rounds it out.
+  city Nouveau Paris); 667 ly from Earth, ~300 ly from Manticore (HH1/HH3).
 - **Gregor** (resolved stub) — **binary**: Gregor-A (F9, uninhabitable) carries the
   Manticoran **Gregor Terminus** of the Manticore Junction; Gregor-B (Andermani)
-  holds the system's one habitable world (former Gregor Republic). 180 ly E of
+  holds the system's one habitable world (former Gregor Republic). 180 ly from
   Manticore (HH6).
 - **Erewhon** (resolved stub) — K5 system governed by the Republic of Erewhon,
   **host of the Erewhon Wormhole Junction** (the second junction now lands on a
   placed system). East of Manticore, south of Haven.
+- **New Berlin** (new) — capital of the **Andermani Empire**, G4 star + capital
+  world **Potsdam** + Alpha Station (Imperial Andermani Navy base); ~49 ly from
+  Gregor (HH6).
+- **Durandel** (new) — Andermani system holding the Durandel Terminus of the
+  *Asgard* Junction (Asgard not yet built → lore only, no graph edge).
 
-**Nations** (now real records, were stubs): Republic of Haven, Protectorate of
-Grayson, Republic of Beowulf, Solarian League, Republic of Erewhon (new code 661).
-Every built system's affiliation is now an authored nation.
+**Map balance (demo):** the Andermani trio (Gregor, New Berlin, Durandel) is placed
+to the galactic **west / left of Manticore** to match a downloaded reference fan map
+and fill the empty left of the galaxy view. Canon describes the Andermani as
+*east* of Manticore; the westward bearing is deliberate artistic license
+(`canon:false`), canon distances preserved (Gregor 180 ly, New Berlin↔Gregor 49 ly).
+Several **non-canon planets** were added to Haven, Gregor, New Berlin, and Durandel
+so no built system is "star + 1 planet" (all `canon:false`).
+
+**Nations** (now real records): Republic of Haven, Protectorate of Grayson,
+Republic of Beowulf, Solarian League, Republic of Erewhon (code 661), and the
+**Andermani Empire** (code 734). Every built system's affiliation is authored.
 
 **Ships** (33 → 36): +3 canon People's Navy **Sultan-class** battlecruisers (PNS
 Barbarossa, Mehmed, Murad), growing the Havenite fleet on the board to 7.
@@ -41,11 +53,13 @@ coords). **All coordinates were regenerated**; existing systems shifted within
 their canon distances (canon:false bearings only). Trevor's Star converted to an
 explicit +12° offset (was a +10° nudge) so its tuning is decoupled from the hash.
 
-Counts after: stars 7 → 11, bodies 35 → 39, places 20 → 22. Placed systems
-(Sol-galactic frame, ly): basilisk (−123.5, 700.4), endicott (−122.0, 522.6),
-erewhon (+102.7, 448.9), gregor (+30.2, 444.8), haven (+43.1, 726.2), manticore
-(−143.7, 491.4), sigma-draconis (+6.0, 39.6), trevors-star (+61.7, 535.1),
-yeltsins-star (−120.5, 512.0); Sol at the origin.
+Counts after: systems 16 (11 built), stars 13, bodies 49, places 24, nations 10,
+ships 36. Placed systems (Sol-galactic frame, ly): basilisk (−123.5, 700.4),
+durandel (−358.7, 476.0), endicott (−122.0, 522.6), erewhon (+102.7, 448.9), gregor
+(−321.0, 522.7), haven (+43.1, 726.2), manticore (−143.7, 491.4), new-berlin
+(−353.1, 559.7), sigma-draconis (+6.0, 39.6), trevors-star (+61.7, 535.1),
+yeltsins-star (−120.5, 512.0); Sol at the origin. The Andermani cluster (gregor,
+new-berlin, durandel) anchors the galactic-west/left of the view.
 
 _Deferred:_ Beowulf / Erewhon ship rosters (their System-Defense / shipyard navies
 aren't well-specified in canon — left rather than fabricated). Andermani Empire not
