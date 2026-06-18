@@ -81,8 +81,15 @@ non-host systems (⇄ → the host junction's queue panel, from `to_terminus_nam
 **queued ships drawn at the nexus** instead of the star, and **clickable labels**
 (hit-testing the text, not just the dot; shared `overlays.ts`) — resolving KWIs
 #71/#74/#75/#70. The post-027 arc is **demo-first** (027 closed the Controller's
-core); next: 030 expand the galaxy (#66), 031 repeating routes (#59). Grafana
-dashboards are a deferred parallel track. A UI/lore glossary lives in
+core). Sprint 030 (**living galaxy**) expanded the dataset via `expand-galaxy`:
+**Haven** (Republic of Haven capital), **Gregor** (binary, a Manticore-Junction
+terminus), and **Erewhon** (host of the second junction) — 14 systems / 9 built —
+plus real **nation** records (Haven, Grayson, Beowulf, Solarian League, Erewhon, no
+longer stubs, #66) and more People's Navy hulls (36 ships). The frame tool's
+bearing-arc gained a **3° floor + per-system `bearing_offset_deg`** (random-at-
+incorporation, frozen) so new systems land naturally; `expand-galaxy`/the
+system-scribe now document the model (#79). Next: 031 repeating routes (#59).
+Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just

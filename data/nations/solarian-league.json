@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "solarian-league",
+  "name": "Solarian League",
+  "government": "Confederation",
+  "capital_system_id": "sol",
+  "capital_planet": "Earth",
+  "capital_city": "Old Chicago",
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH, Companion, SI",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Solarian_League"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "The largest, wealthiest, and most populous human polity in existence — a sprawling confederation of full member systems (centred on Sol/Earth) plus a vast, exploited Office of Frontier Security 'Protectorate'. Founded in the 12th Century PD, governed in practice less by its elected Assembly than by an entrenched, unaccountable senior bureaucracy (the 'Mandarins'). Its enormous but technologically complacent Solarian League Navy was, until the Manticoran wars, assumed invincible.",
+    "official_language": "Standard English",
+    "head_of_state": "President of the Solarian League",
+    "head_of_government": "Prime Minister",
+    "legislature": "League Assembly",
+    "military": ["Solarian League Navy", "Solarian League Marine Corps", "Solarian Gendarmerie"],
+    "founded_note": "Founded in the 12th Century PD (exact PD year not given in canon)."
+  },
+
+  "territory": {
+    "note": "Sol is the galactic-frame origin (kept on the real JPL ephemeris, no system file). Beowulf (Sigma Draconis) is a member system with its own record.",
+    "member_systems": [
+      {"system_id": "sol", "name": "Sol System", "role": "administrative-heart", "member_worlds": ["Earth"], "canon": true, "source": "HH"},
+      {"system_id": "sigma-draconis", "name": "Sigma Draconis System", "member_worlds": ["Beowulf"], "canon": true, "source": "Companion"}
+    ]
+  }
+}

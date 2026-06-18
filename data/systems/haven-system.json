@@ -1,0 +1,119 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "haven",
+  "name": "Haven System",
+  "aliases": [],
+  "star_nation_id": "republic-of-haven",
+  "canon": true,
+  "sources": [
+    "HH1",
+    "HH3",
+    "Companion"
+  ],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Haven_System",
+    "https://honorverse.fandom.com/wiki/Haven"
+  ],
+  "retrieved": "2026-06-18",
+  "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 300,
+    "direction": "galactic north-east",
+    "bearing_offset_deg": 6.5,
+    "galactic_coordinates": null,
+    "source": "HH1, HH3",
+    "notes": "Canon: Haven lies 667 ly from Earth and 'almost three hundred light-years from Manticore' (HH1, HH3). Placed relative to Manticore at 300 ly; the bearing (north-east of Manticore, consistent with Erewhon being east of Manticore and south of Haven) and bearing_offset_deg are fabricated (canon:false)."
+  },
+  "stars": [
+    {
+      "id": "haven-a",
+      "name": "Haven",
+      "role": "primary",
+      "spectral_type": "G2",
+      "mass_solar": null,
+      "canon": true,
+      "source": "HH1",
+      "notes": "The system's primary, hosting the capital world Haven. Spectral type not stated in canon; G2 (Sol-like) is fabricated to support the habitable capital and to drive the hyper-limit lookup (canon:false)."
+    }
+  ],
+  "bodies": [
+    {
+      "id": "haven",
+      "name": "Haven",
+      "designation": null,
+      "parent_star": "haven-a",
+      "orbit_index": 3,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "capital": true,
+      "canon": true,
+      "source": "HH1, HH3",
+      "gravity_g": null,
+      "lore": "The capital world of the Republic of Haven; its planetary capital is Nouveau Paris. Heart of the old Republic, then of the People's Republic of Haven and the restored Republic. Guarded by the Capital Fleet and heavy orbital fortifications.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.024,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 50.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 378.478,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
+      }
+    },
+    {
+      "id": "haven-v",
+      "name": "Haven V",
+      "designation": null,
+      "parent_star": "haven-a",
+      "orbit_index": 5,
+      "type": "planet",
+      "subtype": "gas_giant",
+      "habitable": false,
+      "canon": false,
+      "source": null,
+      "lore": "A fabricated outer gas giant (canon:false) added so the capital system reads as more than a single point; no canon body in this slot.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 2.62144,
+        "e": 0.015,
+        "i_deg": 0.0,
+        "L_deg": 197.0,
+        "long_peri_deg": 125.0,
+        "long_node_deg": 265.0,
+        "period_days": 1550.244,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 1.0 M_sun (mass fabricated from spectral class)."
+      }
+    }
+  ],
+  "belts": [],
+  "places": [],
+  "demographics": {
+    "canon": false,
+    "total_population": null,
+    "as_of_pd": null,
+    "source": null,
+    "notes": "Population not captured in this pass."
+  },
+  "lore": {
+    "summary": "The capital system of the Republic of Haven, 667 ly from Earth and ~300 ly from Manticore. Its capital world Haven (city: Nouveau Paris) was the seat of the old Republic, the People's Republic, and the restored Republic; home of the Proctor Shipyards and the Capital Fleet.",
+    "naming_convention": "Old-Earth French/republican echoes (Nouveau Paris)."
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 43.054,
+    "y_ly": 0.0,
+    "z_ly": 726.203,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
+  }
+}

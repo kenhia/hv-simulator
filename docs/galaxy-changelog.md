@@ -9,6 +9,49 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-18 — Living galaxy: Haven, Gregor, Erewhon + real nations (Sprint 030)
+
+A demo-weighted expansion. Three systems added/resolved, five nations made real
+(no longer compiler stubs), and the Havenite fleet grown.
+
+**Systems** (13 → 14; built 6 → 9):
+- **Haven** (new) — capital system of the Republic of Haven (capital world Haven,
+  city Nouveau Paris); 667 ly from Earth, ~300 ly from Manticore (HH1/HH3). A
+  fabricated outer gas giant rounds it out.
+- **Gregor** (resolved stub) — **binary**: Gregor-A (F9, uninhabitable) carries the
+  Manticoran **Gregor Terminus** of the Manticore Junction; Gregor-B (Andermani)
+  holds the system's one habitable world (former Gregor Republic). 180 ly E of
+  Manticore (HH6).
+- **Erewhon** (resolved stub) — K5 system governed by the Republic of Erewhon,
+  **host of the Erewhon Wormhole Junction** (the second junction now lands on a
+  placed system). East of Manticore, south of Haven.
+
+**Nations** (now real records, were stubs): Republic of Haven, Protectorate of
+Grayson, Republic of Beowulf, Solarian League, Republic of Erewhon (new code 661).
+Every built system's affiliation is now an authored nation.
+
+**Ships** (33 → 36): +3 canon People's Navy **Sultan-class** battlecruisers (PNS
+Barbarossa, Mehmed, Murad), growing the Havenite fleet on the board to 7.
+
+**Placement model (Sprint 028 → refined):** the bearing-arc deflection is now
+floored to **|θ| ∈ [3°, 22.5°]** (no system sits ~on a cardinal — fixes the old
+near-axis cases like Basilisk/Trevor's) and a system may store an explicit
+**`location.bearing_offset_deg`** (random-at-incorporation, frozen for stable
+coords). **All coordinates were regenerated**; existing systems shifted within
+their canon distances (canon:false bearings only). Trevor's Star converted to an
+explicit +12° offset (was a +10° nudge) so its tuning is decoupled from the hash.
+
+Counts after: stars 7 → 11, bodies 35 → 39, places 20 → 22. Placed systems
+(Sol-galactic frame, ly): basilisk (−123.5, 700.4), endicott (−122.0, 522.6),
+erewhon (+102.7, 448.9), gregor (+30.2, 444.8), haven (+43.1, 726.2), manticore
+(−143.7, 491.4), sigma-draconis (+6.0, 39.6), trevors-star (+61.7, 535.1),
+yeltsins-star (−120.5, 512.0); Sol at the origin.
+
+_Deferred:_ Beowulf / Erewhon ship rosters (their System-Defense / shipyard navies
+aren't well-specified in canon — left rather than fabricated). Andermani Empire not
+authored as a nation (Gregor's system-level affiliation set to Manticore, the
+terminus owner; Gregor-B's Andermani ownership is in lore).
+
 ## 2026-06-18 — Bearing-arc galactic spread (Sprint 028)
 
 The frame tool (`tools/coordinate-frame`) now applies a deterministic **±22.5°

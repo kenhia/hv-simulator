@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "protectorate-of-grayson",
+  "name": "Protectorate of Grayson",
+  "government": "Feudal Monarchy",
+  "capital_system_id": "yeltsins-star",
+  "capital_planet": "Grayson",
+  "capital_city": "Austin City",
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH2, HH3, Companion",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Protectorate_of_Grayson"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A theocratic feudal monarchy on the high-gravity, heavy-metal-poisoned world of Grayson in Yeltsin's Star, settled by the religious Church of Humanity Unchained. Ruled by the Protector (House of Mayhew) advised by the Conclave of Steadholders. Long isolated and technologically behind, Grayson became Manticore's staunchest ally after the Alliance defended it from neighbouring Masada (Endicott); its Grayson Space Navy grew rapidly with Manticoran help into a first-rate force.",
+    "official_language": "Standard English",
+    "head_of_state": "Protector of Grayson (House of Mayhew)",
+    "legislature": "Conclave of Steadholders + Conclave of Steaders",
+    "military": ["Grayson Space Navy", "Grayson Army", "Grayson Space Marine Corps"]
+  },
+
+  "territory": {
+    "note": "Yeltsin's Star is already a built system; this nation record makes the affiliation real rather than a compiler stub.",
+    "member_systems": [
+      {"system_id": "yeltsins-star", "name": "Yeltsin's Star System", "role": "capital", "member_worlds": ["Grayson"], "canon": true, "source": "HH2"}
+    ]
+  }
+}

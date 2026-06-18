@@ -1,0 +1,108 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "erewhon",
+  "name": "Erewhon System",
+  "aliases": [],
+  "star_nation_id": "republic-of-erewhon",
+  "canon": true,
+  "sources": [
+    "HH1",
+    "HH3",
+    "CS3"
+  ],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Erewhon_System"
+  ],
+  "retrieved": "2026-06-18",
+  "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 250,
+    "direction": "galactic east",
+    "bearing_offset_deg": -9.8,
+    "galactic_coordinates": null,
+    "source": "HH1, HH3",
+    "notes": "Canon: Erewhon lies to the galactic east of Manticore and south of Haven (HH1, HH3); no precise distance is given. Distance (250 ly), bearing, and bearing_offset_deg are fabricated (canon:false), placed east of Manticore and below Haven (which is north-east) to match the relative description."
+  },
+  "stars": [
+    {
+      "id": "erewhon-a",
+      "name": "Erewhon",
+      "role": "primary",
+      "spectral_type": "K5",
+      "mass_solar": null,
+      "canon": true,
+      "source": "CS3",
+      "notes": "The system's main body is a K5 star (canon, CS3). Mass not stated; would be inferred from the K5 classification if needed (canon:false)."
+    }
+  ],
+  "bodies": [
+    {
+      "id": "erewhon",
+      "name": "Erewhon",
+      "designation": null,
+      "parent_star": "erewhon-a",
+      "orbit_index": 2,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "capital": true,
+      "canon": true,
+      "source": "HH1, HH3",
+      "gravity_g": null,
+      "lore": "The capital world of the Republic of Erewhon \u2014 a wealthy, fiercely independent single-system republic founded by organized-crime families gone legitimate, renowned for its shipyards. Controls the Erewhon Wormhole Junction.",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 0.64,
+        "e": 0.02,
+        "i_deg": 0.8,
+        "L_deg": 160.0,
+        "long_peri_deg": 194.0,
+        "long_node_deg": 106.0,
+        "period_days": 215.938,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.75 M_sun (mass fabricated from spectral class)."
+      }
+    }
+  ],
+  "belts": [],
+  "places": [
+    {
+      "id": "erewhon-junction-nexus",
+      "name": "Erewhon Wormhole Junction",
+      "type": "wormhole_nexus",
+      "parent_star": "erewhon-a",
+      "links_to": "erewhon-junction",
+      "canon": true,
+      "source": "HH1, HH3",
+      "lore": "The Erewhon Wormhole Junction originates in this system (host of the junction); its termini reach Phoenix (Terra Haute), Joshua, and Sasebo. The junction is the basis of Erewhon's commercial importance.",
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "In-system nexus position not specified; the engine/UI fabricate it from the junction host."
+      }
+    }
+  ],
+  "demographics": {
+    "canon": false,
+    "total_population": null,
+    "as_of_pd": null,
+    "source": null,
+    "notes": "Population not captured in this pass."
+  },
+  "lore": {
+    "summary": "A K5 single-star system in the galactic east of Manticore and south of Haven, governed by the Republic of Erewhon. Home of the Erewhon Wormhole Junction and first-rate shipyards; a member of the Manticoran Alliance.",
+    "naming_convention": "Named for Samuel Butler's satirical 'Erewhon' (an anagram of 'nowhere')."
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 102.652,
+    "y_ly": 0.0,
+    "z_ly": 448.868,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
+  }
+}

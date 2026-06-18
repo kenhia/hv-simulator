@@ -1,0 +1,136 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_system",
+  "id": "gregor",
+  "name": "Gregor System",
+  "aliases": [],
+  "star_nation_id": "star-kingdom-of-manticore",
+  "canon": true,
+  "sources": [
+    "HH3",
+    "HH4",
+    "HH6",
+    "Companion"
+  ],
+  "wiki_pages": [
+    "https://honorverse.fandom.com/wiki/Gregor_System"
+  ],
+  "retrieved": "2026-06-18",
+  "license": "Text adapted from the Honorverse Wiki (Fandom), CC BY-SA.",
+  "location": {
+    "canon": true,
+    "reference": "manticore",
+    "distance_ly": 180,
+    "direction": "galactic east",
+    "bearing_offset_deg": -15.0,
+    "galactic_coordinates": null,
+    "source": "HH3, HH4, HH6",
+    "notes": "Canon: Gregor lies 180 ly from Manticore and 49 ly from New Berlin (the Andermani capital), toward the galactic east. The bearing (east, deflected toward the Andermani Empire) and bearing_offset_deg are fabricated (canon:false)."
+  },
+  "star_nation_note": "System-level nation set to Star Kingdom of Manticore because the Gregor Terminus (the Junction-relevant part, associated with Gregor-A) is Manticoran. Gregor-B and its inhabited world belong to the Anderman Empire (the former Gregor Republic, annexed c.1869 PD) \u2014 see lore. A single star_nation_id field can't express the binary split; this is a modeling choice (canon:false), not a claim that the whole system is Manticoran.",
+  "stars": [
+    {
+      "id": "gregor-a",
+      "name": "Gregor-A",
+      "role": "primary",
+      "spectral_type": "F9",
+      "mass_solar": 1.05,
+      "canon": true,
+      "source": "HH6",
+      "notes": "F9 is canon (HH6). The Gregor Terminus of the Manticore Wormhole Junction is associated with Gregor-A, which belongs to the Star Kingdom of Manticore; the star is uninhabitable. Mass fabricated from the F9 classification (canon:false)."
+    },
+    {
+      "id": "gregor-b",
+      "name": "Gregor-B",
+      "role": "secondary",
+      "spectral_type": "G5",
+      "mass_solar": 0.85,
+      "canon": true,
+      "source": "HH6",
+      "notes": "Existence canon (HH6); Gregor-B belongs to the Anderman Empire and hosts the system's one habitable world. Spectral type (G5, to support a habitable planet) and mass are fabricated (canon:false)."
+    }
+  ],
+  "binary": {
+    "canon": false,
+    "type": "binary",
+    "components": [
+      "gregor-a",
+      "gregor-b"
+    ],
+    "barycenter_distance_from_a_lmin": 313,
+    "barycenter_distance_from_b_lmin": 387,
+    "eccentricity": 0.1,
+    "separation_periastron_lmin": 630,
+    "separation_apastron_lmin": 770,
+    "orbital_period_days": null,
+    "source": null,
+    "notes": "Canon establishes a binary (Gregor-A / Gregor-B) but gives no separation, masses, or period. Geometry fabricated (canon:false) consistent with the fabricated masses; 1 light-minute = 1.798754748e10 m."
+  },
+  "bodies": [
+    {
+      "id": "gregor-b-iii",
+      "name": "Gregor",
+      "designation": "Gregor-B III",
+      "parent_star": "gregor-b",
+      "orbit_index": 3,
+      "type": "planet",
+      "subtype": "terrestrial",
+      "habitable": true,
+      "capital": false,
+      "canon": true,
+      "source": "HH6",
+      "gravity_g": null,
+      "lore": "Gregor-B's single habitable world \u2014 once home to the independent Gregor Republic, which collapsed in civil war and was annexed by the Anderman Empire around 1869 PD. The exact planet name is not given in canon; 'Gregor' (after the system/republic) is used here (canon:false on the name).",
+      "moons": [],
+      "orbit": {
+        "canon": false,
+        "determined": true,
+        "a_au": 1.024,
+        "e": 0.025,
+        "i_deg": 1.2,
+        "L_deg": 172.0,
+        "long_peri_deg": 291.0,
+        "long_node_deg": 159.0,
+        "period_days": 410.517,
+        "notes": "Fabricated by orbit-derive (canon:false): geometric spacing; star mass 0.85 M_sun."
+      }
+    }
+  ],
+  "belts": [],
+  "places": [
+    {
+      "id": "gregor-terminus",
+      "name": "Gregor Terminus",
+      "type": "wormhole_terminus",
+      "parent_star": "gregor-a",
+      "links_to": "manticore-wormhole-junction",
+      "canon": true,
+      "source": "HH3, HH6",
+      "lore": "A terminus of the Manticore Wormhole Junction, associated with Gregor-A and held by the Star Kingdom of Manticore (Gregor System Defense Command, RMN). Gives Manticore an instantaneous link to the Andermani frontier.",
+      "position": {
+        "canon": false,
+        "determined": false,
+        "notes": "In-system position of the terminus not specified; to be defined."
+      }
+    }
+  ],
+  "demographics": {
+    "canon": false,
+    "total_population": null,
+    "as_of_pd": null,
+    "source": null,
+    "notes": "Population not captured in this pass."
+  },
+  "lore": {
+    "summary": "A binary system 180 ly galactic-east of Manticore (49 ly from the Andermani capital New Berlin), split between two powers: Gregor-A (F9, uninhabitable) carries a terminus of the Manticore Wormhole Junction and belongs to the Star Kingdom of Manticore, while Gregor-B (Andermani) holds the system's one habitable world, the former Gregor Republic.",
+    "naming_convention": "System named Gregor; binary components Gregor-A / Gregor-B."
+  },
+  "coordinates": {
+    "canon": false,
+    "frame": "sol-galactic-north",
+    "x_ly": 30.167,
+    "y_ly": 0.0,
+    "z_ly": 444.833,
+    "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
+  }
+}

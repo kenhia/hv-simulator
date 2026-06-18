@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "republic-of-beowulf",
+  "name": "Republic of Beowulf",
+  "government": "Meritocratic republic",
+  "capital_system_id": "sigma-draconis",
+  "capital_planet": "Beowulf",
+  "capital_city": "Columbia",
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "Companion, HH",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Republic_of_Beowulf"],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A founding and highly influential member system of the Solarian League, on the planet Beowulf in Sigma Draconis — just 16.3 ly from Sol and the home of humanity's foremost biosciences and genetic-medicine establishment. Author of the Beowulf Code on genetic engineering, and a long-standing friend of Manticore: Beowulf holds the far terminus of the Manticore Wormhole Junction (the Beowulf Terminus) and ultimately broke with the League over its hostility to the Star Empire.",
+    "official_language": "Standard English",
+    "head_of_government": "Chairman (Board of Directors)",
+    "legislature": "Chamber of Shareholders + Chamber of Professions",
+    "military": ["Beowulf System-Defense Force", "Beowulf Marines"],
+    "league_member": true
+  },
+
+  "territory": {
+    "note": "Sigma Draconis is already a built system; this record makes the affiliation real.",
+    "member_systems": [
+      {"system_id": "sigma-draconis", "name": "Sigma Draconis System", "role": "capital", "member_worlds": ["Beowulf"], "canon": true, "source": "Companion"}
+    ]
+  }
+}
