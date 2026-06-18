@@ -120,9 +120,9 @@
   "coordinates": {
     "canon": false,
     "frame": "sol-galactic-north",
-    "x_ly": 210.0,
+    "x_ly": 138.664,
     "y_ly": 0.0,
-    "z_ly": 512.0,
+    "z_ly": 503.461,
     "notes": "Fabricated (canon:false) from canon distance+bearing relative to manticore; Sol origin, +Z galactic north, +X galactic east."
   }
 }

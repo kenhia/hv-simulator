@@ -255,6 +255,9 @@ def test_system_detail(client: TestClient) -> None:
     assert [s["hyper_limit_lmin"] for s in d["stars"]] == [20.0]
     assert d["primary_hyper_limit_lmin"] == 20.0
     assert d["primary_hyper_limit_au"] > 0  # the ring radius the system view draws
+    # A single star sits at the system origin (the map draws it there). Binaries get
+    # mass-ratio offsets (covered in test_universe); here just the single-star case.
+    assert d["stars"][0]["position"]["au"] == {"x": 0.0, "y": 0.0, "z": 0.0}
     assert client.get("/systems/nope").status_code == 404
 
 

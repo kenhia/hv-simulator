@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from coordinate_frame import _direction_unit, solve_frame
+from coordinate_frame import _ARC_HALF_DEG, _direction_unit, _jitter_rad, solve_frame
 
 
 def test_direction_unit() -> None:
@@ -24,9 +24,35 @@ def test_reference_chain_placement() -> None:
         },
     }
     pos = solve_frame(systems)
-    assert pos["manticore"] == (0.0, 0.0, 512.0)
-    # Yeltsin's is placed off Manticore; ~31 ly from it (matches canon).
+    # Bearing-arc jitter rotates the direction in-plane but preserves the canon
+    # distance: Manticore is still 512 ly from Sol (no longer pinned to the +Z axis).
     mx, my, mz = pos["manticore"]
+    assert math.isclose(math.sqrt(mx * mx + my * my + mz * mz), 512.0, abs_tol=1e-6)
+    assert my == 0.0  # Y stays reserved (in-plane rotation only)
+    # Yeltsin's is placed off Manticore; ~31 ly from it (matches canon).
     yx, yy, yz = pos["yeltsins-star"]
     d = math.sqrt((yx - mx) ** 2 + (yy - my) ** 2 + (yz - mz) ** 2)
     assert math.isclose(d, 31.0, abs_tol=1e-6)
+
+
+def test_jitter_is_deterministic_and_bounded() -> None:
+    # Stable across calls/processes (sha256-based, not salted hash()).
+    assert _jitter_rad("manticore") == _jitter_rad("manticore")
+    assert _jitter_rad("manticore") != _jitter_rad("basilisk")
+    limit = math.radians(_ARC_HALF_DEG)
+    for sid in ("sol", "manticore", "basilisk", "sigma-draconis", "trevors-star"):
+        assert -limit <= _jitter_rad(sid) <= limit
+
+
+def test_pure_north_systems_are_spread_off_axis() -> None:
+    # Two pure-"north" systems would both land at X=0 without the arc; the jitter
+    # gives each its own X so the galaxy map isn't a vertical column.
+    systems = {
+        "a": {"distance_ly": 500, "direction": "galactic north", "reference": "Sol"},
+        "b": {"distance_ly": 500, "direction": "galactic north", "reference": "Sol"},
+    }
+    pos = solve_frame(systems)
+    assert pos["a"][0] != 0.0 and pos["b"][0] != 0.0  # both off the +Z axis
+    assert pos["a"][0] != pos["b"][0]  # and distinct from each other
+    # Re-running yields identical coordinates (determinism).
+    assert solve_frame(systems) == pos

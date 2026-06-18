@@ -755,9 +755,9 @@
   "coordinates": {
     "canon": false,
     "frame": "sol-galactic-north",
-    "x_ly": 0.0,
+    "x_ly": -71.306,
     "y_ly": 0.0,
-    "z_ly": 512.0,
+    "z_ly": 507.01,
     "notes": "Fabricated (canon:false) from canon distance+bearing relative to Sol; Sol origin, +Z galactic north, +X galactic east."
   }
 }

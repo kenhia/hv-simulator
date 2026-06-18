@@ -217,6 +217,9 @@ class StarOut(BaseModel):
     spectral_type: str | None
     mass_solar: float | None
     hyper_limit_lmin: float | None
+    # In-system position (km+AU), barycenter-centred. A binary's stars sit at their
+    # mass-ratio offsets; a single star sits at the origin. None if not computable.
+    position: PositionOut | None = None
 
 
 class SystemDetail(BaseModel):

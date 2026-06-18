@@ -63,6 +63,7 @@ export interface Star {
   spectral_type: string | null;
   mass_solar: number | null;
   hyper_limit_lmin: number | null;
+  position: Position | null; // in-system (barycenter-centred); binary stars sit at offsets
 }
 
 export interface SystemDetail {
@@ -82,6 +83,7 @@ export interface SystemBody {
   id: string;
   name: string;
   type: string | null;
+  parent_star_id?: string | null; // which star it orbits (groups planets in binaries)
   position: Position;
 }
 
