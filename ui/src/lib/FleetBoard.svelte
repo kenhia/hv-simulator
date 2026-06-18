@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { FleetEntry, RouteOut } from './api';
+  import { boardFilter, isFilterActive, nationsPresent } from './board';
+  import { nationName } from './nation';
   import { phaseStyle } from './phase';
   import ShipTimeline from './ShipTimeline.svelte';
 
@@ -21,13 +23,33 @@
 
   let collapsed = $state(false);
   let query = $state('');
+  let showFilter = $state(false);
+  let hideArrived = $state(false);
+  let nationHidden = $state(new Set<string>()); // nations unchecked (hidden); all shown by default
+
+  const nations = $derived(nationsPresent(roster));
+  // boardFilter takes a *show* set (empty = all); derive it from the hidden set.
+  const showNations = $derived(
+    nationHidden.size === 0
+      ? new Set<string>()
+      : new Set(nations.filter((n) => !nationHidden.has(n)))
+  );
+  const filter = $derived({ hideArrived, nations: showNations });
+  const active = $derived(isFilterActive(filter));
 
   const shown = $derived(
-    roster.filter((e) => {
+    boardFilter(roster, filter).filter((e) => {
       const q = query.trim().toLowerCase();
       return !q || e.transponder.toLowerCase().includes(q) || e.ship.toLowerCase().includes(q);
     })
   );
+
+  function toggleNation(code: string) {
+    const next = new Set(nationHidden);
+    if (next.has(code)) next.delete(code);
+    else next.add(code);
+    nationHidden = next;
+  }
 </script>
 
 <div class="overlay board">
@@ -36,9 +58,37 @@
       {collapsed ? '▸' : '▾'}
     </button>
     <span class="title">FLEET</span>
-    <span class="muted">{roster.length}</span>
+    <span class="muted">{active ? `${shown.length}/${roster.length}` : roster.length}</span>
+    {#if !collapsed}
+      <button
+        class="filt"
+        class:on={active}
+        onclick={() => (showFilter = !showFilter)}
+        title="filter the board">⛃{active ? ' •' : ''}</button
+      >
+    {/if}
   </div>
   {#if !collapsed}
+    {#if showFilter}
+      <div class="filter">
+        <label class="frow">
+          <input type="checkbox" bind:checked={hideArrived} /> hide arrived
+        </label>
+        {#if nations.length > 1}
+          <div class="seg">nations</div>
+          {#each nations as code (code)}
+            <label class="frow">
+              <input
+                type="checkbox"
+                checked={!nationHidden.has(code)}
+                onchange={() => toggleNation(code)}
+              />
+              {nationName(code)}
+            </label>
+          {/each}
+        {/if}
+      </div>
+    {/if}
     <input class="search" placeholder="find ship…" bind:value={query} />
     <div class="rows">
       {#each shown as e (e.transponder)}
@@ -100,6 +150,38 @@
     letter-spacing: 0.12em;
     font-size: 11px;
     color: var(--muted);
+  }
+  .filt {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+  }
+  .filt.on {
+    color: var(--accent);
+  }
+  .filter {
+    margin: 6px 0;
+    padding: 6px;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    background: #0c1322;
+  }
+  .frow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 1px 0;
+  }
+  .seg {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin: 4px 0 2px;
   }
   .search {
     margin: 6px 0;
