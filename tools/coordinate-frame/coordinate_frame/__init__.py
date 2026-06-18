@@ -78,9 +78,12 @@ def solve_frame(systems: dict[str, dict]) -> dict[str, tuple[float, float, float
             ref = (loc.get("reference") or "Sol").lower()
             if ref not in positions:
                 continue
-            ux, uy, uz = _rotate_in_plane(
-                _direction_unit(loc.get("direction") or "north"), _jitter_rad(sid)
-            )
+            # Auto arc-jitter + an optional hand-tune: ``bearing_nudge_deg`` rotates a
+            # system's placement about its reference in the galactic plane (+CCW: east
+            # toward north), additive to the jitter. Hand-tuning hook for cases where
+            # the seeded spread reads wrong against canon/aesthetics.
+            theta = _jitter_rad(sid) + math.radians(float(loc.get("bearing_nudge_deg") or 0.0))
+            ux, uy, uz = _rotate_in_plane(_direction_unit(loc.get("direction") or "north"), theta)
             dist = float(loc.get("distance_ly") or 0.0)
             rx, ry, rz = positions[ref]
             positions[sid] = (rx + ux * dist, ry + uy * dist, rz + uz * dist)

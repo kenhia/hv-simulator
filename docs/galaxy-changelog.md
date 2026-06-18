@@ -20,9 +20,16 @@ is a pure in-plane rotation), only the in-bearing direction shifted. The galaxy 
 reads as a believable spread instead of a vertical X=0 column. The jitter is a
 stable hash of the system id — re-running the tool reproduces identical coordinates.
 
+A per-system hand-tune hook accompanies the auto spread: an optional
+`location.bearing_nudge_deg` (canon:false, +CCW in the galactic plane, additive to
+the jitter) rotates a system's placement about its reference for cases where the
+seeded spread reads wrong. **Trevor's Star** carries a +10° nudge (rotated ~10°
+counter-clockwise about Manticore, its placement reference; the 210 ly canon
+terminus span is preserved) for a more natural layout.
+
 Placed systems (Sol-galactic frame, ly): basilisk (+3.9, +703.1), endicott
 (−53.8, +540.7), manticore (−71.3, +507.0), sigma-draconis (+15.2, +37.0),
-trevors-star (+138.7, +503.5), yeltsins-star (−47.7, +527.1); Sol at the origin.
+trevors-star (+136.1, +540.0), yeltsins-star (−47.7, +527.1); Sol at the origin.
 No systems/ships/classes added — placement only.
 
 ## 2026-06-16 — Wormhole transit queues (Sprint 019, Phase 2c)
