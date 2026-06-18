@@ -57,6 +57,21 @@ class FiledOriginIn(BaseModel):
     body: str
 
 
+class PlanWaypoint(BaseModel):
+    system: str
+    body: str
+    layover_s: float = Field(default=0.0, ge=0)
+
+
+class PlanRequest(BaseModel):
+    """Plan a multi-destination route to preview (not file). Ship by transponder."""
+
+    ship: str
+    origin: FiledOriginIn
+    waypoints: list[PlanWaypoint]
+    depart_at: datetime | None = None
+
+
 class FiledRouteIn(BaseModel):
     """A planner-produced filed route (the nav-planner JSON body). Ship by transponder."""
 
@@ -146,6 +161,13 @@ class RouteOut(BaseModel):
     total_duration_seconds: float
     total_duration_human: str
     segments: list[SegmentOut]
+
+
+class PlanOut(BaseModel):
+    """A planned (not filed) route: the filed-route doc to POST + a compiled preview."""
+
+    filed: dict  # the filed-route JSON; POST to /fleet/routes to commit
+    route: RouteOut  # compiled preview (segments + ETA)
 
 
 class FleetEntry(BaseModel):

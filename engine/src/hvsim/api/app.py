@@ -31,9 +31,11 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    plan_route_multi,
     resolve_fleet_junctions,
     resolve_route,
     simulation_for_route,
+    to_filed,
 )
 from hvsim.universe import LMIN_M, Universe, body_positions, inter_system_distance
 
@@ -61,6 +63,8 @@ from .schemas import (
     JunctionQueue,
     JunctionQueueEntry,
     PlaceOut,
+    PlanOut,
+    PlanRequest,
     RouteOut,
     SegmentOut,
     ShipCreate,
@@ -288,8 +292,7 @@ def create_app(
             out.append((j["id"], depth, wait))
         return out
 
-    def route_out(row: RouteRow) -> RouteOut:
-        compiled = route_compiled(row)
+    def compiled_route_out(compiled: CompiledRoute, transponder: str, status: str) -> RouteOut:
         segments = [
             SegmentOut(
                 seq=s.seq,
@@ -305,8 +308,8 @@ def create_app(
         depart, arrival = compiled.depart_at, compiled.arrival
         total = (arrival - depart).total_seconds()
         return RouteOut(
-            transponder=row.transponder,
-            status=row.status,
+            transponder=transponder,
+            status=status,
             origin={"system": compiled.route.origin_system, "body": compiled.route.origin_body},
             depart_at=depart,
             arrival=arrival,
@@ -314,6 +317,9 @@ def create_app(
             total_duration_human=human_duration(total),
             segments=segments,
         )
+
+    def route_out(row: RouteRow) -> RouteOut:
+        return compiled_route_out(route_compiled(row), row.transponder, row.status)
 
     def clock_out() -> ClockOut:
         c = app.state.clock
@@ -624,6 +630,35 @@ def create_app(
         ship.status = "idle"
         session.commit()
         return {"id": plan_row.id, "status": "aborted"}
+
+    @app.post("/plan", response_model=PlanOut)
+    def plan(body: PlanRequest) -> PlanOut:
+        """Plan a multi-destination route → a filed-route doc + a compiled preview.
+
+        Computed, not filed: the UI previews this, then POSTs ``filed`` to
+        ``/fleet/routes`` to commit. No min-layover is added here (UI policy).
+        """
+        u = require_universe()
+        ship = u.ship_by_transponder(body.ship)
+        if ship is None:
+            raise HTTPException(404, f"no ship with transponder {body.ship!r}")
+        if not body.waypoints:
+            raise HTTPException(422, "at least one waypoint is required")
+        depart = as_utc(body.depart_at) if body.depart_at else app.state.clock.now()
+        waypoints = [(w.system, w.body, timedelta(seconds=w.layover_s)) for w in body.waypoints]
+        try:
+            route = plan_route_multi(
+                u, ship["id"], body.origin.system, body.origin.body, waypoints, depart
+            )
+            # Resolve wormhole queue(s) so the preview's segment durations are fixed
+            # (phantom traffic, seeded by transponder) — same as the read paths.
+            compiled = resolve_route(compile_route(route, u), u, body.ship)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
+        return PlanOut(
+            filed=to_filed(route, body.ship),
+            route=compiled_route_out(compiled, body.ship, "planned"),
+        )
 
     @app.post("/fleet/routes", response_model=RouteOut, status_code=201)
     def file_route(body: FiledRouteIn, session: Session = Depends(get_db)) -> RouteOut:

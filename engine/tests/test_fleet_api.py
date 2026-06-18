@@ -279,3 +279,60 @@ def test_fleet_route_segments(client: TestClient) -> None:
     kinds = [s["kind"] for s in body["segments"]]
     assert "hyper_cruise" in kinds and "wormhole_queue" in kinds
     assert client.get("/fleet/9.9.9/route").status_code == 404
+
+
+# --- Sprint 026: POST /plan (preview a route, not filed) ----------------------
+
+
+def test_plan_single_destination(client: TestClient) -> None:
+    r = client.post(
+        "/plan",
+        json={
+            "ship": "1.1.1",
+            "origin": {"system": "alpha", "body": "alpha:p1"},
+            "waypoints": [{"system": "gamma", "body": "gamma:p1"}],
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["route"]["transponder"] == "1.1.1"
+    assert body["route"]["status"] == "planned"
+    assert len(body["route"]["segments"]) > 0
+    # The returned filed doc commits cleanly to /fleet/routes.
+    assert client.post("/fleet/routes", json=body["filed"]).status_code == 201
+
+
+def test_plan_multi_waypoint_with_layover(client: TestClient) -> None:
+    r = client.post(
+        "/plan",
+        json={
+            "ship": "1.1.1",
+            "origin": {"system": "alpha", "body": "alpha:p1"},
+            "waypoints": [
+                {"system": "beta", "body": "beta:p1", "layover_s": 7200},
+                {"system": "gamma", "body": "gamma:p1"},
+            ],
+        },
+    )
+    assert r.status_code == 200, r.text
+    legs = r.json()["filed"]["legs"]
+    # Visits beta then gamma; the beta-reaching leg carries the 2 h layover.
+    assert any(lg["layover_s"] == 7200 for lg in legs)
+    assert legs[-1]["to_body"] == "gamma:p1"
+
+
+def test_plan_errors(client: TestClient) -> None:
+    base = {"origin": {"system": "alpha", "body": "alpha:p1"}}
+    assert (
+        client.post(
+            "/plan", json={**base, "ship": "9.9.9", "waypoints": [{"system": "gamma", "body": "g"}]}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            "/plan",
+            json={**base, "ship": "1.1.1", "waypoints": [{"system": "nowhere", "body": "x"}]},
+        ).status_code
+        == 422
+    )

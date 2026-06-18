@@ -244,8 +244,18 @@ engine loads + flies it via `fly_filed_route`, guarded by
 `Simulation.navigable_location(when)` — a phase-based derivation of the ship's
 current navigable point (predeparture/layover/arrived → a body; in-motion → None):
 outside dev mode the route origin must equal it, else reject (re-routing a moving
-ship is deferred). `nav-plan` CLI / `just plan`. Route-finding stays in the tool;
-physics stays in the engine.
+ship is deferred). `nav-plan` CLI / `just plan`.
+
+**Route-finder relocated into the engine** (Sprint 026, Phase 2.5 Controller): the
+Dijkstra finder now lives in **`hvsim.route.find`** (`plan_route` +
+`plan_route_multi` for ordered multi-destination), so the API can plan over HTTP
+without a circular dep. `tools/nav-planner` is now a **thin CLI wrapper**
+re-exporting `plan_route`. The engine serves **`POST /plan`** → `{filed, route}`:
+the filed-route doc to commit **plus** a compiled preview (segments + ETA),
+*computed not filed* — the UI previews, then commits via `POST /fleet/routes`. (This
+revises the earlier "route-finding stays in the tool"; HTTP planning makes finding
+a first-class engine capability. Physics + finding live in the engine; the UI owns
+no logic.) The Flight Planner UI is Sprint 027.
 
 **Transponder identity** (Sprint 017): every ship has a canonical dotted
 **`nation.class.hull`** transponder (stable integer codes from
