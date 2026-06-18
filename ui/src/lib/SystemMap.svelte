@@ -6,7 +6,8 @@
     type Junction,
     type Place,
     type SystemBody,
-    type SystemDetail
+    type SystemDetail,
+    type WormholeLink
   } from './api';
   import {
     fit,
@@ -21,6 +22,7 @@
   import { factionColor } from './factions';
   import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToAu, type LiveShip } from './live';
+  import { drawScaleBar, labelHit } from './overlays';
   import { bodyColor, starColors, starWorld } from './stars';
 
   export interface SystemSummary {
@@ -33,6 +35,7 @@
     systemId,
     detail = null,
     junctions = [],
+    links = [],
     zoneMode = false,
     fitSignal = 0,
     ships,
@@ -45,6 +48,7 @@
     systemId: string;
     detail?: SystemDetail | null;
     junctions?: Junction[];
+    links?: WormholeLink[];
     zoneMode?: boolean;
     fitSignal?: number;
     ships?: () => LiveShip[];
@@ -69,12 +73,39 @@
   const HIT_PX = 14;
   const NEXUS_AU = 50; // fabricated nexus radius (≈ Manticore's canon 7 light-hours)
   const ringAu = $derived(detail?.primary_hyper_limit_au ?? null);
-  const hostJunctions = $derived(junctions.filter((j) => j.host_system_id === systemId));
   const stars = $derived(detail?.stars ?? []);
   const starColorMap = $derived(starColors(stars));
 
+  // Wormhole markers in this system: the junctions it *hosts* (the nexus, ⚲) plus
+  // the *termini* of junctions that land here (⇄, leading back to a junction in
+  // another system). Both open the host junction's queue panel; a terminus shares
+  // the host's queue. Fabricated positions (canon gives a radius, not a bearing).
+  interface JunctionMarker {
+    junctionId: string;
+    label: string;
+    host: boolean;
+    world: Vec2;
+  }
+  const markers = $derived.by((): JunctionMarker[] => {
+    const jName = new Map(junctions.map((j) => [j.id, j.name]));
+    const out: Omit<JunctionMarker, 'world'>[] = [];
+    for (const j of junctions) {
+      if (j.host_system_id === systemId)
+        out.push({ junctionId: j.id, label: `⚲ ${j.name}`, host: true });
+    }
+    for (const l of links) {
+      if (l.transit !== 'instant' || l.to_system_id !== systemId || !l.junction_id) continue;
+      out.push({
+        junctionId: l.junction_id,
+        label: `⇄ ${jName.get(l.junction_id) ?? l.junction_id}`,
+        host: false
+      });
+    }
+    return out.map((m, i) => ({ ...m, world: nexusWorld(i) }));
+  });
+
   // Fabricated in-system nexus point (canon gives a radius, not a bearing): place
-  // junctions on distinct bearings at NEXUS_AU.
+  // markers on distinct bearings at NEXUS_AU.
   function nexusWorld(i: number): Vec2 {
     const a = i * 0.7; // first one "north" (+y = up), then fan out
     return { x: NEXUS_AU * Math.sin(a), y: NEXUS_AU * Math.cos(a) };
@@ -118,7 +149,7 @@
     stars.forEach((st) => pts.push(starWorld(st))); // keep both binary stars in frame
     const c = primaryWorld();
     if (ringAu) pts.push({ x: c.x + ringAu, y: c.y }, { x: c.x - ringAu, y: c.y }); // ring
-    hostJunctions.forEach((_, i) => pts.push(nexusWorld(i))); // keep the nexus in frame
+    markers.forEach((m) => pts.push(m.world)); // keep nexus/termini in frame
     cam = pts.length ? fit(pts, width, height) : { cx: 0, cy: 0, scale: 40 };
     fitScale = cam.scale;
     fitted = true;
@@ -207,26 +238,30 @@
       }
     }
 
-    // Wormhole-junction nexus (fabricated in-system position): a gold ring glyph.
-    // Always drawn — it's the queue-panel interaction target.
-    hostJunctions.forEach((j, i) => {
-      const p = worldToScreen(nexusWorld(i), cam, width, height);
+    // Wormhole markers (fabricated in-system positions): a host nexus (⚲, filled
+    // centre) or a terminus to another system's junction (⇄, hollow). The queue-
+    // panel interaction target; always drawn.
+    markers.forEach((m) => {
+      const p = worldToScreen(m.world, cam, width, height);
       ctx.strokeStyle = '#ffcf6b';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffcf6b';
-      ctx.fill();
+      if (m.host) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffcf6b';
+        ctx.fill();
+      }
       if (layers.labels) {
         ctx.fillStyle = '#e0c98a';
-        ctx.fillText(`⚲ ${j.name}`, p.x + 10, p.y);
+        ctx.fillText(m.label, p.x + 10, p.y);
       }
     });
 
     if (layers.ships) drawShips(ctx);
+    drawScaleBar(ctx, width, height, cam.scale, 'au');
   }
 
   // Tracked ships currently in this system: a dot + a short heading vector
@@ -234,8 +269,16 @@
   function drawShips(ctx: CanvasRenderingContext2D) {
     for (const sh of ships?.() ?? []) {
       if (sh.system !== systemId || sh.frame !== 'heliocentric') continue;
-      const p = worldToScreen({ x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) }, cam, width, height);
-      const speed = Math.hypot(sh.velKmS.x, sh.velKmS.y);
+      // A queued / transiting ship's reported position is the star centre (the
+      // wait position is immaterial); draw it at the junction nexus instead, so it
+      // reads as "waiting at the junction," not "parked on the star."
+      const queued = sh.phase === 'queued' || sh.phase === 'wormhole_transit';
+      const at =
+        queued && markers.length
+          ? markers[0].world
+          : { x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) };
+      const p = worldToScreen(at, cam, width, height);
+      const speed = queued ? 0 : Math.hypot(sh.velKmS.x, sh.velKmS.y);
       const color = factionColor(sh.transponder);
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
@@ -252,7 +295,9 @@
       ctx.fill();
       if (layers.labels) {
         ctx.fillStyle = color;
-        ctx.fillText(sh.transponder, p.x + 6, p.y - 6);
+        const tag =
+          queued && sh.queuePosition ? `${sh.transponder} #${sh.queuePosition}` : sh.transponder;
+        ctx.fillText(tag, p.x + 6, p.y - 6);
       }
     }
   }
@@ -260,15 +305,20 @@
   function nearest(sx: number, sy: number): (() => void) | null {
     let best: (() => void) | null = null;
     let bestD = HIT_PX * HIT_PX;
-    const consider = (w: Vec2, make: () => void) => {
+    const ctx = canvas?.getContext('2d');
+    const cursor = { x: sx, y: sy };
+    // Hit the node dot, or its text label (labelHit -> treat as a near hit so a dot
+    // directly under the cursor still wins, but a label beats empty space).
+    const consider = (w: Vec2, make: () => void, label?: string) => {
       const p = worldToScreen(w, cam, width, height);
-      const d = screenDist2({ x: sx, y: sy }, p);
+      let d = screenDist2(cursor, p);
+      if (label && ctx && labelHit(cursor, p, label, ctx)) d = Math.min(d, 1);
       if (d < bestD) {
         bestD = d;
         best = make;
       }
     };
-    for (const b of bodies) consider(bodyWorld(b), () => onselect?.(bodyRows(b), b.name));
+    for (const b of bodies) consider(bodyWorld(b), () => onselect?.(bodyRows(b), b.name), b.name);
     for (const pl of places) {
       const w = placeWorld(pl);
       if (w) consider(w, () => onselect?.(placeRows(pl), pl.name ?? null));
@@ -278,11 +328,15 @@
     // in a binary); fall back to the origin when no star positions are available.
     if (d && stars.length) {
       for (const st of stars)
-        consider(starWorld(st), () => onselect?.(systemDetailRows(d), st.name));
+        consider(
+          starWorld(st),
+          () => onselect?.(systemDetailRows(d), st.name),
+          st.name ?? undefined
+        );
     } else if (d) {
       consider({ x: 0, y: 0 }, () => onselect?.(systemDetailRows(d), null));
     }
-    hostJunctions.forEach((j, i) => consider(nexusWorld(i), () => onjunction?.(j.id)));
+    markers.forEach((m) => consider(m.world, () => onjunction?.(m.junctionId), m.label));
     return best;
   }
 

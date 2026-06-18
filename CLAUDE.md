@@ -75,9 +75,14 @@ barycenter offsets (engine exposes per-star positions on `GET /systems/{id}`,
 planets grouped/coloured by `parent_star_id`), and a deterministic ±22.5°
 **bearing-arc** jitter in the frame tool spreads the galaxy so it's no longer a
 vertical X=0 column (artifact regenerated; canon distances preserved) — resolving
-KWIs #69/#68. The post-027 arc is **demo-first** (027 closed the Controller's core):
-029 map polish (#70/#71/#74/#75), 030 expand the galaxy (#66), 031 repeating routes
-(#59). Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
+KWIs #69/#68. Sprint 029 (**map polish**) added an adaptive **scale bar**
+(ly↔AU↔light-min↔light-sec↔km, `scalebar.ts`), wormhole-**terminus markers** in
+non-host systems (⇄ → the host junction's queue panel, from `to_terminus_name`),
+**queued ships drawn at the nexus** instead of the star, and **clickable labels**
+(hit-testing the text, not just the dot; shared `overlays.ts`) — resolving KWIs
+#71/#74/#75/#70. The post-027 arc is **demo-first** (027 closed the Controller's
+core); next: 030 expand the galaxy (#66), 031 repeating routes (#59). Grafana
+dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just

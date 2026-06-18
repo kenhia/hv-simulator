@@ -13,6 +13,7 @@
   import { factionColor } from './factions';
   import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToLy, type LiveShip } from './live';
+  import { drawScaleBar, labelHit } from './overlays';
 
   let {
     systems = [],
@@ -145,6 +146,7 @@
     }
 
     if (layers.ships) drawShips(ctx);
+    drawScaleBar(ctx, width, height, cam.scale, 'ly');
   }
 
   // Tracked ships: in-hyper ones at their galactic position (km -> ly, X-Z), the
@@ -187,9 +189,15 @@
   function nearest(sx: number, sy: number, maxPx = HIT_PX): System | null {
     let best: System | null = null;
     let bestD = maxPx * maxPx;
+    // Label hit-testing applies to clicks (default radius), not the wide center-of-
+    // screen proximity probe used for keyboard/zoom enter.
+    const useLabels = maxPx === HIT_PX;
+    const ctx = useLabels ? canvas?.getContext('2d') : null;
+    const cursor = { x: sx, y: sy };
     for (const s of placed) {
       const p = worldToScreen(world(s), cam, width, height);
-      const d = screenDist2({ x: sx, y: sy }, p);
+      let d = screenDist2(cursor, p);
+      if (ctx && labelHit(cursor, p, s.name, ctx)) d = Math.min(d, 1);
       if (d < bestD) {
         bestD = d;
         best = s;
