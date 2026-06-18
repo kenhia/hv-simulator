@@ -73,6 +73,7 @@
   let places = $state<Place[]>([]);
   let fitScale = 1; // baseline from the initial fit; zooming far below it exits
   let fitted = false;
+  let lastFocus = 0; // the focusSignal already consumed — Locate is one-shot, not per-poll
 
   const NODE_R = 3;
   const HIT_PX = 14;
@@ -146,10 +147,11 @@
       moons: b.filter((x) => x.type === 'moon').length,
       stations: p.length
     });
-    // Frame the system once its bodies arrive — unless a Locate target is pending
-    // (then centre on the ship instead of fitting the whole system).
+    // Frame the system once its bodies arrive. A *pending* Locate (unconsumed
+    // focusSignal) centres on the ship instead; an already-consumed one is left
+    // alone so the 5s poll never re-zooms over the user's manual pan/zoom.
     if (width > 1) {
-      if (focus) applyFocus();
+      if (focus && focusSignal !== lastFocus) applyFocus();
       else if (!fitted) doFit();
     }
   }
@@ -167,6 +169,7 @@
 
   function applyFocus() {
     if (!focus) return;
+    lastFocus = focusSignal; // consume this Locate so it applies exactly once
     cam = centerOn({ x: focus.x, y: focus.y }, focus.span, width, height);
     fitScale = cam.scale;
     fitted = true;
@@ -425,12 +428,8 @@
   });
 
   // Locate-ship: centre on the ship when the page bumps focusSignal (same system).
-  let lastFocus = 0;
   $effect(() => {
-    if (focus && focusSignal !== lastFocus && width > 1) {
-      lastFocus = focusSignal;
-      applyFocus();
-    }
+    if (focus && focusSignal !== lastFocus && width > 1) applyFocus();
   });
 </script>
 
