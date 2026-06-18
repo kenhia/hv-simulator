@@ -336,3 +336,16 @@ def test_plan_errors(client: TestClient) -> None:
         ).status_code
         == 422
     )
+
+
+# --- Sprint 027: ship catalog (the Flight Planner's picker) -------------------
+
+
+def test_ship_catalog(client: TestClient) -> None:
+    by = {s["transponder"]: s for s in client.get("/fleet/ships").json()}
+    assert "1.1.1" in by and "1.1.2" in by
+    assert by["1.1.1"]["military"] is True  # warbird carries a navy
+    assert by["1.1.1"]["has_active_route"] is False
+    client.post("/fleet/routes", json=ROUTE)
+    after = {s["transponder"]: s for s in client.get("/fleet/ships").json()}
+    assert after["1.1.1"]["has_active_route"] is True

@@ -57,6 +57,15 @@ class FiledOriginIn(BaseModel):
     body: str
 
 
+class ShipCatalogEntry(BaseModel):
+    transponder: str
+    name: str
+    nation_code: str  # first transponder component
+    ship_class: str | None
+    military: bool  # has a navy -> drives the UI min-layover rule
+    has_active_route: bool
+
+
 class PlanWaypoint(BaseModel):
     system: str
     body: str

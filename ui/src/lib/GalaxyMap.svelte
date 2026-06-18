@@ -22,6 +22,7 @@
     fitSignal = 0,
     ships,
     layers = DEFAULT_LAYERS,
+    previewPath = null,
     onselect,
     onenter
   }: {
@@ -32,6 +33,7 @@
     fitSignal?: number;
     ships?: () => LiveShip[]; // dead-reckoned each frame
     layers?: Layers;
+    previewPath?: string[] | null; // planned-route system path to highlight
     onselect?: (s: System) => void;
     onenter?: (s: System) => void;
   } = $props();
@@ -89,6 +91,24 @@
       ctx.beginPath();
       ctx.moveTo(pa.x, pa.y);
       ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+
+    // Planned-route path (Flight Planner preview): a highlighted polyline through
+    // the visited systems.
+    if (previewPath && previewPath.length > 1) {
+      ctx.strokeStyle = '#ff9d4d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let started = false;
+      for (const sid of previewPath) {
+        const s = byId.get(sid);
+        if (!s?.coordinates) continue;
+        const p = worldToScreen(world(s), cam, width, height);
+        if (started) ctx.lineTo(p.x, p.y);
+        else ctx.moveTo(p.x, p.y);
+        started = true;
+      }
       ctx.stroke();
     }
 

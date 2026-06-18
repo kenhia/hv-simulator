@@ -97,6 +97,10 @@ class Universe:
         r = self.con.execute("SELECT * FROM hyperspace_model WHERE id=1").fetchone()
         return dict(r) if r else None
 
+    def ships(self) -> list[dict]:
+        """All ships in the artifact (catalog), ordered by transponder."""
+        return [dict(r) for r in self.con.execute("SELECT * FROM ships ORDER BY transponder, id")]
+
     def ship(self, ship_id: str) -> dict | None:
         r = self.con.execute("SELECT * FROM ships WHERE id=?", (ship_id,)).fetchone()
         return dict(r) if r else None

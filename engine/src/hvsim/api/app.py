@@ -67,6 +67,7 @@ from .schemas import (
     PlanRequest,
     RouteOut,
     SegmentOut,
+    ShipCatalogEntry,
     ShipCreate,
     ShipDetail,
     ShipOut,
@@ -729,6 +730,32 @@ def create_app(
         row.status = "aborted"
         session.commit()
         return {"transponder": transponder, "status": "aborted"}
+
+    @app.get("/fleet/ships", response_model=list[ShipCatalogEntry])
+    def fleet_ships(session: Session = Depends(get_db)) -> list[ShipCatalogEntry]:
+        """The galaxy ship catalog (for the Flight Planner's picker)."""
+        u = require_universe()
+        active = {
+            r.transponder
+            for r in session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
+        }
+        out: list[ShipCatalogEntry] = []
+        for s in u.ships():
+            tp = s.get("transponder")
+            if not tp:
+                continue
+            cls = u.ship_class(s["class_id"]) or {}
+            out.append(
+                ShipCatalogEntry(
+                    transponder=tp,
+                    name=s["name"],
+                    nation_code=tp.split(".")[0],
+                    ship_class=cls.get("name"),
+                    military=bool(s.get("navy") or cls.get("navy")),
+                    has_active_route=tp in active,
+                )
+            )
+        return out
 
     @app.get("/fleet", response_model=FleetOut)
     def get_fleet(at: datetime | None = None, session: Session = Depends(get_db)) -> FleetOut:

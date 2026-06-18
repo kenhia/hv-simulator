@@ -201,6 +201,58 @@ export interface JunctionQueue {
 export const fetchJunctionQueue = (id: string, at?: string) =>
   getJSON<JunctionQueue>(`/junctions/${id}/queue${at ? `?at=${encodeURIComponent(at)}` : ''}`);
 
+// --- Controller: ship catalog + plan/file (Sprint 027) -----------------------
+
+export interface ShipCatalogEntry {
+  transponder: string;
+  name: string;
+  nation_code: string;
+  ship_class: string | null;
+  military: boolean;
+  has_active_route: boolean;
+}
+
+export interface FiledLeg {
+  mode: string;
+  to_system: string;
+  to_body: string | null;
+  layover_s: number;
+}
+
+export interface FiledRoute {
+  schema: string;
+  ship: string;
+  origin: { system: string; body: string };
+  depart_at: string;
+  legs: FiledLeg[];
+}
+
+export interface PlanRequest {
+  ship: string;
+  origin: { system: string; body: string };
+  waypoints: { system: string; body: string; layover_s: number }[];
+}
+
+export interface PlanResult {
+  filed: FiledRoute;
+  route: RouteOut;
+}
+
+async function send<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method,
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`${method} ${path} -> ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export const fetchShipCatalog = () => getJSON<ShipCatalogEntry[]>('/fleet/ships');
+export const postPlan = (req: PlanRequest) => send<PlanResult>('POST', '/plan', req);
+export const postFleetRoute = (filed: FiledRoute) => send<RouteOut>('POST', '/fleet/routes', filed);
+export const deleteRoute = (tp: string) => send<unknown>('DELETE', `/fleet/${tp}/route`);
+
 export interface Galaxy {
   systems: System[];
   links: WormholeLink[];
