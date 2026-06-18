@@ -127,6 +127,11 @@ def test_resolver_and_determinism(universe: Universe) -> None:
     assert a == b and a is not None
     # Sol still routes to the JPL ephemeris (no universe needed).
     assert resolve_position(universe, "sol", "saturn", WHEN) is not None
+    # The map/UI sends namespaced ``sol:body`` ids (e.g. from /systems/sol/bodies);
+    # Sol's ephemeris keys on the bare name, so the prefix is stripped (both work).
+    assert resolve_position(universe, "sol", "sol:saturn", WHEN) == resolve_position(
+        universe, "sol", "saturn", WHEN
+    )
 
 
 def test_inter_system_distance(universe: Universe) -> None:
