@@ -42,6 +42,7 @@ class ShipState:
     system: str | None = None
     frame: str = "heliocentric"
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
+    band: dict | None = None  # hyper_cruise: the active band (order/name/multiplier)
 
 
 def _context(segment: Segment) -> tuple[str | None, str]:
@@ -112,7 +113,9 @@ class Simulation:
             position, velocity, phase = evaluate(active, when, self.resolve_body)
             system, frame = _context(active)
             qpos = queue_position(active, when)
-            return ShipState(when, position, velocity, phase, active.seq, end, system, frame, qpos)
+            return ShipState(
+                when, position, velocity, phase, active.seq, end, system, frame, qpos, active.band
+            )
 
         # Past the last segment's end (no successor entered) — docked at the
         # final body of the final system.

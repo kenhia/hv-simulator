@@ -10,6 +10,7 @@
     type WormholeLink
   } from './api';
   import {
+    centerOn,
     fit,
     panBy,
     screenDist2,
@@ -38,6 +39,8 @@
     links = [],
     zoneMode = false,
     fitSignal = 0,
+    focus = null,
+    focusSignal = 0,
     ships,
     layers = DEFAULT_LAYERS,
     onselect,
@@ -51,6 +54,8 @@
     links?: WormholeLink[];
     zoneMode?: boolean;
     fitSignal?: number;
+    focus?: { x: number; y: number; span: number } | null; // Locate-ship target (AU)
+    focusSignal?: number;
     ships?: () => LiveShip[];
     layers?: Layers;
     onselect?: (d: Detail, bodyName: string | null) => void;
@@ -141,7 +146,12 @@
       moons: b.filter((x) => x.type === 'moon').length,
       stations: p.length
     });
-    if (!fitted && width > 1) doFit(); // frame the system once its bodies arrive
+    // Frame the system once its bodies arrive — unless a Locate target is pending
+    // (then centre on the ship instead of fitting the whole system).
+    if (width > 1) {
+      if (focus) applyFocus();
+      else if (!fitted) doFit();
+    }
   }
 
   function doFit() {
@@ -151,6 +161,13 @@
     if (ringAu) pts.push({ x: c.x + ringAu, y: c.y }, { x: c.x - ringAu, y: c.y }); // ring
     markers.forEach((m) => pts.push(m.world)); // keep nexus/termini in frame
     cam = pts.length ? fit(pts, width, height) : { cx: 0, cy: 0, scale: 40 };
+    fitScale = cam.scale;
+    fitted = true;
+  }
+
+  function applyFocus() {
+    if (!focus) return;
+    cam = centerOn({ x: focus.x, y: focus.y }, focus.span, width, height);
     fitScale = cam.scale;
     fitted = true;
   }
@@ -404,6 +421,15 @@
     if (fitSignal !== lastFit) {
       lastFit = fitSignal;
       doFit();
+    }
+  });
+
+  // Locate-ship: centre on the ship when the page bumps focusSignal (same system).
+  let lastFocus = 0;
+  $effect(() => {
+    if (focus && focusSignal !== lastFocus && width > 1) {
+      lastFocus = focusSignal;
+      applyFocus();
     }
   });
 </script>

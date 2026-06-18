@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FleetEntry, RouteOut } from './api';
+  import { phaseStyle } from './phase';
   import ShipTimeline from './ShipTimeline.svelte';
 
   let {
@@ -27,10 +28,6 @@
       return !q || e.transponder.toLowerCase().includes(q) || e.ship.toLowerCase().includes(q);
     })
   );
-
-  function eta(e: FleetEntry): string {
-    return e.eta ? e.eta.slice(11, 16) : '—';
-  }
 </script>
 
 <div class="overlay board">
@@ -54,11 +51,14 @@
           />
           <button class="entry" onclick={() => onselect?.(e.transponder)}>
             <span class="tp">{e.transponder}</span>
-            <span class="nm">{e.ship}</span>
-            <span class="ph muted"
-              >{e.queue_position != null ? `#${e.queue_position}` : e.phase}</span
+            <span
+              class="gl"
+              style="color:{phaseStyle(e.phase).color}"
+              title="{phaseStyle(e.phase).label}{e.queue_position != null
+                ? ` · #${e.queue_position}`
+                : ''}">{phaseStyle(e.phase).glyph}</span
             >
-            <span class="eta muted">{eta(e)}</span>
+            <span class="nm">{e.ship}</span>
           </button>
         </div>
         {#if e.transponder === selected && selectedRoute}
@@ -126,7 +126,7 @@
   .entry {
     flex: 1;
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto auto 1fr;
     gap: 6px;
     align-items: baseline;
     background: none;
@@ -139,6 +139,10 @@
   }
   .tp {
     color: #ffb3b3;
+  }
+  .gl {
+    width: 1ch;
+    text-align: center;
   }
   .nm {
     overflow: hidden;

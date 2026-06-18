@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { Detail } from './detail';
 
-  let { detail, onclose }: { detail: Detail; onclose?: () => void } = $props();
+  let {
+    detail,
+    onclose,
+    onlocate
+  }: { detail: Detail; onclose?: () => void; onlocate?: () => void } = $props();
 </script>
 
 <aside class="overlay panel">
@@ -14,6 +18,9 @@
       <dd>{v}</dd>
     {/each}
   </dl>
+  {#if detail.kind === 'ship' && onlocate}
+    <button class="locate" onclick={() => onlocate?.()}>⌖ Locate on map</button>
+  {/if}
 </aside>
 
 <style>
@@ -49,5 +56,16 @@
   dd {
     margin: 0;
     word-break: break-word;
+  }
+  .locate {
+    margin-top: 10px;
+    width: 100%;
+    background: #1d2940;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    font: inherit;
   }
 </style>

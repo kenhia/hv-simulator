@@ -43,6 +43,7 @@ class Segment:
     to_system: str | None = None  # hyper / wormhole destination
     junction: str | None = None  # wormhole_queue: the junction being transited
     queue_ahead: tuple[datetime, ...] | None = None  # wormhole_queue: transit-opens ahead
+    band: dict | None = None  # hyper_cruise: the band {band_order, name, velocity_multiplier}
 
     @property
     def duration_s(self) -> float:

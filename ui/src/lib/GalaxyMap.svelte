@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { Junction, System, WormholeLink } from './api';
   import {
+    centerOn,
     fit,
     panBy,
     screenDist2,
@@ -21,6 +22,8 @@
     junctions = [],
     selectedId = null,
     fitSignal = 0,
+    focus = null,
+    focusSignal = 0,
     ships,
     layers = DEFAULT_LAYERS,
     previewPath = null,
@@ -32,6 +35,8 @@
     junctions?: Junction[];
     selectedId?: string | null;
     fitSignal?: number;
+    focus?: { x: number; y: number; span: number } | null; // Locate-ship target (ly)
+    focusSignal?: number;
     ships?: () => LiveShip[]; // dead-reckoned each frame
     layers?: Layers;
     previewPath?: string[] | null; // planned-route system path to highlight
@@ -286,6 +291,15 @@
       lastFit = fitSignal;
       cam = fit(placed.map(world), width, height);
       fitScale = cam.scale;
+    }
+  });
+
+  // Locate-ship: the page bumps focusSignal to centre on a galactic point.
+  let lastFocus = 0;
+  $effect(() => {
+    if (focus && focusSignal !== lastFocus && width > 1) {
+      lastFocus = focusSignal;
+      cam = centerOn({ x: focus.x, y: focus.y }, focus.span, width, height);
     }
   });
 </script>

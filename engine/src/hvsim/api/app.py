@@ -58,6 +58,7 @@ from .db import (
 from .metrics import CONTENT_TYPE_LATEST
 from .metrics import render as render_metrics
 from .schemas import (
+    BandOut,
     BodyOut,
     ClockOut,
     ClockUpdate,
@@ -278,6 +279,15 @@ def create_app(
             frame=st.frame,
             transponder=transponder,
             queue_position=st.queue_position,
+            band=(
+                BandOut(
+                    order=st.band["band_order"],
+                    name=st.band.get("name"),
+                    velocity_multiplier=st.band["velocity_multiplier"],
+                )
+                if st.band
+                else None
+            ),
         )
 
     def junction_queue_metrics(session: Session, when: datetime) -> list[tuple[str, int, float]]:

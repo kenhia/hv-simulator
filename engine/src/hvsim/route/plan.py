@@ -179,6 +179,7 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
                     to_pos=to_gal,
                     from_system=system,
                     to_system=leg.to_system,
+                    band=band,
                 )
             )
             when, system = cruise_end, leg.to_system

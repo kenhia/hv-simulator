@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { fit, panBy, screenToWorld, worldToScreen, zoomAbout, type Camera } from './camera';
+import {
+  centerOn,
+  fit,
+  panBy,
+  screenToWorld,
+  worldToScreen,
+  zoomAbout,
+  type Camera
+} from './camera';
 
 const W = 800;
 const H = 600;
@@ -63,5 +71,18 @@ describe('fit', () => {
 
   it('is defensive about empty input', () => {
     expect(fit([], W, H).scale).toBe(1);
+  });
+});
+
+describe('centerOn', () => {
+  it('centres on the world point at a scale showing `span` across the min dimension', () => {
+    const c = centerOn({ x: 100, y: -50 }, 200, W, H);
+    expect(c.cx).toBe(100);
+    expect(c.cy).toBe(-50);
+    expect(c.scale).toBe(H / 200); // min(800,600)/200 = 3
+    // The focused point lands at screen centre.
+    const s = worldToScreen({ x: 100, y: -50 }, c, W, H);
+    expect(s.x).toBeCloseTo(W / 2, 6);
+    expect(s.y).toBeCloseTo(H / 2, 6);
   });
 });
