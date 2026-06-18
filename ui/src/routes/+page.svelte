@@ -41,6 +41,7 @@
   let panel = $state<Detail | null>(null);
   let focusedBody = $state<string | null>(null);
   let zoneMode = $state(false);
+  let galaxyLock = $state(false); // follow a ship on the galaxy scene (no drill-in)
   let fitSignal = $state(0);
   let summary = $state<{ planets: number; moons: number; stations: number } | null>(null);
 
@@ -56,7 +57,7 @@
   // Locate-ship (Sprint 031): a one-shot camera-centre target per scene + a signal.
   let focusTarget = $state<{ x: number; y: number; span: number } | null>(null);
   let focusSignal = $state(0);
-  const GALAXY_FOCUS_SPAN_LY = 250; // ly across the viewport when locating in hyper
+  const GALAXY_FOCUS_SPAN_LY = 30; // ly across the viewport when locating in hyper (then zoom freely, locked)
   const SYSTEM_FOCUS_SPAN_AU = 40; // AU across the viewport when locating in-system
 
   let layers = $state<Layers>({ ...DEFAULT_LAYERS });
@@ -101,6 +102,7 @@
     selectedSystem = s;
     panel = null;
     focusTarget = null; // drop any stale Locate target on normal navigation
+    galaxyLock = false; // galaxy-only follow mode ends when we drill into a system
     focusedBody = null;
     zoneMode = false;
     summary = null;
@@ -172,6 +174,9 @@
     }
     if (sh.frame === 'galactic') {
       if (scene.kind !== 'galaxy') exitToGalaxy();
+      // Lock the galaxy scene so zooming in follows the ship instead of drilling
+      // into the host system (where an interstellar ship isn't drawn). Esc releases.
+      galaxyLock = true;
       focusTarget = { x: kmToLy(sh.posKm.x), y: kmToLy(sh.posKm.z), span: GALAXY_FOCUS_SPAN_LY };
     } else if (sh.system) {
       const sys = galaxy.systems.find((s) => s.id === sh.system);
@@ -199,14 +204,24 @@
       enterSystem(selectedSystem);
     } else if (action === 'exit') {
       e.preventDefault();
-      // Progressive back-out: queue panel -> data panel -> exit the system.
+      // Progressive back-out: queue panel -> data panel -> galaxy follow-lock ->
+      // exit the system.
       if (junctionQueueId) junctionQueueId = null;
       else if (panel) panel = null;
-      else if (scene.kind === 'system') exitToGalaxy();
+      else if (galaxyLock) {
+        galaxyLock = false;
+        fitSignal++; // release the follow and re-frame the galaxy
+      } else if (scene.kind === 'system') exitToGalaxy();
     } else if (action === 'zone') {
       e.preventDefault();
-      zoneMode = !zoneMode;
-      if (zoneMode) fitSignal++;
+      // `z` locks the current scene's zoom: zone-lock in a system, follow-lock on
+      // the galaxy (zoom-in stops drilling into systems).
+      if (scene.kind === 'system') {
+        zoneMode = !zoneMode;
+        if (zoneMode) fitSignal++;
+      } else {
+        galaxyLock = !galaxyLock;
+      }
     } else if (action === 'fit') {
       e.preventDefault();
       fitSignal++;
@@ -270,6 +285,7 @@
       {fitSignal}
       focus={focusTarget}
       {focusSignal}
+      lockGalaxy={galaxyLock}
       {ships}
       {layers}
       {previewPath}
@@ -329,7 +345,11 @@
 
   <div class="overlay hints">
     {#if systemId === null}
-      dbl-click / <kbd>Enter</kbd> a system · <kbd>f</kbd> fit
+      {#if galaxyLock}
+        <kbd>Esc</kbd> release follow · <kbd>f</kbd> fit · 🔒 following ship
+      {:else}
+        dbl-click / <kbd>Enter</kbd> a system · <kbd>z</kbd> lock · <kbd>f</kbd> fit
+      {/if}
     {:else}
       <kbd>Esc</kbd> back · <kbd>z</kbd> zone{zoneMode ? ' ✓' : ''} · <kbd>f</kbd> fit
     {/if}

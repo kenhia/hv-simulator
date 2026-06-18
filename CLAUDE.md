@@ -94,8 +94,10 @@ system-scribe now document the model (#79). Sprint 031 (**demo polish**) reforma
 the Fleet Board to a leading **phase glyph + full ship name**, made **ship detail**
 rich (phase/ETA/destination/distance + real & **apparent velocity with the hyper
 band** — engine now exposes `band` on `StateOut`, part of #72), and added a
-LOD-aware **Locate ship** button (`camera.centerOn`; interstellar ships frame on the
-galaxy scene). Next: 032 repeating routes (#59).
+LOD-aware **Locate ship** button (`camera.centerOn`; interstellar ships engage a
+**galaxy follow-lock** — `z`/`Esc`, zoom-in stops drilling into systems — so you can
+watch a ship fly interstellar; the galaxy scale bar steps to light-hours/min when
+deep). Next: 032 repeating routes (#59).
 Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 

@@ -73,10 +73,15 @@ Add a **Locate** button to the ship detail panel. Add a camera helper
 `centerOn(world, scale, width, height)` (sibling to `fit`) → a `Camera` centred on
 `world` at a chosen `scale`. Behaviour keys on the ship's live frame:
 - **Interstellar** (frame `galactic`, e.g. a `hyper_cruise` ship): ensure the
-  **galaxy scene** is active (back out of any system), centre on the ship's
-  galactic position (km→ly, X-Z) at a fixed galaxy zoom. **This fixes the
-  "zoomed in and lost my ship" case** — locate frames it on the galaxy scene rather
-  than drilling into a system where galactic-frame ships aren't drawn.
+  **galaxy scene** is active, centre on the ship's galactic position (km→ly, X-Z)
+  at a close galaxy zoom, and engage a **galaxy follow-lock** (`lockGalaxy`) so
+  zooming in keeps tracking the ship on the galaxy scene instead of drilling into
+  the host system (where galactic-frame ships aren't drawn). The lock is the galaxy
+  analogue of the system **zone-lock**: toggle with `z`, release with `Esc` (which
+  re-frames the galaxy). The galaxy scale bar steps down to **light-hours / minutes**
+  on a deep locked zoom so the readout stays sensible. **This is the full fix for
+  the "zoomed in and lost my ship" case** — you can follow a ship out of its home
+  zone and watch it fly interstellar.
 - **In-system** (frame `heliocentric`): enter that system (if not already there),
   centre on the ship's heliocentric position (km→AU) at a fixed system zoom.
 - Ensure the ship is **tracked/visible** (locate implies show) and selected.
