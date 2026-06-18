@@ -164,6 +164,19 @@ paths:
       responses:
         "200": { description: text exposition, content: { text/plain: {} } }
 
+  /plan:
+    post:
+      summary: Plan a multi-destination route to preview (not filed)
+      operationId: planRoute
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/PlanRequest" } } }
+      responses:
+        "200": { description: planned route + preview, content: { application/json: { schema: { $ref: "#/components/schemas/PlanResult" } } } }
+        "404": { description: unknown ship }
+        "422": { description: unroutable }
+        "503": { description: universe artifact not loaded }
+
 components:
   parameters:
     SystemId:
@@ -309,6 +322,31 @@ components:
         junction_id: { type: string }
         position: { type: integer }
         transit_eta: { type: string, format: date-time }
+
+    PlanRequest:
+      type: object
+      required: [ship, origin, waypoints]
+      properties:
+        ship: { type: string, description: transponder }
+        origin:
+          type: object
+          properties: { system: { type: string }, body: { type: string } }
+        waypoints:
+          type: array
+          description: ordered must-visit destinations
+          items:
+            type: object
+            properties:
+              system: { type: string }
+              body: { type: string }
+              layover_s: { type: number, default: 0 }
+        depart_at: { type: [string, "null"], format: date-time }
+
+    PlanResult:
+      type: object
+      properties:
+        filed: { type: object, description: filed-route doc — POST to /fleet/routes to commit }
+        route: { type: object, description: compiled preview (segments + ETA) }
 
     JunctionQueue:
       type: object

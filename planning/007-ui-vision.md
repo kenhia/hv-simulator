@@ -238,15 +238,69 @@ surface and unblocks the UI queue view later).
 | 023 ✅ | Live ships + Fleet Board — sim-clock + dead-reckoning render loop; ships on both scenes (galactic motes + in-system dots/heading-vectors); Fleet Board rail (collapsible, search, click-to-fly) with the Ship Timeline; Locate-a-ship (search + per-ship show/hide). Engine: `GET /fleet/{tp}/route`. | ui |
 | 024 ✅ | Junction queue panels — a nexus marker in the host system opens a live queue panel (consumes 020): ordered real + phantom entries with a per-second `transit in MM:SS` countdown off the shared sim clock; `Esc` backs out progressively. | ui |
 | 025 ✅ | Polish + dev time controls — dev-gated **time scrubber** (play/pause via rate 0, rate presets, step, jump; `Space`/`,`/`.`), **faction colours**, **layer toggles** (`l`), **help overlay** (`?`), itinerary line + leader-line de-collision. Engine: `ClockUpdate.rate` `ge=0`. **Observer complete.** | ui |
-| later | Controller / Flight Planner — Observer-complete first. **Dependency:** planning is currently client-side/CLI only (no `/plan` endpoint) — needs a new endpoint or embedded planning; plus the UI-enforced min-layover rule. | ui+engine |
+| **026** ✅ | **engine: `POST /plan`** — relocated the finder into `hvsim.route.find` (`plan_route` + `plan_route_multi`); `tools/nav-planner` is now a thin CLI wrapper. `POST /plan` → `{filed, route}` (multi-destination, per-waypoint layovers; resolved preview); 404/422/503. Min-layover left to the UI. | engine |
+| 027 | UI Flight Planner — Controller mode (menu `m`): pick ship → prefill origin by state → pick destination(s) + layovers → `POST /plan` → preview on the map (segments/ETA) → submit (`POST /fleet/routes`); abort from the UI. | ui |
+| 028 | Controller extras (later) — saved routes ("Sphinx-Grayson-Courier-Run"), non-traditional waypoint routes (belt waypoint → hyper from above the ecliptic), re-route a moving ship. | ui+engine |
 | deferred | Grafana dashboards — separate 1-2 sprint effort; revisit at each new data surface (next: the 020 queue metrics). | ops |
 
 Build order parallels the engine's own: topology -> motion -> operate -> observe.
 Stop and refine between sprints as needed.
 
+## Controller — planned (2026-06-18)
+
+The Observer is done; the Controller lets a user **file/route ships from the UI**.
+Arc: **026** (engine `/plan`) → **027** (Flight Planner UI) → **028** (extras,
+later). The Controller is "Observer + write actions" — it reuses the map, board,
+panels, and the existing `POST /fleet/routes` / `DELETE /fleet/{tp}/route`.
+
+### The crux: where route-finding lives (settle for 026)
+
+Today the route-finder is **`tools/nav-planner`, which depends on `hvsim`**. The
+UI can't run Python, so it needs an HTTP **`POST /plan`**. But the engine API is
+`hvsim.api` — if it imported `nav_planner`, that's `hvsim → nav-planner → hvsim`,
+**circular**. So:
+
+- **Recommended:** **relocate the finder into the engine** — move the Dijkstra
+  search (`_search`/`plan_route`, ~120 lines, pure graph over `Universe`, no extra
+  deps) into `hvsim` (e.g. `hvsim.route` gains `find_route`, or a new `hvsim.nav`);
+  `tools/nav-planner` becomes a thin CLI wrapper that imports it. The API then
+  serves `/plan` from `hvsim`. This **revises** the earlier "route-finding stays in
+  the tool" principle — acknowledged: HTTP planning makes finding a first-class
+  engine capability. Physics + finding both live in `hvsim`; the *UI* still owns no
+  logic.
+- Rejected: API depends on the `nav-planner` package (awkward circular/packaging);
+  a separate planner microservice (overkill).
+
+### `POST /plan` shape (026)
+- Input: `{ ship (transponder), origin {system, body}, waypoints: [{system, body,
+  layover_s?}] }` — an **ordered list of must-visit destinations** (multi-planet),
+  each with an optional layover. Output: the **filed-route JSON** (`to_filed` shape)
+  **plus** a compiled preview (segments + ETA) — *computed, not filed*. The UI
+  previews it, then submits the filed-route to `POST /fleet/routes` to commit.
+- **Multi-destination is core, not deferred.** The engine `Route` is already a list
+  of legs with per-leg layovers (the `Sol→Beowulf→Manticore→Grayson` demo flies
+  one); `/plan` runs the finder for each consecutive `(from, to)` hop and
+  concatenates the legs (inserting layovers at each waypoint). Single-destination is
+  just a one-waypoint list. Reuses the relocated finder + `compile_route`; 404
+  unknown ship/system, 422 unroutable.
+
+### Min-layover filing policy — UI-enforced (decided 2026-06-18)
+- Non-military ships get a default layover (~2 h) to clear arrival+departure,
+  **enforced in the UI** (027) — a value we expect to **vary later**. `/plan` does
+  not enforce it. It is really a **filing policy** Phase-3 admirals will need too,
+  so it stays earmarked to migrate into the engine when that variation arrives.
+
+### Flight Planner UI (027)
+- A Controller **mode** (the reserved `m` menu switches Observer↔Controller). Pick
+  an available ship → **prefill origin by state** (at-rest → current; in-flight →
+  "extend from destination", re-route deferred to 028) → pick destination(s) +
+  layovers → `POST /plan` → preview the route on the map + a summary → **submit**.
+  Abort/clear via `DELETE`. Re-uses the Ship Timeline for the preview.
+
 ## Open — to settle next (NOT decided here)
 
-- **Serving model specifics** (bundled into the engine vs sibling container, exact
-  build wiring into `just`) — finalize when Sprint 021 scaffolds `ui/`.
-- **`/plan` endpoint** shape — decide when the Controller / Flight Planner sprint
-  is prepped (engine endpoint vs embedded client-side planning).
+- **Re-routing a moving ship** — deferred to 028 (the at-origin guard rejects it
+  today); pairs with "extend from destination" for in-flight ships.
+
+_Resolved 2026-06-18: route-finder **relocates into `hvsim`** (026); min-layover is
+**UI-enforced** (027); multi-destination routing is **in scope for 026/027**._
