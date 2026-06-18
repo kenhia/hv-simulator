@@ -63,7 +63,9 @@ class ShipCatalogEntry(BaseModel):
     nation_code: str  # first transponder component
     ship_class: str | None
     military: bool  # has a navy -> drives the UI min-layover rule
-    has_active_route: bool
+    under_way: bool  # in motion now (can't re-file without 409); arrived ≠ under way
+    location_system: str | None  # current navigable point (for origin prefill), if at rest
+    location_body: str | None
 
 
 class PlanWaypoint(BaseModel):

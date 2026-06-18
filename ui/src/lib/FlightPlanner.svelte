@@ -54,6 +54,21 @@
     onpreview?.(null);
   }
 
+  // Pick a ship; prefill the origin from its current navigable point (an arrived /
+  // idle ship sits somewhere fileable). Ships never filed have no known location.
+  function setShip(newTp: string) {
+    tp = newTp;
+    const c = catalog.find((e) => e.transponder === newTp);
+    if (c?.location_system && c.location_body) {
+      origin = { system: c.location_system, body: c.location_body };
+      loadBodies(c.location_system);
+    } else {
+      origin = { system: '', body: '' };
+    }
+    waypoints = [];
+    invalidate();
+  }
+
   function setOriginSystem(sys: string) {
     origin = { system: sys, body: '' };
     loadBodies(sys);
@@ -127,16 +142,16 @@
 
   <label
     >ship
-    <select bind:value={tp} onchange={invalidate}>
+    <select value={tp} onchange={(e) => setShip(e.currentTarget.value)}>
       <option value="" disabled>— pick a ship —</option>
       {#each catalog as c (c.transponder)}
         <option value={c.transponder}>
-          {c.name} · {c.transponder}{c.has_active_route ? ' (under way)' : ''}
+          {c.name} · {c.transponder}{c.under_way ? ' (under way)' : ''}
         </option>
       {/each}
     </select>
   </label>
-  {#if ship?.has_active_route}
+  {#if ship?.under_way}
     <div class="warn">under way — re-routing is deferred; submit may be rejected</div>
   {/if}
 

@@ -209,7 +209,9 @@ export interface ShipCatalogEntry {
   nation_code: string;
   ship_class: string | null;
   military: boolean;
-  has_active_route: boolean;
+  under_way: boolean; // in motion now (arrived ≠ under way)
+  location_system: string | null; // current navigable point (for origin prefill)
+  location_body: string | null;
 }
 
 export interface FiledLeg {

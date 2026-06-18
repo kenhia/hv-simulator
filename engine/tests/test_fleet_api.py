@@ -345,7 +345,23 @@ def test_ship_catalog(client: TestClient) -> None:
     by = {s["transponder"]: s for s in client.get("/fleet/ships").json()}
     assert "1.1.1" in by and "1.1.2" in by
     assert by["1.1.1"]["military"] is True  # warbird carries a navy
-    assert by["1.1.1"]["has_active_route"] is False
+    assert by["1.1.1"]["under_way"] is False and by["1.1.1"]["location_body"] is None  # idle
+    # File a 1890 route; long after departure the ship has ARRIVED -> at rest at the
+    # final body, NOT under way (the bug: a stale "active" row read as under way).
     client.post("/fleet/routes", json=ROUTE)
     after = {s["transponder"]: s for s in client.get("/fleet/ships").json()}
-    assert after["1.1.1"]["has_active_route"] is True
+    assert after["1.1.1"]["under_way"] is False
+    assert after["1.1.1"]["location_body"] == "gamma:p1"  # current navigable point
+
+
+def test_ship_catalog_under_way(artifact_path: str, tmp_path) -> None:
+    dev = TestClient(
+        create_app(
+            database_url=f"sqlite:///{tmp_path / 'm.db'}", universe_db=artifact_path, dev_clock=True
+        )
+    )
+    dev.post("/fleet/routes", json=ROUTE)
+    dev.put("/clock", json={"jump_to": "1890-01-03T00:00:00Z"})  # mid-flight
+    by = {s["transponder"]: s for s in dev.get("/fleet/ships").json()}
+    assert by["1.1.1"]["under_way"] is True
+    assert by["1.1.1"]["location_body"] is None
