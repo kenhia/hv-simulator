@@ -23,6 +23,7 @@
   import { factionColor } from './factions';
   import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToAu, type LiveShip } from './live';
+  import { AT_BODY_PHASES, atBodyGroups } from './atbody';
   import { drawScaleBar, labelHit } from './overlays';
   import { bodyColor, starColors, starWorld } from './stars';
 
@@ -284,14 +285,28 @@
     drawScaleBar(ctx, width, height, cam.scale, 'au');
   }
 
-  // Tracked ships currently in this system: a dot + a short heading vector
-  // (fatter dot at rest), at their dead-reckoned heliocentric position (km -> AU).
+  // Tracked ships in this system. Ships *at rest at a body* are listed on a leader
+  // off the body's label (see drawAtBodyLabels) rather than as overlapping dots;
+  // in-motion / queued ships keep their dot + heading vector.
   function drawShips(ctx: CanvasRenderingContext2D) {
-    for (const sh of ships?.() ?? []) {
-      if (sh.system !== systemId || sh.frame !== 'heliocentric') continue;
+    const here = (ships?.() ?? []).filter(
+      (s) => s.system === systemId && s.frame === 'heliocentric'
+    );
+    // At-rest ships grouped onto the body they're parked at.
+    const located = here
+      .filter((s) => AT_BODY_PHASES.has(s.phase))
+      .map((s) => ({ id: s.transponder, x: kmToAu(s.posKm.x), y: kmToAu(s.posKm.y) }));
+    const groups = atBodyGroups(
+      located,
+      bodies.map((b) => ({ id: b.id, x: b.position.au.x, y: b.position.au.y }))
+    );
+    const grouped = new Set<string>();
+    for (const tps of groups.values()) for (const tp of tps) grouped.add(tp);
+
+    for (const sh of here) {
+      if (grouped.has(sh.transponder)) continue; // shown on the body's leader instead
       // A queued / transiting ship's reported position is the star centre (the
-      // wait position is immaterial); draw it at the junction nexus instead, so it
-      // reads as "waiting at the junction," not "parked on the star."
+      // wait position is immaterial); draw it at the junction nexus instead.
       const queued = sh.phase === 'queued' || sh.phase === 'wormhole_transit';
       const at =
         queued && markers.length
@@ -318,6 +333,39 @@
         const tag =
           queued && sh.queuePosition ? `${sh.transponder} #${sh.queuePosition}` : sh.transponder;
         ctx.fillText(tag, p.x + 6, p.y - 6);
+      }
+    }
+    if (layers.labels) drawAtBodyLabels(ctx, groups);
+  }
+
+  // A leader off each occupied body's label: a short vertical line dropped from a
+  // small indent just right of the body dot, with the parked ships' transponder
+  // codes stacked beside it (in faction colour). Caps a crowd at MAX.
+  function drawAtBodyLabels(ctx: CanvasRenderingContext2D, groups: Map<string, string[]>) {
+    const MAX = 6;
+    const byId = new Map(bodies.map((b) => [b.id, b]));
+    for (const [bodyId, tps] of groups) {
+      const b = byId.get(bodyId);
+      if (!b) continue;
+      const p = worldToScreen(bodyWorld(b), cam, width, height);
+      const lineX = p.x + 6; // small indent right of the dot, under the label
+      const shown = tps.slice(0, MAX);
+      const codeX = lineX + 5;
+      let y = p.y + 13;
+      ctx.strokeStyle = '#5a6b86';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lineX, p.y + 5);
+      ctx.lineTo(lineX, y + (shown.length - 1) * 12 + 1);
+      ctx.stroke();
+      for (const tp of shown) {
+        ctx.fillStyle = factionColor(tp);
+        ctx.fillText(tp, codeX, y);
+        y += 12;
+      }
+      if (tps.length > MAX) {
+        ctx.fillStyle = '#8da2c0';
+        ctx.fillText(`+${tps.length - MAX} more`, codeX, y);
       }
     }
   }
