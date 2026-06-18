@@ -28,8 +28,9 @@ export function labelHit(
   );
 }
 
-// A labelled scale bar, bottom-left. `scale` = px per `baseUnit` (ly galaxy, au
-// system); the helper picks the unit + a nice round length for the current zoom.
+// A labelled scale bar, bottom-centre (the bottom-left holds the keyboard hints and
+// the bottom-right the layers/legend column). `scale` = px per `baseUnit` (ly
+// galaxy, au system); the helper picks the unit + a nice round length for the zoom.
 export function drawScaleBar(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -41,7 +42,7 @@ export function drawScaleBar(
   const bar = scaleBar(scale, baseUnit);
   if (!Number.isFinite(bar.pixels) || bar.pixels <= 0) return;
 
-  const x0 = 16;
+  const x0 = Math.round((width - bar.pixels) / 2);
   const y = height - 18;
   const x1 = x0 + bar.pixels;
   ctx.save();
@@ -56,6 +57,7 @@ export function drawScaleBar(
   ctx.stroke();
   ctx.font = '11px ui-monospace, monospace';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(bar.label, x0, y - 7);
+  ctx.textAlign = 'center';
+  ctx.fillText(bar.label, (x0 + x1) / 2, y - 7);
   ctx.restore();
 }
