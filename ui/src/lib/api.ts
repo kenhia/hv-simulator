@@ -21,6 +21,7 @@ export interface WormholeLink {
   junction_id: string | null;
   from_system_id: string;
   to_system_id: string | null;
+  to_terminus_name: string | null; // terminus this link lands at (in to_system)
   transit: string | null; // "instant" for true wormholes
 }
 

@@ -243,6 +243,7 @@
         {systemId}
         detail={systemDetail}
         junctions={galaxy.junctions}
+        links={galaxy.links}
         {zoneMode}
         {fitSignal}
         {ships}
