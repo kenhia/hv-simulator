@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pathlib
 import sqlite3
+import threading
 from datetime import UTC, datetime
 
 import pytest
@@ -95,6 +96,39 @@ def artifact_path(tmp_path) -> str:
 @pytest.fixture
 def universe(artifact_path: str) -> Universe:
     return Universe.open(artifact_path)
+
+
+def test_concurrent_access_is_threadsafe(universe: Universe) -> None:
+    """Per-thread connections: concurrent reads never error or interleave-corrupt.
+
+    Regression for the shared-connection race (one sqlite3.Connection used across
+    FastAPI's threadpool returned wrong/empty rows -> intermittent 500s / empty
+    Flight Planner). Each thread must get its own connection and consistent results.
+    """
+    errors: list[Exception] = []
+    con_ids: dict[str, int] = {}
+    barrier = threading.Barrier(8)
+
+    def work() -> None:
+        try:
+            barrier.wait()  # maximise overlap
+            for _ in range(40):
+                assert len(universe.systems()) >= 1
+                assert universe.system("manticore") is not None
+                assert len(universe.stars("manticore")) == 2
+            con_ids[threading.current_thread().name] = id(universe.con)
+        except Exception as e:  # noqa: BLE001 - record for the assertion below
+            errors.append(e)
+
+    threads = [threading.Thread(target=work, name=f"t{i}") for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, errors
+    # Distinct threads got distinct connections (the fix), not one shared object.
+    assert len(set(con_ids.values())) == len(con_ids) == 8
 
 
 def test_binary_separation_in_canon_range(universe: Universe) -> None:

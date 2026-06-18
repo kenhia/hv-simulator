@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 import sqlite3
+import threading
 from datetime import datetime
 
 from hvsim.ephemeris import heliocentric_position
@@ -22,16 +23,39 @@ LY_M = 9.460730472580800e15  # 1 light-year in metres
 
 
 class Universe:
-    """Read-only handle to a compiled universe artifact."""
+    """Read-only handle to a compiled universe artifact.
 
-    def __init__(self, con: sqlite3.Connection) -> None:
-        self.con = con
-        self.con.row_factory = sqlite3.Row
+    A single ``sqlite3.Connection`` is **not safe for concurrent use** across
+    threads (even with ``check_same_thread=False``): interleaved cursors return
+    wrong/empty rows. FastAPI runs sync endpoints in a threadpool, so the artifact
+    is opened **per thread** — each thread lazily gets its own read-only connection
+    (read-only ⇒ no write contention, full read concurrency). ``open(path)`` uses
+    this; a directly-supplied connection (tests/CLI, single-threaded) is used as-is.
+    """
+
+    def __init__(self, con: sqlite3.Connection | None = None, path: str | None = None) -> None:
+        self._path = path
+        self._local = threading.local()
+        self._direct = con
+        if con is not None:
+            con.row_factory = sqlite3.Row
 
     @classmethod
     def open(cls, path: str) -> Universe:
-        # check_same_thread=False: read-only, shared across FastAPI's threadpool.
-        return cls(sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False))
+        # Per-thread connections opened lazily (see class docstring) — thread-safe.
+        return cls(path=path)
+
+    @property
+    def con(self) -> sqlite3.Connection:
+        """The connection for the current thread (or the direct one, if supplied)."""
+        if self._direct is not None:
+            return self._direct
+        con = getattr(self._local, "con", None)
+        if con is None:
+            con = sqlite3.connect(f"file:{self._path}?mode=ro", uri=True, check_same_thread=False)
+            con.row_factory = sqlite3.Row
+            self._local.con = con
+        return con
 
     def systems(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM star_systems ORDER BY id")]
