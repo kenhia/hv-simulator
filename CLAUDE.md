@@ -100,7 +100,11 @@ watch a ship fly interstellar; the galaxy scale bar steps to light-hours/min whe
 deep). Sprint 032 (**demo polish II**) added a Fleet Board **filter** (hide-arrived +
 per-nation checkboxes by name) and **at-planet ship labels** (a leader off the
 planet label lists the transponder codes of ships parked there, instead of
-overlapping dots). Next: 033 repeating routes (#59).
+overlapping dots). Sprint 033 added a **non-canon Easter egg** — the **All-The-Vibes**
+tribute system (~250 ly NE of Sol; G2 star Vibe; worlds named after LLMs — Phi, GPT,
+Claude, Gemini, Llama; nation code 42; the experimental 927 G / Theta-band
+**StarterKit** personal transport: ATV Phoenix / TokenMasterX / PaperBoard) for the
+ATV AI-enthusiast community demo. Next: 034 repeating routes (#59).
 Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 

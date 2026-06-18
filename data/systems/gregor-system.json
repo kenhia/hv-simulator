@@ -174,7 +174,7 @@
     "notes": "Population not captured in this pass."
   },
   "lore": {
-    "summary": "A binary system 180 ly from Manticore (49 ly from the Andermani capital New Berlin), split between two powers: Gregor-A (F9, uninhabitable) carries a terminus of the Manticore Wormhole Junction and belongs to the Star Kingdom of Manticore, while Gregor-B (Andermani) holds the system's one habitable world, the former Gregor Republic. (Canon places the Andermani galactic-east of Manticore; this map follows the reference fan-map layout to the west — see the location note.)",
+    "summary": "A binary system 180 ly from Manticore (49 ly from the Andermani capital New Berlin), split between two powers: Gregor-A (F9, uninhabitable) carries a terminus of the Manticore Wormhole Junction and belongs to the Star Kingdom of Manticore, while Gregor-B (Andermani) holds the system's one habitable world, the former Gregor Republic. (Canon places the Andermani galactic-east of Manticore; this map follows the reference fan-map layout to the west \u2014 see the location note.)",
     "naming_convention": "System named Gregor; binary components Gregor-A / Gregor-B."
   },
   "coordinates": {

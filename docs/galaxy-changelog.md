@@ -9,6 +9,27 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-18 — All-The-Vibes tribute system (Sprint 033, non-canon)
+
+A fun, **non-canon Easter egg** (everything `canon:false`) for the All-The-Vibes
+(ATV) community — an internal Microsoft community of AI enthusiasts
+(https://github.com/All-The-Vibes). Not Honorverse canon; it just lives in the
+dataset for the demo.
+
+- **System** **All-The-Vibes** (id `all-the-vibes`, ~250 ly galactic-NE of Sol):
+  G2 star **Vibe** with five worlds named for LLMs — **Phi** (small rocky inner),
+  **GPT** + **Claude** (habitable; Claude is the capital, Prompt Town), **Gemini**
+  and **Llama** (gas giants).
+- **Nation** **All-The-Vibes** (transponder code **42**), an "AI Enthusiast
+  Collective."
+- **Ship class** **StarterKit** (code 1) — a highly experimental 1,200-ton light
+  personal transport rated to **927 G** and the **Theta band (8)** (apparent =
+  5000 x 0.6c). Hulls: **ATV Phoenix** (42.1.1), **ATV TokenMasterX** (42.1.2),
+  **ATV PaperBoard** (42.1.3). Verified: a StarterKit plans + flies a full
+  multi-mode route (n-space + Theta hyper + the Manticore Junction).
+
+Counts after: systems 17, nations 11, ship classes 15, ships 39.
+
 ## 2026-06-18 — Living galaxy: Haven, Gregor, Erewhon + real nations (Sprint 030)
 
 A demo-weighted expansion. Three systems added/resolved, five nations made real
