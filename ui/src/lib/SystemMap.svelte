@@ -21,6 +21,7 @@
   import { factionColor } from './factions';
   import { DEFAULT_LAYERS, type Layers } from './layers';
   import { kmToAu, type LiveShip } from './live';
+  import { bodyColor, starColors, starWorld } from './stars';
 
   export interface SystemSummary {
     planets: number;
@@ -69,6 +70,8 @@
   const NEXUS_AU = 50; // fabricated nexus radius (≈ Manticore's canon 7 light-hours)
   const ringAu = $derived(detail?.primary_hyper_limit_au ?? null);
   const hostJunctions = $derived(junctions.filter((j) => j.host_system_id === systemId));
+  const stars = $derived(detail?.stars ?? []);
+  const starColorMap = $derived(starColors(stars));
 
   // Fabricated in-system nexus point (canon gives a radius, not a bearing): place
   // junctions on distinct bearings at NEXUS_AU.
@@ -79,6 +82,11 @@
 
   function bodyWorld(b: SystemBody): Vec2 {
     return { x: b.position.au.x, y: b.position.au.y };
+  }
+  // The primary star's in-system point (origin if positions aren't available) —
+  // the hyper-limit ring centres here, not on the (empty) barycenter.
+  function primaryWorld(): Vec2 {
+    return stars[0] ? starWorld(stars[0]) : { x: 0, y: 0 };
   }
   // A place rides on a body -> its on-screen point is that body's position.
   function placeWorld(p: Place): Vec2 | null {
@@ -107,7 +115,9 @@
 
   function doFit() {
     const pts = bodies.map(bodyWorld);
-    if (ringAu) pts.push({ x: ringAu, y: 0 }, { x: -ringAu, y: 0 }); // keep the ring in frame
+    stars.forEach((st) => pts.push(starWorld(st))); // keep both binary stars in frame
+    const c = primaryWorld();
+    if (ringAu) pts.push({ x: c.x + ringAu, y: c.y }, { x: c.x - ringAu, y: c.y }); // ring
     hostJunctions.forEach((_, i) => pts.push(nexusWorld(i))); // keep the nexus in frame
     cam = pts.length ? fit(pts, width, height) : { cx: 0, cy: 0, scale: 40 };
     fitScale = cam.scale;
@@ -132,14 +142,13 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    const origin = worldToScreen({ x: 0, y: 0 }, cam, width, height);
-
-    // Hyper-limit ring around the primary star.
+    // Hyper-limit ring around the primary star (centred on its real position).
     if (ringAu && layers.ring) {
+      const c = worldToScreen(primaryWorld(), cam, width, height);
       ctx.strokeStyle = '#3a5a44';
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      ctx.arc(origin.x, origin.y, ringAu * cam.scale, 0, Math.PI * 2);
+      ctx.arc(c.x, c.y, ringAu * cam.scale, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -147,22 +156,37 @@
     ctx.font = '11px ui-monospace, monospace';
     ctx.textBaseline = 'middle';
 
-    // Primary star at the origin, labelled. (Binary companion placement at its
-    // real barycenter offset is deferred — see the system-geometry follow-up.)
-    ctx.fillStyle = '#ffd86b';
-    ctx.beginPath();
-    ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-    if (layers.labels) {
-      ctx.fillStyle = '#cabf7a';
-      ctx.fillText(starLabel(), origin.x + 9, origin.y);
+    // Each star at its barycenter offset, labelled (a binary's A/B sit apart; a
+    // single star is at the origin). Fall back to one star at origin if no detail.
+    if (stars.length) {
+      for (const st of stars) {
+        const s = worldToScreen(starWorld(st), cam, width, height);
+        ctx.fillStyle = starColorMap.get(st.id) ?? '#ffd86b';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        if (layers.labels) {
+          ctx.fillStyle = '#cabf7a';
+          ctx.fillText(st.name ?? detail?.name ?? systemId, s.x + 9, s.y);
+        }
+      }
+    } else {
+      const o = worldToScreen({ x: 0, y: 0 }, cam, width, height);
+      ctx.fillStyle = '#ffd86b';
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      if (layers.labels) {
+        ctx.fillStyle = '#cabf7a';
+        ctx.fillText(starLabel(), o.x + 9, o.y);
+      }
     }
 
-    // Planets / moons.
+    // Planets / moons, coloured by their parent star so binaries group visibly.
     for (const b of bodies) {
       const p = worldToScreen(bodyWorld(b), cam, width, height);
       const moon = b.type === 'moon';
-      ctx.fillStyle = moon ? '#9aa6bd' : '#cfe0ff';
+      ctx.fillStyle = bodyColor(b, starColorMap);
       ctx.beginPath();
       ctx.arc(p.x, p.y, moon ? NODE_R - 1 : NODE_R, 0, Math.PI * 2);
       ctx.fill();
@@ -250,7 +274,14 @@
       if (w) consider(w, () => onselect?.(placeRows(pl), pl.name ?? null));
     }
     const d = detail;
-    if (d) consider({ x: 0, y: 0 }, () => onselect?.(systemDetailRows(d), null));
+    // The stars are the system-detail click targets (the barycenter origin is empty
+    // in a binary); fall back to the origin when no star positions are available.
+    if (d && stars.length) {
+      for (const st of stars)
+        consider(starWorld(st), () => onselect?.(systemDetailRows(d), st.name));
+    } else if (d) {
+      consider({ x: 0, y: 0 }, () => onselect?.(systemDetailRows(d), null));
+    }
     hostJunctions.forEach((j, i) => consider(nexusWorld(i), () => onjunction?.(j.id)));
     return best;
   }

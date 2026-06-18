@@ -37,7 +37,13 @@ from hvsim.route import (
     simulation_for_route,
     to_filed,
 )
-from hvsim.universe import LMIN_M, Universe, body_positions, inter_system_distance
+from hvsim.universe import (
+    LMIN_M,
+    Universe,
+    body_positions,
+    inter_system_distance,
+    star_positions,
+)
 
 from .db import (
     FlightPlanRow,
@@ -419,13 +425,17 @@ def create_app(
         return {"from": a, "to": b, **inter_system_distance(u, a, b)}
 
     @app.get("/systems/{system_id}", response_model=SystemDetail)
-    def system_detail(system_id: str) -> SystemDetail:
-        """One system's catalog detail: stars, hyper-limit ring radius, binary."""
+    def system_detail(system_id: str, at: datetime | None = None) -> SystemDetail:
+        """One system's catalog detail: stars (with in-system positions), hyper-limit
+        ring radius, binary. ``at`` syncs star positions with /bodies on a time-scrub."""
         u = require_universe()
         s = u.system(system_id)
         if s is None:
             raise HTTPException(404, f"unknown system {system_id!r}")
         hl = u.hyper_limit_lmin(system_id)
+        # Sol's single star sits at the origin (no artifact binary); others come from
+        # the binary-aware placement (single star -> origin, binary -> offsets).
+        spos = {} if system_id == "sol" else star_positions(u, system_id, resolve_when(at))
         coords = (
             None
             if s["coord_x_ly"] is None
@@ -448,6 +458,7 @@ def create_app(
                     spectral_type=st.get("spectral_type"),
                     mass_solar=st.get("mass_solar"),
                     hyper_limit_lmin=st.get("hyper_limit_lmin"),
+                    position=position_out(spos[st["id"]]) if st["id"] in spos else None,
                 )
                 for st in u.stars(system_id)
             ],
@@ -506,6 +517,7 @@ def create_app(
                     "id": bid,
                     "name": b.get("name", bid),
                     "type": b.get("type"),
+                    "parent_star_id": b.get("parent_star_id"),  # group planets by star (binaries)
                     "position": position_out(vec).model_dump(),
                 }
             )

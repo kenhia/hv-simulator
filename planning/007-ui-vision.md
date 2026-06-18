@@ -240,7 +240,11 @@ surface and unblocks the UI queue view later).
 | 025 ✅ | Polish + dev time controls — dev-gated **time scrubber** (play/pause via rate 0, rate presets, step, jump; `Space`/`,`/`.`), **faction colours**, **layer toggles** (`l`), **help overlay** (`?`), itinerary line + leader-line de-collision. Engine: `ClockUpdate.rate` `ge=0`. **Observer complete.** | ui |
 | **026** ✅ | **engine: `POST /plan`** — relocated the finder into `hvsim.route.find` (`plan_route` + `plan_route_multi`); `tools/nav-planner` is now a thin CLI wrapper. `POST /plan` → `{filed, route}` (multi-destination, per-waypoint layovers; resolved preview); 404/422/503. Min-layover left to the UI. | engine |
 | 027 ✅ | UI Flight Planner — `m` opens the planner: pick ship (from `GET /fleet/ships` catalog) → origin + ordered destinations + layovers (non-military default ≥2 h) → `POST /plan` → preview (galaxy path highlight + ETA + Ship Timeline) → submit (`POST /fleet/routes`) → joins the live board. Engine: `Universe.ships()` + `GET /fleet/ships`. | ui+engine |
-| 028 | Controller extras (later) — saved routes ("Sphinx-Grayson-Courier-Run"), non-traditional waypoint routes (belt waypoint → hyper from above the ecliptic), re-route a moving ship. | ui+engine |
+| **028** ✅ | **Map fidelity** — binary stars drawn at their barycenter offsets (engine exposes per-star positions on `GET /systems/{id}`; planets coloured/grouped by `parent_star_id`) + a deterministic ±22.5° **bearing-arc** jitter in the frame tool so the galaxy isn't a vertical X=0 column. Artifact regenerated. (KWIs #69/#68) | ui+engine |
+| 029 | Map polish — adaptive scale bar (#71), wormhole-terminus markers in non-host systems (#74), queued ships drawn at the nexus (#75), label click-targets (#70). | ui |
+| 030 | Living galaxy — expand systems + ships + nations (#66) via the `expand-galaxy`/scribe pipeline (dedicated sprint). | universe-build |
+| 031 | Repeating routes — ships live on auto-cycling itineraries (#59); the map bustles unattended. | ui+engine |
+| later | Controller extras — saved routes ("Sphinx-Grayson-Courier-Run"), non-traditional waypoint routes (belt waypoint → hyper from above the ecliptic), re-route a moving ship. | ui+engine |
 | deferred | Grafana dashboards — separate 1-2 sprint effort; revisit at each new data surface (next: the 020 queue metrics). | ops |
 
 Build order parallels the engine's own: topology -> motion -> operate -> observe.
@@ -293,13 +297,13 @@ UI can't run Python, so it needs an HTTP **`POST /plan`**. But the engine API is
 ### Flight Planner UI (027)
 - A Controller **mode** (the reserved `m` menu switches Observer↔Controller). Pick
   an available ship → **prefill origin by state** (at-rest → current; in-flight →
-  "extend from destination", re-route deferred to 028) → pick destination(s) +
+  "extend from destination", re-route deferred to a later Controller sprint) → pick destination(s) +
   layovers → `POST /plan` → preview the route on the map + a summary → **submit**.
   Abort/clear via `DELETE`. Re-uses the Ship Timeline for the preview.
 
 ## Open — to settle next (NOT decided here)
 
-- **Re-routing a moving ship** — deferred to 028 (the at-origin guard rejects it
+- **Re-routing a moving ship** — deferred to a later Controller sprint (the at-origin guard rejects it
   today); pairs with "extend from destination" for in-flight ships.
 
 _Resolved 2026-06-18: route-finder **relocates into `hvsim`** (026); min-layover is

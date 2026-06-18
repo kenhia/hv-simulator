@@ -190,9 +190,9 @@
   "coordinates": {
     "canon": false,
     "frame": "sol-galactic-north",
-    "x_ly": 0.0,
+    "x_ly": 15.195,
     "y_ly": 0.0,
-    "z_ly": 40.0,
+    "z_ly": 37.001,
     "notes": "Fabricated (canon:false) from canon distance+bearing relative to sol; Sol origin, +Z galactic north, +X galactic east."
   }
 }

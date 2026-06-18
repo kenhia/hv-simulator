@@ -11,6 +11,7 @@ hand-tunable later. Writes a `coordinates` block into `data/systems/*.json`.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import pathlib
@@ -22,6 +23,34 @@ _AXIS = {
     "east": (1.0, 0.0, 0.0),
     "west": (-1.0, 0.0, 0.0),
 }
+
+# Artistic license (canon:false): canon gives only a coarse compass bearing, so we
+# treat each cardinal as a wedge and spread systems within it. "Galactic north" =
+# anywhere in the NW-NE arc, i.e. +-22.5 deg about due north (the 90 deg NW-NE arc,
+# halved). Without this every pure-cardinal system lands on one axis (X=0 for
+# north) and the galaxy map renders as a vertical column. The offset is a
+# deterministic function of the system id -- reproducible, hand-tunable, never
+# random per run -- and is a pure in-plane (X-Z) rotation, so canon distance is
+# preserved and Y stays reserved (~0).
+_ARC_HALF_DEG = 22.5
+
+
+def _jitter_rad(system_id: str) -> float:
+    """Deterministic in-plane bearing offset in [-22.5 deg, +22.5 deg] for a system.
+
+    Uses a stable hash (not Python's per-process-salted ``hash()``) so re-running
+    the frame tool yields identical coordinates.
+    """
+    h = int(hashlib.sha256(system_id.encode()).hexdigest()[:8], 16)
+    frac = h / 0xFFFFFFFF  # [0, 1]
+    return math.radians((frac * 2.0 - 1.0) * _ARC_HALF_DEG)
+
+
+def _rotate_in_plane(unit: tuple[float, float, float], theta: float) -> tuple[float, float, float]:
+    """Rotate a unit vector by ``theta`` in the galactic plane (about the Y axis)."""
+    x, y, z = unit
+    c, s = math.cos(theta), math.sin(theta)
+    return (x * c - z * s, y, x * s + z * c)
 
 
 def _direction_unit(direction: str) -> tuple[float, float, float]:
@@ -49,7 +78,12 @@ def solve_frame(systems: dict[str, dict]) -> dict[str, tuple[float, float, float
             ref = (loc.get("reference") or "Sol").lower()
             if ref not in positions:
                 continue
-            ux, uy, uz = _direction_unit(loc.get("direction") or "north")
+            # Auto arc-jitter + an optional hand-tune: ``bearing_nudge_deg`` rotates a
+            # system's placement about its reference in the galactic plane (+CCW: east
+            # toward north), additive to the jitter. Hand-tuning hook for cases where
+            # the seeded spread reads wrong against canon/aesthetics.
+            theta = _jitter_rad(sid) + math.radians(float(loc.get("bearing_nudge_deg") or 0.0))
+            ux, uy, uz = _rotate_in_plane(_direction_unit(loc.get("direction") or "north"), theta)
             dist = float(loc.get("distance_ly") or 0.0)
             rx, ry, rz = positions[ref]
             positions[sid] = (rx + ux * dist, ry + uy * dist, rz + uz * dist)

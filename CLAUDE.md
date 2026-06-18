@@ -68,10 +68,16 @@ Sprint 025 polished + **completed the Observer**: a dev-gated **time scrubber**
 (play/pause via `rate 0`, rate presets, step, jump — `Space`/`,`/`.`), **faction
 colours** (by transponder nation code), **layer toggles** (`l`), a **help overlay**
 (`?`, rendering the keymap). Engine: `ClockUpdate.rate` now allows `0` (frozen).
-**Phase 2.5 Observer is complete**; the **Controller** (file/route from the UI —
-needs a `/plan` endpoint) is the next arc. Open polish lives in KWIs #69 (binary
-geometry) / #70 (label clicks) / #71 (scale bar) / #72 (rich ship popup). Grafana
-dashboards are a deferred parallel track. A UI/lore glossary lives in
+**Phase 2.5 Observer is complete**; the **Controller** landed in Sprints 026–027
+(`POST /plan` + the Flight Planner UI — file/route ships from the map). Sprint 028
+(**map fidelity**) made the maps *look right*: binary stars now render at their
+barycenter offsets (engine exposes per-star positions on `GET /systems/{id}`,
+planets grouped/coloured by `parent_star_id`), and a deterministic ±22.5°
+**bearing-arc** jitter in the frame tool spreads the galaxy so it's no longer a
+vertical X=0 column (artifact regenerated; canon distances preserved) — resolving
+KWIs #69/#68. The post-027 arc is **demo-first** (027 closed the Controller's core):
+029 map polish (#70/#71/#74/#75), 030 expand the galaxy (#66), 031 repeating routes
+(#59). Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
@@ -260,8 +266,8 @@ pick a ship (from `GET /fleet/ships` catalog) → origin + ordered destinations 
 layovers (non-military default ≥2 h, UI-enforced) → `POST /plan` → preview (galaxy
 route-path highlight + ETA + Ship Timeline) → submit (`POST /fleet/routes`) → the
 ship joins the live board. Idle ships are the target; re-routing an under-way ship
-is deferred (028, the at-origin guard). Remaining Controller work (028): saved
-routes, non-traditional waypoints, re-route a moving ship.
+is deferred (the at-origin guard). Remaining Controller extras (a later sprint):
+saved routes, non-traditional waypoints, re-route a moving ship.
 
 **Transponder identity** (Sprint 017): every ship has a canonical dotted
 **`nation.class.hull`** transponder (stable integer codes from
