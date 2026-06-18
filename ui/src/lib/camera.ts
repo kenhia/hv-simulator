@@ -70,6 +70,14 @@ export function fit(points: Vec2[], width: number, height: number, padding = 60)
   return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, scale: scale > 0 ? scale : 1 };
 }
 
+// Centre the view on a world point, showing `span` world-units across the smaller
+// viewport dimension. Used by Locate-ship (Sprint 031) to frame a chosen ship at a
+// fixed zoom regardless of resolution.
+export function centerOn(world: Vec2, span: number, width: number, height: number): Camera {
+  const scale = Math.min(width, height) / (span > 0 ? span : 1);
+  return { cx: world.x, cy: world.y, scale: scale > 0 ? scale : 1 };
+}
+
 // Squared screen distance — for nearest-node hit-testing.
 export function screenDist2(a: Vec2, b: Vec2): number {
   const dx = a.x - b.x;

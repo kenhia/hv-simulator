@@ -109,6 +109,14 @@ class VelocityOut(BaseModel):
     fraction_c: float
 
 
+class BandOut(BaseModel):
+    """The active hyperspace band (set only during a hyper_cruise leg)."""
+
+    order: int
+    name: str | None
+    velocity_multiplier: float  # apparent = velocity_multiplier x real velocity
+
+
 class StateOut(BaseModel):
     when: datetime
     # idle | predeparture | transit | layover | hyper_cruise | queued | wormhole_transit | arrived
@@ -126,6 +134,9 @@ class StateOut(BaseModel):
     frame: str = "heliocentric"  # heliocentric | galactic
     transponder: str | None = None
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
+    # Set only in hyper: velocity (above) is the *apparent* speed; real = apparent /
+    # band.velocity_multiplier. Lets the UI show "0.382c real · 1640c apparent (Zeta)".
+    band: BandOut | None = None
 
 
 class ShipOut(BaseModel):

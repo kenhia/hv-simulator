@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { Junction, System, WormholeLink } from './api';
   import {
+    centerOn,
     fit,
     panBy,
     screenDist2,
@@ -21,6 +22,9 @@
     junctions = [],
     selectedId = null,
     fitSignal = 0,
+    focus = null,
+    focusSignal = 0,
+    lockGalaxy = false,
     ships,
     layers = DEFAULT_LAYERS,
     previewPath = null,
@@ -32,6 +36,9 @@
     junctions?: Junction[];
     selectedId?: string | null;
     fitSignal?: number;
+    focus?: { x: number; y: number; span: number } | null; // Locate-ship target (ly)
+    focusSignal?: number;
+    lockGalaxy?: boolean; // when set, zoom-in does NOT drill into a system (follow a ship)
     ships?: () => LiveShip[]; // dead-reckoned each frame
     layers?: Layers;
     previewPath?: string[] | null; // planned-route system path to highlight
@@ -238,8 +245,9 @@
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
     const next = zoomAbout(cam, e.offsetX, e.offsetY, factor, width, height);
-    // Zooming deep past the framing scale, with a system near centre, drills in.
-    if (next.scale > fitScale * 8) {
+    // Zooming deep past the framing scale, with a system near centre, drills in —
+    // unless the galaxy is locked (following a ship), where we zoom freely instead.
+    if (!lockGalaxy && next.scale > fitScale * 8) {
       const hit = nearest(width / 2, height / 2, 80);
       if (hit) {
         onenter?.(hit);
@@ -286,6 +294,15 @@
       lastFit = fitSignal;
       cam = fit(placed.map(world), width, height);
       fitScale = cam.scale;
+    }
+  });
+
+  // Locate-ship: the page bumps focusSignal to centre on a galactic point.
+  let lastFocus = 0;
+  $effect(() => {
+    if (focus && focusSignal !== lastFocus && width > 1) {
+      lastFocus = focusSignal;
+      cam = centerOn({ x: focus.x, y: focus.y }, focus.span, width, height);
     }
   });
 </script>

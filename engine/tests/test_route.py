@@ -206,6 +206,24 @@ def test_hyper_cruise_reports_galactic_frame(u: Universe) -> None:
     assert st.position.norm() == pytest.approx(20.0 * LY_M, rel=1e-6)
 
 
+def test_hyper_cruise_state_reports_band(u: Universe) -> None:
+    # During a hyper leg the state carries the active band; velocity is the apparent
+    # speed, so real = apparent / multiplier recovers the ship's real cruise (#72).
+    c = compile_route(_deliverable(WARSHIP), u)
+    sim = simulation_for_route(c, u)
+    cruise = c.segments[1]
+    st = sim.state(cruise.t_start + timedelta(seconds=cruise.duration_s / 2))
+    assert st.phase == "hyper_cruise"
+    assert st.band is not None
+    assert st.band["band_order"] == 7  # Eta (WARSHIP max_hyper_band)
+    mult = st.band["velocity_multiplier"]
+    apparent = st.velocity.norm()  # coasting at apparent v_cap = mult x real x c
+    assert apparent == pytest.approx(mult * 0.6 * SPEED_OF_LIGHT, rel=1e-9)
+    assert apparent / mult == pytest.approx(0.6 * SPEED_OF_LIGHT, rel=1e-9)  # real
+    # At rest in-system there is no band.
+    assert sim.state(c.depart_at).band is None
+
+
 def test_higher_band_ship_is_faster(u: Universe) -> None:
     # Same route, Theta ship vs Delta ship: the higher band arrives sooner.
     theta = Ship("Fast", 600.0, 0.6, max_hyper_band=8, hyper_cruise_velocity_c=0.6)

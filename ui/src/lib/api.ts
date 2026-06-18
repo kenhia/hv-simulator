@@ -118,6 +118,12 @@ export interface Velocity {
   fraction_c: number;
 }
 
+export interface Band {
+  order: number;
+  name: string | null;
+  velocity_multiplier: number; // apparent = velocity_multiplier × real
+}
+
 export interface ShipState {
   when: string;
   phase: string;
@@ -127,10 +133,12 @@ export interface ShipState {
   eta: string | null;
   percent_complete: number | null;
   destination: string | null;
+  distance_to_destination_km: number | null;
   system: string | null;
   frame: 'heliocentric' | 'galactic';
   transponder: string | null;
   queue_position: number | null;
+  band: Band | null; // set only in hyper; velocity is then the *apparent* speed
 }
 
 export interface FleetEntry {

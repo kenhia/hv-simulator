@@ -26,7 +26,13 @@ export interface Binding {
 export const KEYMAP: Binding[] = [
   { key: 'Enter', action: 'enter', label: 'enter selected system', sprint: '022', active: true },
   { key: 'Escape', action: 'exit', label: 'back out / dismiss', sprint: '022', active: true },
-  { key: 'z', action: 'zone', label: 'toggle zone mode', sprint: '022', active: true },
+  {
+    key: 'z',
+    action: 'zone',
+    label: 'lock zoom (zone in-system / follow on galaxy)',
+    sprint: '022',
+    active: true
+  },
   { key: 'f', action: 'fit', label: 'fit / reset view', sprint: '022', active: true },
   { key: '?', action: 'help', label: 'show shortcuts', sprint: '025', active: true },
   { key: 'l', action: 'layers', label: 'layer toggles', sprint: '025', active: true },

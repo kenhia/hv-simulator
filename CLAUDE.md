@@ -90,7 +90,14 @@ balance the map per a reference fan map) — 16 systems / 11 built — plus real
 Empire, no longer stubs, #66) and more People's Navy hulls (36 ships). The frame tool's
 bearing-arc gained a **3° floor + per-system `bearing_offset_deg`** (random-at-
 incorporation, frozen) so new systems land naturally; `expand-galaxy`/the
-system-scribe now document the model (#79). Next: 031 repeating routes (#59).
+system-scribe now document the model (#79). Sprint 031 (**demo polish**) reformatted
+the Fleet Board to a leading **phase glyph + full ship name**, made **ship detail**
+rich (phase/ETA/destination/distance + real & **apparent velocity with the hyper
+band** — engine now exposes `band` on `StateOut`, part of #72), and added a
+LOD-aware **Locate ship** button (`camera.centerOn`; interstellar ships engage a
+**galaxy follow-lock** — `z`/`Esc`, zoom-in stops drilling into systems — so you can
+watch a ship fly interstellar; the galaxy scale bar steps to light-hours/min when
+deep). Next: 032 repeating routes (#59).
 Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 

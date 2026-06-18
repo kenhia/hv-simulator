@@ -13,6 +13,7 @@ const M_PER: Record<string, number> = {
   km: 1e3,
   ls: 2.99792458e8, // light-second
   lmin: 1.798754748e10, // light-minute
+  lhr: 1.0792528488e12, // light-hour (60 light-minutes)
   au: 1.495978707e11,
   ly: 9.4607304725808e15
 };
@@ -21,14 +22,16 @@ const LABEL: Record<string, string> = {
   km: 'km',
   ls: 'light-sec',
   lmin: 'light-min',
+  lhr: 'light-hr',
   au: 'AU',
   ly: 'ly'
 };
 
 // Unit ladder per scene, largest first (we pick the largest unit that still gives
-// a value >= 1, so the displayed number stays small and readable).
+// a value >= 1, so the displayed number stays small and readable). The galaxy
+// ladder steps down to light-hours/minutes for a deep (locked) zoom on a ship.
 const LADDER: Record<BaseUnit, string[]> = {
-  ly: ['ly'],
+  ly: ['ly', 'lhr', 'lmin'],
   au: ['au', 'lmin', 'ls', 'km']
 };
 

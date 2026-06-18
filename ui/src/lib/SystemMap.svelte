@@ -10,6 +10,7 @@
     type WormholeLink
   } from './api';
   import {
+    centerOn,
     fit,
     panBy,
     screenDist2,
@@ -38,6 +39,8 @@
     links = [],
     zoneMode = false,
     fitSignal = 0,
+    focus = null,
+    focusSignal = 0,
     ships,
     layers = DEFAULT_LAYERS,
     onselect,
@@ -51,6 +54,8 @@
     links?: WormholeLink[];
     zoneMode?: boolean;
     fitSignal?: number;
+    focus?: { x: number; y: number; span: number } | null; // Locate-ship target (AU)
+    focusSignal?: number;
     ships?: () => LiveShip[];
     layers?: Layers;
     onselect?: (d: Detail, bodyName: string | null) => void;
@@ -68,6 +73,7 @@
   let places = $state<Place[]>([]);
   let fitScale = 1; // baseline from the initial fit; zooming far below it exits
   let fitted = false;
+  let lastFocus = 0; // the focusSignal already consumed — Locate is one-shot, not per-poll
 
   const NODE_R = 3;
   const HIT_PX = 14;
@@ -141,7 +147,13 @@
       moons: b.filter((x) => x.type === 'moon').length,
       stations: p.length
     });
-    if (!fitted && width > 1) doFit(); // frame the system once its bodies arrive
+    // Frame the system once its bodies arrive. A *pending* Locate (unconsumed
+    // focusSignal) centres on the ship instead; an already-consumed one is left
+    // alone so the 5s poll never re-zooms over the user's manual pan/zoom.
+    if (width > 1) {
+      if (focus && focusSignal !== lastFocus) applyFocus();
+      else if (!fitted) doFit();
+    }
   }
 
   function doFit() {
@@ -151,6 +163,14 @@
     if (ringAu) pts.push({ x: c.x + ringAu, y: c.y }, { x: c.x - ringAu, y: c.y }); // ring
     markers.forEach((m) => pts.push(m.world)); // keep nexus/termini in frame
     cam = pts.length ? fit(pts, width, height) : { cx: 0, cy: 0, scale: 40 };
+    fitScale = cam.scale;
+    fitted = true;
+  }
+
+  function applyFocus() {
+    if (!focus) return;
+    lastFocus = focusSignal; // consume this Locate so it applies exactly once
+    cam = centerOn({ x: focus.x, y: focus.y }, focus.span, width, height);
     fitScale = cam.scale;
     fitted = true;
   }
@@ -405,6 +425,11 @@
       lastFit = fitSignal;
       doFit();
     }
+  });
+
+  // Locate-ship: centre on the ship when the page bumps focusSignal (same system).
+  $effect(() => {
+    if (focus && focusSignal !== lastFocus && width > 1) applyFocus();
   });
 </script>
 

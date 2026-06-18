@@ -4,6 +4,7 @@
     fetchGalaxy,
     fetchShipCatalog,
     fetchShipRoute,
+    fetchShipState,
     fetchSystemDetail,
     type Galaxy,
     type RouteOut,
@@ -14,7 +15,8 @@
   import { putClock } from '$lib/api';
   import { actionForKey } from '$lib/keymap';
   import { breadcrumb, GALAXY, type Scene } from '$lib/scene';
-  import { shipRows, systemRows, type Detail } from '$lib/detail';
+  import { shipRows, shipStateRows, systemRows, type Detail } from '$lib/detail';
+  import { kmToAu, kmToLy } from '$lib/live';
   import { DEFAULT_LAYERS, type Layers } from '$lib/layers';
   import { LiveFleet } from '$lib/live';
   import AtAGlance from '$lib/AtAGlance.svelte';
@@ -39,6 +41,7 @@
   let panel = $state<Detail | null>(null);
   let focusedBody = $state<string | null>(null);
   let zoneMode = $state(false);
+  let galaxyLock = $state(false); // follow a ship on the galaxy scene (no drill-in)
   let fitSignal = $state(0);
   let summary = $state<{ planets: number; moons: number; stations: number } | null>(null);
 
@@ -50,6 +53,12 @@
   let selectedRoute = $state<RouteOut | null>(null);
   let junctionQueueId = $state<string | null>(null);
   const ships = () => live.ships();
+
+  // Locate-ship (Sprint 031): a one-shot camera-centre target per scene + a signal.
+  let focusTarget = $state<{ x: number; y: number; span: number } | null>(null);
+  let focusSignal = $state(0);
+  const GALAXY_FOCUS_SPAN_LY = 30; // ly across the viewport when locating in hyper (then zoom freely, locked)
+  const SYSTEM_FOCUS_SPAN_AU = 40; // AU across the viewport when locating in-system
 
   let layers = $state<Layers>({ ...DEFAULT_LAYERS });
   let showHelp = $state(false);
@@ -92,6 +101,8 @@
   async function enterSystem(s: System) {
     selectedSystem = s;
     panel = null;
+    focusTarget = null; // drop any stale Locate target on normal navigation
+    galaxyLock = false; // galaxy-only follow mode ends when we drill into a system
     focusedBody = null;
     zoneMode = false;
     summary = null;
@@ -109,6 +120,7 @@
   function exitToGalaxy() {
     scene = GALAXY;
     systemDetail = null;
+    focusTarget = null; // drop any stale Locate target on normal navigation
     focusedBody = null;
     panel = null;
     selectedShip = null;
@@ -133,13 +145,47 @@
       exitToGalaxy();
     }
     selectedShip = tp;
-    panel = shipRows(entry);
+    panel = shipRows(entry); // immediate lightweight rows; enriched below
     selectedRoute = null;
     try {
       selectedRoute = await fetchShipRoute(tp);
     } catch {
       selectedRoute = null;
     }
+    // Enrich with live state (velocity + hyper band/apparent, destination, distance).
+    try {
+      const state = await fetchShipState(tp);
+      const ship = catalog.find((c) => c.transponder === tp);
+      if (selectedShip === tp) panel = shipStateRows(state, entry, ship);
+    } catch {
+      /* keep the lightweight rows on failure */
+    }
+  }
+
+  // Locate-ship: centre the camera on a ship, LOD-aware. Interstellar ships frame on
+  // the galaxy scene (no drill-in, so they stay visible); in-system ships frame
+  // within their system.
+  async function locateShip(tp: string) {
+    const sh = ships().find((s) => s.transponder === tp);
+    if (!sh) return;
+    if (!live.tracked.has(tp)) {
+      live.tracked.add(tp); // locate implies show
+      tracked = new Set(live.tracked);
+    }
+    if (sh.frame === 'galactic') {
+      if (scene.kind !== 'galaxy') exitToGalaxy();
+      // Lock the galaxy scene so zooming in follows the ship instead of drilling
+      // into the host system (where an interstellar ship isn't drawn). Esc releases.
+      galaxyLock = true;
+      focusTarget = { x: kmToLy(sh.posKm.x), y: kmToLy(sh.posKm.z), span: GALAXY_FOCUS_SPAN_LY };
+    } else if (sh.system) {
+      const sys = galaxy.systems.find((s) => s.id === sh.system);
+      if (sys && !(scene.kind === 'system' && scene.id === sys.id)) await enterSystem(sys);
+      focusTarget = { x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y), span: SYSTEM_FOCUS_SPAN_AU };
+    } else {
+      return;
+    }
+    focusSignal++;
   }
 
   function toggleTrack(tp: string) {
@@ -158,14 +204,24 @@
       enterSystem(selectedSystem);
     } else if (action === 'exit') {
       e.preventDefault();
-      // Progressive back-out: queue panel -> data panel -> exit the system.
+      // Progressive back-out: queue panel -> data panel -> galaxy follow-lock ->
+      // exit the system.
       if (junctionQueueId) junctionQueueId = null;
       else if (panel) panel = null;
-      else if (scene.kind === 'system') exitToGalaxy();
+      else if (galaxyLock) {
+        galaxyLock = false;
+        fitSignal++; // release the follow and re-frame the galaxy
+      } else if (scene.kind === 'system') exitToGalaxy();
     } else if (action === 'zone') {
       e.preventDefault();
-      zoneMode = !zoneMode;
-      if (zoneMode) fitSignal++;
+      // `z` locks the current scene's zoom: zone-lock in a system, follow-lock on
+      // the galaxy (zoom-in stops drilling into systems).
+      if (scene.kind === 'system') {
+        zoneMode = !zoneMode;
+        if (zoneMode) fitSignal++;
+      } else {
+        galaxyLock = !galaxyLock;
+      }
     } else if (action === 'fit') {
       e.preventDefault();
       fitSignal++;
@@ -227,6 +283,9 @@
       junctions={galaxy.junctions}
       selectedId={selectedSystem?.id ?? null}
       {fitSignal}
+      focus={focusTarget}
+      {focusSignal}
+      lockGalaxy={galaxyLock}
       {ships}
       {layers}
       {previewPath}
@@ -246,6 +305,8 @@
         links={galaxy.links}
         {zoneMode}
         {fitSignal}
+        focus={focusTarget}
+        {focusSignal}
         {ships}
         {layers}
         onselect={(d, body) => {
@@ -284,7 +345,11 @@
 
   <div class="overlay hints">
     {#if systemId === null}
-      dbl-click / <kbd>Enter</kbd> a system · <kbd>f</kbd> fit
+      {#if galaxyLock}
+        <kbd>Esc</kbd> release follow · <kbd>f</kbd> fit · 🔒 following ship
+      {:else}
+        dbl-click / <kbd>Enter</kbd> a system · <kbd>z</kbd> lock · <kbd>f</kbd> fit
+      {/if}
     {:else}
       <kbd>Esc</kbd> back · <kbd>z</kbd> zone{zoneMode ? ' ✓' : ''} · <kbd>f</kbd> fit
     {/if}
@@ -316,7 +381,11 @@
       />
     {/key}
   {:else if panel}
-    <DataPanel detail={panel} onclose={() => (panel = null)} />
+    <DataPanel
+      detail={panel}
+      onclose={() => (panel = null)}
+      onlocate={selectedShip ? () => locateShip(selectedShip!) : undefined}
+    />
   {/if}
 
   {#if dev}

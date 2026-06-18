@@ -30,6 +30,14 @@ describe('scaleBar', () => {
     expect(scaleBar(5e8, 'au').unit).toBe('km');
   });
 
+  it('galaxy scene steps down to light-hours/minutes on a deep (locked) zoom', () => {
+    // A galaxy-scale view (a few ly across) stays in ly.
+    expect(scaleBar(50, 'ly').unit).toBe('ly');
+    // Much deeper: a fraction of a ly reads in light-hours, then light-minutes.
+    expect(scaleBar(2e5, 'ly').unit).toBe('lhr');
+    expect(scaleBar(1e7, 'ly').unit).toBe('lmin');
+  });
+
   it('snaps to nice 1/2/5 numbers and the bar fits the target', () => {
     for (const scale of [0.3, 1, 7, 42, 300]) {
       const b = scaleBar(scale, 'au', 90);
