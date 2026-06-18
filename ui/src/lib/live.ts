@@ -113,6 +113,11 @@ export class LiveFleet {
     await this.pollClock();
   }
 
+  // Re-fetch the roster now (call after filing a route so it appears at once).
+  async refreshFleet(): Promise<void> {
+    await this.pollFleet();
+  }
+
   private async pollClock(): Promise<void> {
     try {
       const c = await fetchClock();

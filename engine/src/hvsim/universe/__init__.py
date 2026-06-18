@@ -97,6 +97,10 @@ class Universe:
         r = self.con.execute("SELECT * FROM hyperspace_model WHERE id=1").fetchone()
         return dict(r) if r else None
 
+    def ships(self) -> list[dict]:
+        """All ships in the artifact (catalog), ordered by transponder."""
+        return [dict(r) for r in self.con.execute("SELECT * FROM ships ORDER BY transponder, id")]
+
     def ship(self, ship_id: str) -> dict | None:
         r = self.con.execute("SELECT * FROM ships WHERE id=?", (ship_id,)).fetchone()
         return dict(r) if r else None
@@ -290,9 +294,16 @@ def body_positions(u: Universe, system_id: str, when: datetime) -> dict[str, Vec
 def resolve_position(
     u: Universe | None, system_id: str, body_id: str, when: datetime
 ) -> Vec3 | None:
-    """System-aware position. Sol uses the JPL ephemeris; others the artifact."""
+    """System-aware position. Sol uses the JPL ephemeris; others the artifact.
+
+    Body ids are namespaced ``system:body`` at the API boundary (the map/UI
+    convention). Real systems store that namespaced id as the artifact PK, so it
+    matches directly; Sol's JPL ephemeris keys on the **bare** name, so strip a
+    leading ``sol:`` here (accept both ``sol:jupiter`` and ``jupiter``).
+    """
     if system_id == "sol":
-        return Vec3(*heliocentric_position(body_id, when))
+        name = body_id[4:] if body_id.startswith("sol:") else body_id
+        return Vec3(*heliocentric_position(name, when))
     if u is None:
         return None
     return body_positions(u, system_id, when).get(body_id)

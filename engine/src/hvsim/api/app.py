@@ -67,6 +67,7 @@ from .schemas import (
     PlanRequest,
     RouteOut,
     SegmentOut,
+    ShipCatalogEntry,
     ShipCreate,
     ShipDetail,
     ShipOut,
@@ -729,6 +730,42 @@ def create_app(
         row.status = "aborted"
         session.commit()
         return {"transponder": transponder, "status": "aborted"}
+
+    @app.get("/fleet/ships", response_model=list[ShipCatalogEntry])
+    def fleet_ships(session: Session = Depends(get_db)) -> list[ShipCatalogEntry]:
+        """The galaxy ship catalog (for the Flight Planner's picker).
+
+        ``under_way`` is phase-based (a ship that has *arrived* is at rest and
+        re-fileable, not under way); ``location_*`` is its current navigable point,
+        so the planner can prefill the origin.
+        """
+        u = require_universe()
+        when = app.state.clock.now()
+        by_tp, _ = resolved_fleet(session)
+        nav: dict[str, tuple[str | None, str | None] | None] = {
+            tp: simulation_for_route(c, u).navigable_location(when) for tp, c in by_tp.items()
+        }
+        out: list[ShipCatalogEntry] = []
+        for s in u.ships():
+            tp = s.get("transponder")
+            if not tp:
+                continue
+            cls = u.ship_class(s["class_id"]) or {}
+            loc = nav.get(tp)  # None => no route OR in motion
+            under_way = tp in by_tp and loc is None
+            out.append(
+                ShipCatalogEntry(
+                    transponder=tp,
+                    name=s["name"],
+                    nation_code=tp.split(".")[0],
+                    ship_class=cls.get("name"),
+                    military=bool(s.get("navy") or cls.get("navy")),
+                    under_way=under_way,
+                    location_system=loc[0] if loc else None,
+                    location_body=loc[1] if loc else None,
+                )
+            )
+        return out
 
     @app.get("/fleet", response_model=FleetOut)
     def get_fleet(at: datetime | None = None, session: Session = Depends(get_db)) -> FleetOut:

@@ -164,6 +164,14 @@ paths:
       responses:
         "200": { description: text exposition, content: { text/plain: {} } }
 
+  /fleet/ships:
+    get:
+      summary: Galaxy ship catalog (the Flight Planner's picker)
+      operationId: fleetShips
+      responses:
+        "200": { description: catalog, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ShipCatalogEntry" } } } } }
+        "503": { description: universe artifact not loaded }
+
   /plan:
     post:
       summary: Plan a multi-destination route to preview (not filed)
@@ -322,6 +330,16 @@ components:
         junction_id: { type: string }
         position: { type: integer }
         transit_eta: { type: string, format: date-time }
+
+    ShipCatalogEntry:
+      type: object
+      properties:
+        transponder: { type: string }
+        name: { type: string }
+        nation_code: { type: string }
+        ship_class: { type: [string, "null"] }
+        military: { type: boolean }
+        has_active_route: { type: boolean }
 
     PlanRequest:
       type: object

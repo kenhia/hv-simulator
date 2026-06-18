@@ -33,8 +33,8 @@ export const KEYMAP: Binding[] = [
   { key: ' ', action: 'playPause', label: 'play/pause clock (dev)', sprint: '025', active: true },
   { key: ',', action: 'stepBack', label: 'step clock back (dev)', sprint: '025', active: true },
   { key: '.', action: 'stepForward', label: 'step clock fwd (dev)', sprint: '025', active: true },
-  { key: '/', action: 'search', label: 'locate a ship', sprint: '023', active: false },
-  { key: 'm', action: 'menu', label: 'main menu', sprint: 'later', active: false }
+  { key: 'm', action: 'menu', label: 'flight planner', sprint: '027', active: true },
+  { key: '/', action: 'search', label: 'locate a ship', sprint: '023', active: false }
 ];
 
 // Minimal shape so this is unit-testable without a DOM KeyboardEvent.

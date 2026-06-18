@@ -2,10 +2,12 @@
   import { onMount } from 'svelte';
   import {
     fetchGalaxy,
+    fetchShipCatalog,
     fetchShipRoute,
     fetchSystemDetail,
     type Galaxy,
     type RouteOut,
+    type ShipCatalogEntry,
     type System,
     type SystemDetail
   } from '$lib/api';
@@ -18,6 +20,7 @@
   import AtAGlance from '$lib/AtAGlance.svelte';
   import DataPanel from '$lib/DataPanel.svelte';
   import FleetBoard from '$lib/FleetBoard.svelte';
+  import FlightPlanner from '$lib/FlightPlanner.svelte';
   import GalaxyMap from '$lib/GalaxyMap.svelte';
   import HelpOverlay from '$lib/HelpOverlay.svelte';
   import JunctionQueuePanel from '$lib/JunctionQueuePanel.svelte';
@@ -54,6 +57,10 @@
   let dev = $state(false); // /clock dev_controls_enabled -> show the time scrubber
   let clockRate = $state(1);
   let scrubRate = $state(3600);
+
+  let showPlanner = $state(false); // Controller: the Flight Planner (menu `m`)
+  let catalog = $state<ShipCatalogEntry[]>([]);
+  let previewPath = $state<string[] | null>(null); // planned route, highlighted on the galaxy
 
   function toggleLayer(key: keyof Layers) {
     layers = { ...layers, [key]: !layers[key] };
@@ -177,6 +184,15 @@
     } else if (action === 'stepForward' && dev) {
       e.preventDefault();
       stepClock(3600);
+    } else if (action === 'menu') {
+      e.preventDefault();
+      showPlanner = !showPlanner;
+      if (showPlanner) {
+        panel = null;
+        junctionQueueId = null;
+      } else {
+        previewPath = null;
+      }
     }
   }
 
@@ -185,6 +201,9 @@
       .then((g) => (galaxy = g))
       .catch((e) => (error = e instanceof Error ? e.message : String(e)))
       .finally(() => (loading = false));
+    fetchShipCatalog()
+      .then((ships) => (catalog = ships))
+      .catch(() => (catalog = []));
     live.onchange = () => {
       roster = [...live.roster];
       tracked = new Set(live.tracked);
@@ -210,6 +229,7 @@
       {fitSignal}
       {ships}
       {layers}
+      {previewPath}
       onselect={(s) => {
         selectedSystem = s;
         selectedShip = null;
@@ -269,7 +289,24 @@
     {/if}
   </div>
 
-  {#if junctionQueueId}
+  {#if showPlanner}
+    <FlightPlanner
+      {catalog}
+      systems={galaxy.systems}
+      onclose={() => {
+        showPlanner = false;
+        previewPath = null;
+      }}
+      onpreview={(path) => (previewPath = path)}
+      onfiled={(tp) => {
+        live.tracked.add(tp);
+        tracked = new Set(live.tracked);
+        live.refreshFleet();
+        showPlanner = false;
+        previewPath = null;
+      }}
+    />
+  {:else if junctionQueueId}
     {#key junctionQueueId}
       <JunctionQueuePanel
         junctionId={junctionQueueId}

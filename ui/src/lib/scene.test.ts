@@ -25,9 +25,9 @@ describe('keymap', () => {
     expect(actionForKey({ key: 'z' })).toBe('zone');
     expect(actionForKey({ key: 'f' })).toBe('fit');
   });
-  it('ignores reserved-but-inactive keys', () => {
-    expect(actionForKey({ key: '/' })).toBeNull();
-    expect(actionForKey({ key: 'm' })).toBeNull();
+  it('maps the flight-planner key, ignores reserved-but-inactive ones', () => {
+    expect(actionForKey({ key: 'm' })).toBe('menu');
+    expect(actionForKey({ key: '/' })).toBeNull(); // still reserved/inactive
   });
   it('ignores modifier combos (browser/OS shortcuts)', () => {
     expect(actionForKey({ key: 'f', ctrlKey: true })).toBeNull();

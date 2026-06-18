@@ -255,7 +255,13 @@ the filed-route doc to commit **plus** a compiled preview (segments + ETA),
 *computed not filed* — the UI previews, then commits via `POST /fleet/routes`. (This
 revises the earlier "route-finding stays in the tool"; HTTP planning makes finding
 a first-class engine capability. Physics + finding live in the engine; the UI owns
-no logic.) The Flight Planner UI is Sprint 027.
+no logic.) Sprint 027 added the **Flight Planner UI** (Controller): `m` opens it →
+pick a ship (from `GET /fleet/ships` catalog) → origin + ordered destinations +
+layovers (non-military default ≥2 h, UI-enforced) → `POST /plan` → preview (galaxy
+route-path highlight + ETA + Ship Timeline) → submit (`POST /fleet/routes`) → the
+ship joins the live board. Idle ships are the target; re-routing an under-way ship
+is deferred (028, the at-origin guard). Remaining Controller work (028): saved
+routes, non-traditional waypoints, re-route a moving ship.
 
 **Transponder identity** (Sprint 017): every ship has a canonical dotted
 **`nation.class.hull`** transponder (stable integer codes from
