@@ -1,0 +1,43 @@
+name: 🚀 ATV ship request
+description: Request a ship for the All-The-Vibes fleet (a fun, non-canon tribute system).
+title: "[ATV Ship] "
+labels: ["atv-ship"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Add your own ship to the **All-The-Vibes** system! Every ATV ship is a
+        **StarterKit**-class personal transport (927 G, Theta-band capable) and is a
+        purely-for-fun, non-canon addition. We'll assign it a transponder
+        (`42.1.<hull>`) and reply here once it's flying. 🛸
+  - type: input
+    id: ship-name
+    attributes:
+      label: Ship name
+      description: We'll prefix it with **ATV** automatically (so just "Singularity" → "ATV Singularity").
+      placeholder: Singularity
+    validations:
+      required: true
+  - type: input
+    id: captain
+    attributes:
+      label: Captain (optional)
+      description: Who's at the helm? We'll credit them in the ship's lore.
+      placeholder: Captain Shyam
+    validations:
+      required: false
+  - type: textarea
+    id: vibe
+    attributes:
+      label: One-line vibe / lore (optional)
+      description: A short flavour line for your ship. Keep it fun and friendly.
+      placeholder: The point past which the vibes become unstoppable.
+    validations:
+      required: false
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Acknowledgement
+      options:
+        - label: I understand this is a non-canon, just-for-fun tribute fleet (not the Honorverse).
+          required: true
