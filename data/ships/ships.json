@@ -569,6 +569,54 @@
       "canon": true,
       "source": "Companion",
       "lore": "A Sultan-class battlecruiser of the People's Navy."
+    },
+    {
+      "id": "atv-phoenix",
+      "name": "ATV Phoenix",
+      "prefix": "ATV",
+      "hull_number": null,
+      "class_id": "starterkit",
+      "hull_code": 1,
+      "navy": null,
+      "affiliation_nation_id": "all-the-vibes",
+      "role": "flagship of the vibes",
+      "status": "active",
+      "fate_pd": null,
+      "canon": false,
+      "source": "fan tribute (non-canon)",
+      "lore": "Lead StarterKit hull — rebuilt from the ashes of three previous prototypes, hence the name."
+    },
+    {
+      "id": "atv-tokenmasterx",
+      "name": "ATV TokenMasterX",
+      "prefix": "ATV",
+      "hull_number": null,
+      "class_id": "starterkit",
+      "hull_code": 2,
+      "navy": null,
+      "affiliation_nation_id": "all-the-vibes",
+      "role": "long-context courier",
+      "status": "active",
+      "fate_pd": null,
+      "canon": false,
+      "source": "fan tribute (non-canon)",
+      "lore": "Optimised for very long hauls; never drops a token."
+    },
+    {
+      "id": "atv-paperboard",
+      "name": "ATV PaperBoard",
+      "prefix": "ATV",
+      "hull_number": null,
+      "class_id": "starterkit",
+      "hull_code": 3,
+      "navy": null,
+      "affiliation_nation_id": "all-the-vibes",
+      "role": "rapid prototyping shuttle",
+      "status": "active",
+      "fate_pd": null,
+      "canon": false,
+      "source": "fan tribute (non-canon)",
+      "lore": "Held together by sketches and good intentions; somehow flies."
     }
   ]
 }

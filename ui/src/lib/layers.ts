@@ -6,6 +6,7 @@ export interface Layers {
   wormholes: boolean;
   ring: boolean;
   stations: boolean;
+  moons: boolean;
 }
 
 export const DEFAULT_LAYERS: Layers = {
@@ -13,7 +14,8 @@ export const DEFAULT_LAYERS: Layers = {
   labels: true,
   wormholes: true,
   ring: true,
-  stations: true
+  stations: true,
+  moons: true
 };
 
 // Order + human labels for the toggle UI.
@@ -22,5 +24,6 @@ export const LAYER_ROWS: [keyof Layers, string][] = [
   ['labels', 'labels'],
   ['wormholes', 'wormhole links'],
   ['ring', 'hyper-limit ring'],
-  ['stations', 'stations']
+  ['stations', 'stations'],
+  ['moons', 'moons']
 ];

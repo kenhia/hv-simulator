@@ -507,6 +507,40 @@
         "notes": "Modular design for easy refit of newer components; acceleration drops when towing missile pods. Could translate into hyperspace from a Readiness state in 55.7 seconds."
       },
       "lore": "A Solarian League Navy battlecruiser introduced circa 1920 PD, successor to the Indefatigable class. Its modular design let the SLN plug in newer components as they matured. Representative of the League's pre-war 'wall of battle adjacent' heavy units before the Manticoran wars exposed the SLN's technological lag."
+    },
+    {
+      "id": "starterkit",
+      "name": "StarterKit class",
+      "ship_type": "personal transport",
+      "hull_classification": "PT",
+      "navy": null,
+      "affiliation_nation_id": "all-the-vibes",
+      "operator": "All-The-Vibes",
+      "date_introduced_pd": null,
+      "preceded_by": null,
+      "succeeded_by": null,
+      "also_known_as": ["the weekend-hackathon starship"],
+      "canon": false,
+      "sources": ["fan tribute (non-canon)"],
+      "wiki_page": null,
+      "retrieved": "2026-06-18",
+      "dimensions": {
+        "canon": false, "source": "fan tribute (non-canon)",
+        "mass_tons": 1200, "length_m": 64, "beam_m": 12, "draught_m": 10, "derived": [],
+        "notes": "A tiny experimental personal transport — barely more than an impeller wedge, a couch, and a coffee machine."
+      },
+      "acceleration": {
+        "canon": false, "source": "fan tribute (non-canon)",
+        "normal_g": 741.6, "max_g": 927.0, "derived": [],
+        "notes": "Wildly over-powered for its mass: 927 G max (~741.6 G sustained at 80%). Use max_g (927) for the sim."
+      },
+      "crew": {"canon": false, "source": "fan tribute (non-canon)", "total": 2, "derived": [], "notes": "A pilot and a rubber duck."},
+      "hyper": {
+        "canon": false, "source": "fan tribute (non-canon)",
+        "max_band": 8, "real_cruise_velocity_c": 0.6,
+        "notes": "Experimentally rated to translate up to the Theta band (8) — apparent = 5000 x 0.6c. Reckless, but it ships."
+      },
+      "lore": "A highly experimental light personal transport from the All-The-Vibes community: 927 G and Theta-band-capable in a 1,200-ton hull. Officially a prototype; unofficially, it absolutely rips. Hulls: ATV Phoenix, ATV TokenMasterX, ATV PaperBoard."
     }
   ]
 }

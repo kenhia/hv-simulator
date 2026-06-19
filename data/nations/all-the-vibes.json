@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "all-the-vibes",
+  "name": "All-The-Vibes",
+  "government": "AI Enthusiast Collective",
+  "capital_system_id": "all-the-vibes",
+  "capital_planet": "Claude",
+  "capital_city": "Prompt Town",
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": false,
+  "source": "fan tribute (non-canon)",
+  "wiki_pages": [],
+  "retrieved": "2026-06-18",
+
+  "lore": {
+    "summary": "A wholly fictitious, non-canon tribute to the All-The-Vibes (ATV) community — an internal Microsoft community of AI enthusiasts (https://github.com/All-The-Vibes). Not part of the Honorverse; it lives in the dataset purely as an Easter egg, settled by tinkerers who shipped a personal starship from a weekend hackathon.",
+    "motto": "Ship it with vibes.",
+    "fleet": "StarterKit-class personal transports (ATV Phoenix, ATV TokenMasterX, ATV PaperBoard)."
+  },
+
+  "territory": {
+    "member_systems": [
+      {
+        "system_id": "all-the-vibes",
+        "name": "All-The-Vibes System",
+        "role": "capital",
+        "member_worlds": ["Phi", "GPT", "Claude", "Gemini", "Llama"],
+        "canon": false,
+        "source": "fan tribute (non-canon)"
+      }
+    ]
+  }
+}

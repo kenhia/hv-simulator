@@ -10,7 +10,8 @@
     "silesia": 555,
     "republic-of-haven": 618,
     "republic-of-erewhon": 661,
-    "andermani-empire": 734
+    "andermani-empire": 734,
+    "all-the-vibes": 42
   },
   "classes": {
     "honor-harrington": 1,
@@ -26,6 +27,7 @@
     "invictus": 4,
     "nike": 5,
     "reliant": 6,
-    "star-knight": 7
+    "star-knight": 7,
+    "starterkit": 1
   }
 }

@@ -245,7 +245,8 @@ surface and unblocks the UI queue view later).
 | **030** ✅ | **Living galaxy** — added Haven (Republic of Haven), Gregor (binary, Manticore-Junction terminus), Erewhon (2nd junction host); real nation records (Haven/Grayson/Beowulf/Solarian/Erewhon, #66); +3 People's Navy hulls. Frame tool: 3° floor + per-system `bearing_offset_deg` so new systems land naturally (#79). 14 systems / 9 built. | universe-build |
 | **031** ✅ | Demo polish — Fleet Board glyph reformat (`[✓] tp <glyph> name`, room for full names), richer ship detail (phase/ETA/destination/distance + real & **apparent velocity with the hyper band**, engine `StateOut.band`; part of #72), and a **Locate ship** button (`camera.centerOn`, LOD-aware — interstellar ships frame on the galaxy scene). | ui+engine |
 | **032** ✅ | Demo polish II — Fleet Board **filter** (hide-arrived toggle + per-nation checkboxes by name) and **at-planet ship labels** (a leader off the planet label listing the transponder codes of ships at rest there, replacing their dots). New `board.ts` / `nation.ts` / `atbody.ts` helpers. | ui |
-| 033 | Repeating routes — ships live on auto-cycling itineraries (#59); the map bustles unattended. | ui+engine |
+| 033 | **ATV tribute system** (fun, non-canon) — a fictitious system ~250 ly NE of Sol with planets named after LLMs, the All-The-Vibes "nation", and 3 StarterKit-class ships (ATV Phoenix / TokenMasterX / PaperBoard; 927 G, Theta band). For the All-The-Vibes community demo. | universe-build |
+| 034 | Repeating routes — ships live on auto-cycling itineraries (#59); the map bustles unattended. | ui+engine |
 | later | Controller extras — saved routes ("Sphinx-Grayson-Courier-Run"), non-traditional waypoint routes (belt waypoint → hyper from above the ecliptic), re-route a moving ship. | ui+engine |
 | deferred | Grafana dashboards — separate 1-2 sprint effort; revisit at each new data surface (next: the 020 queue metrics). | ops |
 
