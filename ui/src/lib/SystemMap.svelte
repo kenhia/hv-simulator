@@ -239,6 +239,7 @@
       // Sol's stations (e.g. Titan Station) arrive as `station`-type *bodies* from
       // the JPL delegate — gate them with the stations layer, like ride-on places.
       if (b.type === 'station' && !layers.stations) continue;
+      if (b.type === 'moon' && !layers.moons) continue; // moons crowd planets at low zoom
       const p = worldToScreen(bodyWorld(b), cam, width, height);
       const moon = b.type === 'moon';
       ctx.fillStyle = bodyColor(b, starColorMap);
