@@ -617,6 +617,22 @@
       "canon": false,
       "source": "fan tribute (non-canon)",
       "lore": "Held together by sketches and good intentions; somehow flies."
+    },
+    {
+      "id": "atv-singularity",
+      "name": "ATV Singularity",
+      "prefix": "ATV",
+      "hull_number": null,
+      "class_id": "starterkit",
+      "hull_code": 4,
+      "navy": null,
+      "affiliation_nation_id": "all-the-vibes",
+      "role": "personal transport",
+      "status": "active",
+      "fate_pd": null,
+      "canon": false,
+      "source": "community request (GH #37)",
+      "lore": "Added by community request — GH issue #37, submitted by @shyamsridhar123. Commanded by Captain Shyam. The point past which the vibes become unstoppable."
     }
   ]
 }

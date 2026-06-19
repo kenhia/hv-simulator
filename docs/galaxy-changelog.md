@@ -9,6 +9,14 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-06-19 — ATV ship intake: ATV Singularity (Sprint 034, non-canon)
+
+Community ship intake for the All-The-Vibes fleet. Added an `atv-add-ship` skill
+that turns an "add a ship" GitHub issue into a StarterKit hull, and processed the
+first request: **ATV Singularity** (`atv-singularity`, hull 4, transponder
+**42.1.4**), commanded by Captain Shyam — submitted by @shyamsridhar123 (GH #37).
+StarterKit class, `all-the-vibes` nation, `canon:false`. Ships count 39 → 40.
+
 ## 2026-06-18 — All-The-Vibes tribute system (Sprint 033, non-canon)
 
 A fun, **non-canon Easter egg** (everything `canon:false`) for the All-The-Vibes
