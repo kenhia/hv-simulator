@@ -26,6 +26,7 @@
   import GalaxyMap from '$lib/GalaxyMap.svelte';
   import HelpOverlay from '$lib/HelpOverlay.svelte';
   import JunctionQueuePanel from '$lib/JunctionQueuePanel.svelte';
+  import PlanetShipsPanel from '$lib/PlanetShipsPanel.svelte';
   import LayersPanel from '$lib/LayersPanel.svelte';
   import Legend from '$lib/Legend.svelte';
   import SystemMap from '$lib/SystemMap.svelte';
@@ -52,6 +53,7 @@
   let selectedShip = $state<string | null>(null);
   let selectedRoute = $state<RouteOut | null>(null);
   let junctionQueueId = $state<string | null>(null);
+  let planetShips = $state<{ name: string; tps: string[] } | null>(null); // #78 parked-ships panel
   const ships = () => live.ships();
 
   // Locate-ship (Sprint 031): a one-shot camera-centre target per scene + a signal.
@@ -109,6 +111,7 @@
     selectedShip = null;
     selectedRoute = null;
     junctionQueueId = null;
+    planetShips = null;
     try {
       systemDetail = await fetchSystemDetail(s.id);
     } catch {
@@ -126,6 +129,7 @@
     selectedShip = null;
     selectedRoute = null;
     junctionQueueId = null;
+    planetShips = null;
   }
 
   function openQueue(id: string) {
@@ -137,6 +141,7 @@
     const entry = roster.find((e) => e.transponder === tp);
     if (!entry) return;
     junctionQueueId = null;
+    planetShips = null;
     // Fly to it: into its system, or out to the galaxy if it's in hyper.
     if (entry.system) {
       const sys = galaxy.systems.find((s) => s.id === entry.system);
@@ -204,9 +209,10 @@
       enterSystem(selectedSystem);
     } else if (action === 'exit') {
       e.preventDefault();
-      // Progressive back-out: queue panel -> data panel -> galaxy follow-lock ->
-      // exit the system.
+      // Progressive back-out: queue/ships panel -> data panel -> galaxy follow-lock
+      // -> exit the system.
       if (junctionQueueId) junctionQueueId = null;
+      else if (planetShips) planetShips = null;
       else if (panel) panel = null;
       else if (galaxyLock) {
         galaxyLock = false;
@@ -317,6 +323,11 @@
         onexit={exitToGalaxy}
         onsummary={(s) => (summary = s)}
         onjunction={openQueue}
+        onbodyships={(name, tps) => {
+          panel = null;
+          junctionQueueId = null;
+          planetShips = { name, tps };
+        }}
       />
     {/key}
   {/if}
@@ -380,6 +391,17 @@
         onclose={() => (junctionQueueId = null)}
       />
     {/key}
+  {:else if planetShips}
+    <PlanetShipsPanel
+      name={planetShips.name}
+      transponders={planetShips.tps}
+      {roster}
+      onselect={(tp) => {
+        planetShips = null;
+        selectShip(tp);
+      }}
+      onclose={() => (planetShips = null)}
+    />
   {:else if panel}
     <DataPanel
       detail={panel}

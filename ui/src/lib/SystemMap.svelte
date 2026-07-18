@@ -47,7 +47,8 @@
     onselect,
     onexit,
     onsummary,
-    onjunction
+    onjunction,
+    onbodyships
   }: {
     systemId: string;
     detail?: SystemDetail | null;
@@ -63,6 +64,7 @@
     onexit?: () => void;
     onsummary?: (s: SystemSummary) => void;
     onjunction?: (id: string) => void;
+    onbodyships?: (bodyName: string, transponders: string[]) => void; // #78: parked-ships list
   } = $props();
 
   let wrap: HTMLDivElement;
@@ -289,6 +291,20 @@
     drawScaleBar(ctx, width, height, cam.scale, 'au');
   }
 
+  // At-rest ships (arrived/layover/predeparture, in this system) grouped onto the
+  // body they're parked at. Shared by the leader labels + the parked-ships panel (#78).
+  function atRestGroups(): Map<string, string[]> {
+    const located = (ships?.() ?? [])
+      .filter(
+        (s) => s.system === systemId && s.frame === 'heliocentric' && AT_BODY_PHASES.has(s.phase)
+      )
+      .map((s) => ({ id: s.transponder, x: kmToAu(s.posKm.x), y: kmToAu(s.posKm.y) }));
+    return atBodyGroups(
+      located,
+      bodies.map((b) => ({ id: b.id, x: b.position.au.x, y: b.position.au.y }))
+    );
+  }
+
   // Tracked ships in this system. Ships *at rest at a body* are listed on a leader
   // off the body's label (see drawAtBodyLabels) rather than as overlapping dots;
   // in-motion / queued ships keep their dot + heading vector.
@@ -296,14 +312,7 @@
     const here = (ships?.() ?? []).filter(
       (s) => s.system === systemId && s.frame === 'heliocentric'
     );
-    // At-rest ships grouped onto the body they're parked at.
-    const located = here
-      .filter((s) => AT_BODY_PHASES.has(s.phase))
-      .map((s) => ({ id: s.transponder, x: kmToAu(s.posKm.x), y: kmToAu(s.posKm.y) }));
-    const groups = atBodyGroups(
-      located,
-      bodies.map((b) => ({ id: b.id, x: b.position.au.x, y: b.position.au.y }))
-    );
+    const groups = atRestGroups();
     const grouped = new Set<string>();
     for (const tps of groups.values()) for (const tp of tps) grouped.add(tp);
 
@@ -390,7 +399,17 @@
         best = make;
       }
     };
-    for (const b of bodies) consider(bodyWorld(b), () => onselect?.(bodyRows(b), b.name), b.name);
+    // A body with ships parked at it opens the parked-ships panel (#78); otherwise
+    // it opens the body detail.
+    const parked = atRestGroups();
+    for (const b of bodies) {
+      const tps = parked.get(b.id);
+      const act =
+        tps && tps.length
+          ? () => onbodyships?.(b.name, tps)
+          : () => onselect?.(bodyRows(b), b.name);
+      consider(bodyWorld(b), act, b.name);
+    }
     for (const pl of places) {
       const w = placeWorld(pl);
       if (w) consider(w, () => onselect?.(placeRows(pl), pl.name ?? null));
