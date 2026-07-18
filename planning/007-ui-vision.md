@@ -247,7 +247,8 @@ surface and unblocks the UI queue view later).
 | **032** ✅ | Demo polish II — Fleet Board **filter** (hide-arrived toggle + per-nation checkboxes by name) and **at-planet ship labels** (a leader off the planet label listing the transponder codes of ships at rest there, replacing their dots). New `board.ts` / `nation.ts` / `atbody.ts` helpers. | ui |
 | 033 | **ATV tribute system** (fun, non-canon) — a fictitious system ~250 ly NE of Sol with planets named after LLMs, the All-The-Vibes "nation", and 3 StarterKit-class ships (ATV Phoenix / TokenMasterX / PaperBoard; 927 G, Theta band). For the All-The-Vibes community demo. | universe-build |
 | **034** ✅ | **ATV ship intake** — an `atv-add-ship` skill to process community "add a ship" GitHub issues into the All-The-Vibes fleet (StarterKit hull, next code, credit the submitter, recompile, close the issue). First request added: **ATV Singularity** (42.1.4, GH #37). | universe-build |
-| 035 | Repeating routes — ships live on auto-cycling itineraries (#59); the map bustles unattended. | ui+engine |
+| 035 | Repeating routes — ships live on auto-cycling itineraries (#59); the map bustles unattended. **Deferred** (spec drafted; korg #185). | ui+engine |
+| **036** ✅ | **Dashboard pass** (korg #177 remaining) — Fleet Board **sort** (transponder/full-name/ship-name/file-time, #81), **multi-leg stacked timeline** (#73), ship-detail **acceleration** (g + km/s²) + from/to-body **distances** (#72 slice), and an **openable per-planet ships-at-rest panel** (#78). | ui+engine |
 | later | Controller extras — saved routes ("Sphinx-Grayson-Courier-Run"), non-traditional waypoint routes (belt waypoint → hyper from above the ecliptic), re-route a moving ship. | ui+engine |
 | deferred | Grafana dashboards — separate 1-2 sprint effort; revisit at each new data surface (next: the 020 queue metrics). | ops |
 
