@@ -47,6 +47,15 @@ export function shipStateRows(s: ShipState, e: FleetEntry, ship?: ShipCatalogEnt
     ['progress', s.percent_complete != null ? `${Math.round(s.percent_complete * 100)}%` : '—'],
     ['velocity', velocityText(s)]
   ];
+  if (s.acceleration) {
+    rows.push([
+      'acceleration',
+      `${s.acceleration.g.toFixed(0)} g · ${s.acceleration.km_s2.toFixed(2)} km/s²`
+    ]);
+  }
+  if (s.distance_from_origin_km != null) {
+    rows.push(['from origin', distanceText(s.distance_from_origin_km)]);
+  }
   if (s.distance_to_destination_km != null) {
     rows.push(['to destination', distanceText(s.distance_to_destination_km)]);
   }

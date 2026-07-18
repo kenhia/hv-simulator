@@ -5,9 +5,14 @@ from __future__ import annotations
 from hvsim.ephemeris import AU_M
 from hvsim.kinematics import SPEED_OF_LIGHT, Vec3
 
-from .schemas import PositionOut, Vector3, VelocityOut
+from .schemas import AccelOut, PositionOut, Vector3, VelocityOut
 
 _KM = 1.0e3
+_G = 9.80665  # standard gravity (m/s^2)
+
+
+def accel_out(m_s2: float) -> AccelOut:
+    return AccelOut(m_s2=m_s2, km_s2=m_s2 / _KM, g=m_s2 / _G)
 
 
 def position_out(pos: Vec3) -> PositionOut:

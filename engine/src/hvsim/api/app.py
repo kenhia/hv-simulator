@@ -42,6 +42,7 @@ from hvsim.universe import (
     Universe,
     body_positions,
     inter_system_distance,
+    resolve_position,
     star_positions,
 )
 
@@ -83,7 +84,7 @@ from .schemas import (
     SystemDetail,
 )
 from .serialize import as_utc, load_compiled, segment_to_row
-from .units import human_duration, position_out, velocity_out
+from .units import accel_out, human_duration, position_out, velocity_out
 
 DEFAULT_DB_URL = "sqlite:///hvsim.db"
 _MAP_HTML = Path(__file__).parent / "static" / "index.html"
@@ -261,10 +262,21 @@ def create_app(
         return by_tp, servers
 
     def state_out(compiled: CompiledRoute, transponder: str, when: datetime) -> StateOut:
-        st = simulation_for_route(compiled, require_universe()).state(when)
+        u = require_universe()
+        st = simulation_for_route(compiled, u).state(when)
         depart, arrival = compiled.depart_at, compiled.arrival
         span = (arrival - depart).total_seconds()
         pct = min(max((when - depart).total_seconds() / span, 0.0), 1.0) if span > 0 else None
+
+        # Straight-line distances to the destination / from the origin body, only when
+        # the ship and that body share a frame (heliocentric, same system). Cross-frame
+        # (interstellar hyper) legs report None. #72.
+        def _dist_km(system: str | None, body: str | None) -> float | None:
+            if st.frame != "heliocentric" or st.system is None or system != st.system or not body:
+                return None
+            p = resolve_position(u, st.system, body, when)
+            return None if p is None else (st.position - p).norm() / 1000.0
+
         return StateOut(
             when=when,
             phase=st.phase,
@@ -274,7 +286,11 @@ def create_app(
             eta=arrival,
             percent_complete=pct,
             destination=compiled.final_body,
-            distance_to_destination_km=None,  # cross-frame; the fleet board uses phase/eta
+            distance_to_destination_km=_dist_km(compiled.final_system, compiled.final_body),
+            distance_from_origin_km=_dist_km(
+                compiled.route.origin_system, compiled.route.origin_body
+            ),
+            acceleration=(accel_out(st.acceleration_m_s2) if st.acceleration_m_s2 > 1e-9 else None),
             system=st.system,
             frame=st.frame,
             transponder=transponder,

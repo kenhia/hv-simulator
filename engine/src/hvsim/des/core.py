@@ -43,6 +43,7 @@ class ShipState:
     frame: str = "heliocentric"
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
     band: dict | None = None  # hyper_cruise: the active band (order/name/multiplier)
+    acceleration_m_s2: float = 0.0  # current *real* felt accel magnitude (0 at rest/coast)
 
 
 def _context(segment: Segment) -> tuple[str | None, str]:
@@ -113,8 +114,28 @@ class Simulation:
             position, velocity, phase = evaluate(active, when, self.resolve_body)
             system, frame = _context(active)
             qpos = queue_position(active, when)
+            # Current felt acceleration from the active trajectory (0 while coasting or
+            # at rest). A hyper_cruise trajectory runs in *apparent* units, so divide
+            # by the band multiplier to report the real impeller accel.
+            accel = 0.0
+            if active.trajectory is not None and active.kind in ("transit", "hyper_cruise"):
+                accel = active.trajectory.state(
+                    (when - active.t_start).total_seconds()
+                ).acceleration.norm()
+                if active.kind == "hyper_cruise" and active.band:
+                    accel /= active.band["velocity_multiplier"]
             return ShipState(
-                when, position, velocity, phase, active.seq, end, system, frame, qpos, active.band
+                when,
+                position,
+                velocity,
+                phase,
+                active.seq,
+                end,
+                system,
+                frame,
+                qpos,
+                active.band,
+                accel,
             )
 
         # Past the last segment's end (no successor entered) — docked at the
