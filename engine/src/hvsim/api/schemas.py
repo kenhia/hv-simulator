@@ -200,6 +200,7 @@ class FleetEntry(BaseModel):
     eta: datetime | None
     percent_complete: float | None
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
+    filed_at: datetime | None = None  # when the route was filed (for board sort)
 
 
 class FleetOut(BaseModel):

@@ -794,6 +794,10 @@ def create_app(
         when = resolve_when(at)
         u = require_universe()
         by_tp, _ = resolved_fleet(session)  # fleet-level resolve -> real interleaving
+        filed = {
+            r.transponder: r.created_at
+            for r in session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
+        }
         entries = []
         for transponder, compiled in by_tp.items():
             st = state_out(compiled, transponder, when)
@@ -807,6 +811,7 @@ def create_app(
                     eta=st.eta,
                     percent_complete=st.percent_complete,
                     queue_position=st.queue_position,
+                    filed_at=filed.get(transponder),
                 )
             )
         return FleetOut(when=when, ships=entries)

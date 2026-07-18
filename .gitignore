@@ -40,3 +40,6 @@ htmlcov/
 .idea/
 *.swp
 .DS_Store
+
+# start-sprint local marker (never commit)
+.korg-sprint-proposal

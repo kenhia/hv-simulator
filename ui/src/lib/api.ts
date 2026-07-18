@@ -149,6 +149,7 @@ export interface FleetEntry {
   eta: string | null;
   percent_complete: number | null;
   queue_position: number | null;
+  filed_at: string | null; // when the route was filed (board sort by file time)
 }
 
 export interface RouteSegment {
