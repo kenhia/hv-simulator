@@ -1,6 +1,13 @@
 <script lang="ts">
   import type { FleetEntry, RouteOut } from './api';
-  import { boardFilter, isFilterActive, nationsPresent } from './board';
+  import {
+    boardFilter,
+    boardSort,
+    isFilterActive,
+    nationsPresent,
+    SORT_ROWS,
+    type SortMode
+  } from './board';
   import { nationName } from './nation';
   import { phaseStyle } from './phase';
   import ShipTimeline from './ShipTimeline.svelte';
@@ -26,6 +33,7 @@
   let showFilter = $state(false);
   let hideArrived = $state(false);
   let nationHidden = $state(new Set<string>()); // nations unchecked (hidden); all shown by default
+  let sortMode = $state<SortMode>('transponder');
 
   const nations = $derived(nationsPresent(roster));
   // boardFilter takes a *show* set (empty = all); derive it from the hidden set.
@@ -38,10 +46,13 @@
   const active = $derived(isFilterActive(filter));
 
   const shown = $derived(
-    boardFilter(roster, filter).filter((e) => {
-      const q = query.trim().toLowerCase();
-      return !q || e.transponder.toLowerCase().includes(q) || e.ship.toLowerCase().includes(q);
-    })
+    boardSort(
+      boardFilter(roster, filter).filter((e) => {
+        const q = query.trim().toLowerCase();
+        return !q || e.transponder.toLowerCase().includes(q) || e.ship.toLowerCase().includes(q);
+      }),
+      sortMode
+    )
   );
 
   function toggleNation(code: string) {
@@ -87,6 +98,13 @@
             </label>
           {/each}
         {/if}
+        <div class="seg">sort by</div>
+        {#each SORT_ROWS as [mode, label] (mode)}
+          <label class="frow">
+            <input type="radio" name="board-sort" value={mode} bind:group={sortMode} />
+            {label}
+          </label>
+        {/each}
       </div>
     {/if}
     <input class="search" placeholder="find ship…" bind:value={query} />

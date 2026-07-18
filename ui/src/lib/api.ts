@@ -124,6 +124,12 @@ export interface Band {
   velocity_multiplier: number; // apparent = velocity_multiplier × real
 }
 
+export interface Accel {
+  m_s2: number;
+  km_s2: number;
+  g: number;
+}
+
 export interface ShipState {
   when: string;
   phase: string;
@@ -134,11 +140,13 @@ export interface ShipState {
   percent_complete: number | null;
   destination: string | null;
   distance_to_destination_km: number | null;
+  distance_from_origin_km: number | null;
   system: string | null;
   frame: 'heliocentric' | 'galactic';
   transponder: string | null;
   queue_position: number | null;
   band: Band | null; // set only in hyper; velocity is then the *apparent* speed
+  acceleration: Accel | null; // current felt accel (null at rest/coast)
 }
 
 export interface FleetEntry {
@@ -149,6 +157,7 @@ export interface FleetEntry {
   eta: string | null;
   percent_complete: number | null;
   queue_position: number | null;
+  filed_at: string | null; // when the route was filed (board sort by file time)
 }
 
 export interface RouteSegment {

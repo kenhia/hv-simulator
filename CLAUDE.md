@@ -104,7 +104,12 @@ overlapping dots). Sprint 033 added a **non-canon Easter egg** — the **All-The
 tribute system (~250 ly NE of Sol; G2 star Vibe; worlds named after LLMs — Phi, GPT,
 Claude, Gemini, Llama; nation code 42; the experimental 927 G / Theta-band
 **StarterKit** personal transport: ATV Phoenix / TokenMasterX / PaperBoard) for the
-ATV AI-enthusiast community demo. Next: 034 repeating routes (#59).
+ATV AI-enthusiast community demo (Sprint 034 added the `atv-add-ship` skill + intake
+flow). Sprint 036 (**dashboard pass**, korg #177) finished the visible-UI backlog:
+Fleet Board **sort** (#81), a **multi-leg stacked Ship Timeline** (#73), ship-detail
+**acceleration** (`StateOut.acceleration`, g + km/s²) + from/to-body **distances**
+(#72), and an **openable per-planet ships-at-rest panel** (#78). Next: **repeating
+routes** (#59, spec at `sprints/035-repeating-routes.md`, korg #185).
 Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
 `docs/terminology.md`.
 

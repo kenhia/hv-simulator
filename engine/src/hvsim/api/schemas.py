@@ -117,6 +117,14 @@ class BandOut(BaseModel):
     velocity_multiplier: float  # apparent = velocity_multiplier x real velocity
 
 
+class AccelOut(BaseModel):
+    """Current felt acceleration (real). Null at rest / while coasting."""
+
+    m_s2: float
+    km_s2: float
+    g: float
+
+
 class StateOut(BaseModel):
     when: datetime
     # idle | predeparture | transit | layover | hyper_cruise | queued | wormhole_transit | arrived
@@ -128,6 +136,8 @@ class StateOut(BaseModel):
     percent_complete: float | None
     destination: str | None
     distance_to_destination_km: float | None
+    distance_from_origin_km: float | None = None  # from the origin body (co-frame only)
+    acceleration: AccelOut | None = None  # current felt accel (null at rest/coast)
     subjective_time_delta_s: float | None = None  # reserved (relativity deferred)
     # Cross-system context (Sprint 018). system is None on an interstellar leg.
     system: str | None = None
@@ -200,6 +210,7 @@ class FleetEntry(BaseModel):
     eta: datetime | None
     percent_complete: float | None
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
+    filed_at: datetime | None = None  # when the route was filed (for board sort)
 
 
 class FleetOut(BaseModel):

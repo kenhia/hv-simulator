@@ -224,6 +224,20 @@ def test_hyper_cruise_state_reports_band(u: Universe) -> None:
     assert sim.state(c.depart_at).band is None
 
 
+def test_state_reports_real_acceleration(u: Universe) -> None:
+    # Felt acceleration on the active trajectory (#72): >0 while accelerating, 0 while
+    # coasting or at rest; hyper reports the *real* impeller accel (apparent / mult).
+    c = compile_route(_deliverable(WARSHIP), u)
+    sim = simulation_for_route(c, u)
+    runout, cruise = c.segments[0], c.segments[1]  # n-space run-out, then hyper cruise
+    assert sim.state(runout.t_start + timedelta(seconds=1)).acceleration_m_s2 > 0
+    mid = sim.state(cruise.t_start + timedelta(seconds=cruise.duration_s / 2)).acceleration_m_s2
+    assert mid == pytest.approx(0.0, abs=1e-6)  # coasting
+    early = sim.state(cruise.t_start + timedelta(seconds=1)).acceleration_m_s2
+    assert 0 < early < 1e5  # real impeller g (thousands), not mult x that (millions)
+    assert sim.state(c.arrival + timedelta(seconds=10)).acceleration_m_s2 == 0.0  # arrived, at rest
+
+
 def test_higher_band_ship_is_faster(u: Universe) -> None:
     # Same route, Theta ship vs Delta ship: the higher band arrives sooner.
     theta = Ship("Fast", 600.0, 0.6, max_hyper_band=8, hyper_cruise_velocity_c=0.6)
