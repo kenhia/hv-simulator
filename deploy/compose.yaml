@@ -5,7 +5,11 @@ services:
     image: hvsim:latest
     container_name: hvsim
     ports:
-      - "4667:8000"            # host 4667 ("HONR") -> container 8000
+      # host 4667 ("HONR") -> container 8000. Loopback (tailscale serve
+      # backend) + LAN; not the tailscale IP or 0.0.0.0 — tailscaled holds
+      # <ts-ip>:4667 for same-host ts.net traffic (EADDRINUSE otherwise).
+      - "127.0.0.1:4667:8000"
+      - "192.168.1.60:4667:8000"
     volumes:
       - hvsim-data:/data       # persistent SQLite across restarts/redeploys
     environment:

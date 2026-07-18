@@ -8,6 +8,9 @@ set dotenv-load := true   # load .env if present (copy .env.example -> .env)
 # the maintainer's homelab. Override per-machine in .env, not by editing here.
 host := env_var_or_default("HVSIM_HOST", "kubsdb")
 port := env_var_or_default("HVSIM_PORT", "4667")
+# Client-side base URL: the host publishes via tailscale serve, so plaintext
+# http://<host>:<port> no longer answers from tailnet machines.
+base_url := env_var_or_default("HVSIM_URL", "https://" + host + ".encke-wahoo.ts.net:" + port)
 image := "hvsim:latest"
 remote_dir := "hvsim"     # ~/hvsim on the host holds the deploy compose
 
@@ -34,8 +37,8 @@ deploy: build
 
 # Check the deployed service (health + clock) from this machine.
 health:
-    @printf 'health: '; curl -fsS http://{{host}}:{{port}}/health; echo
-    @printf 'clock:  '; curl -fsS http://{{host}}:{{port}}/clock; echo
+    @printf 'health: '; curl -fsS {{base_url}}/health; echo
+    @printf 'clock:  '; curl -fsS {{base_url}}/clock; echo
 
 # Tail the deployed service logs (Ctrl-C to stop).
 logs:
@@ -47,16 +50,16 @@ down:
 
 # File a few experimental (XSS) demo ships on the deployed instance (used by M7).
 seed:
-    ./deploy/seed.sh http://{{host}}:{{port}}
+    ./deploy/seed.sh {{base_url}}
 
 # List the fleet as a text roster (ships + current plan state). Stopgap for the
 # map's label crowding (kwi #57); "routes" will join this once kwi #59 lands.
 fleet:
-    ./deploy/fleet.sh http://{{host}}:{{port}}
+    ./deploy/fleet.sh {{base_url}}
 
 # Print a junction's live transit queue (the "you are #3" board). Args: [junction] [at]
 queue-board junction="manticore-junction" at="":
-    ./deploy/queue-board.sh {{junction}} http://{{host}}:{{port}} "{{at}}"
+    ./deploy/queue-board.sh {{junction}} {{base_url}} "{{at}}"
 
 # Run the validation gate: engine (tests + lint + format), the tools, and the UI.
 check:
@@ -70,9 +73,9 @@ check:
     python3 tools/validate-data.py data
     just ui-check
 
-# UI dev server (Vite); proxies the API to http://{{host}}:{{port}}.
+# UI dev server (Vite); proxies the API to {{base_url}}.
 ui-dev:
-    cd ui && HVSIM_API=http://{{host}}:{{port}} npm run dev
+    cd ui && HVSIM_API={{base_url}} npm run dev
 
 # Build the galaxy SPA to ui/build (consumed by the engine + the image).
 ui-build:
