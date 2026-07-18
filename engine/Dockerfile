@@ -37,5 +37,8 @@ RUN mkdir -p /data
 VOLUME ["/data"]
 EXPOSE 8000
 
+# --proxy-headers: honor X-Forwarded-Proto from tailscale serve so redirects
+# (e.g. /ui -> /ui/) keep the https scheme instead of downgrading to plaintext.
 CMD ["uv", "run", "--no-dev", "uvicorn", "--factory", "hvsim.api.app:create_app", \
-     "--host", "0.0.0.0", "--port", "8000"]
+     "--host", "0.0.0.0", "--port", "8000", \
+     "--proxy-headers", "--forwarded-allow-ips", "*"]
