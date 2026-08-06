@@ -108,17 +108,26 @@ ATV AI-enthusiast community demo (Sprint 034 added the `atv-add-ship` skill + in
 flow). Sprint 036 (**dashboard pass**, korg #177) finished the visible-UI backlog:
 Fleet Board **sort** (#81), a **multi-leg stacked Ship Timeline** (#73), ship-detail
 **acceleration** (`StateOut.acceleration`, g + km/s²) + from/to-body **distances**
-(#72), and an **openable per-planet ships-at-rest panel** (#78). Next: **repeating
-routes** (#59, spec at `sprints/035-repeating-routes.md`, korg #185).
-Grafana dashboards are a deferred parallel track. A UI/lore glossary lives in
-`docs/terminology.md`.
+(#72), and an **openable per-planet ships-at-rest panel** (#78). Sprint 037
+(**wormhole run-to-nexus**, korg #186 / #76) fixed the "teleport to the queue"
+bug: a junction now carries an **in-system nexus location** (`nexus_dist_lmin` +
+fabricated `nexus_bearing_deg`, contract **v0.5.0**; Manticore's is canon at 7
+light-hours), the engine flies a host-originating wormhole leg **out to the nexus
+(~a day) before it queues** (`Universe.junction_nexus_position`; `compile_route`
+inserts the run-out, skipping it for a straight-through transit already at the
+nexus), the `wormhole_queue` now **reports the nexus position** so a queued ship
+rests there, and `GET /junctions` exposes `nexus_position` so the UI marker + the
+ship agree. Per-terminus entry points on the non-host side stay deferred (#77).
+Next: **repeating routes** (#59, spec at `sprints/035-repeating-routes.md`, korg
+#185). Grafana dashboards are a deferred parallel track. A UI/lore glossary lives
+in `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
 canon:false) → `just compile-data` → `build/universe.db` (artifact, contract
-v0.3.0) → engine loads it (`HVSIM_UNIVERSE_DB`). The artifact carries systems
+v0.5.0) → engine loads it (`HVSIM_UNIVERSE_DB`). The artifact carries systems
 (coords, binary, per-star hyper limits), bodies, the wormhole route graph +
-transit model, and the hyperspace bands. Query via `where-is --system <sys>
+transit model (+ per-junction nexus location), and the hyperspace bands. Query via `where-is --system <sys>
 <body>`, `GET /systems`, `/wormholes`, `/junctions`, `/systems/{a}/distance/{b}`
 (canon wormhole span if linked, else frame). **Sol is special-case:** it keeps
 the real JPL ephemeris (artistic license — Sol tracks the *actual* current planet
@@ -251,9 +260,11 @@ exhaustive dispatch (`des/model.py`) — the seam new travel modes plug into.
 mode-tagged legs (`nspace` / `hyper` / `wormhole`) compiles via `compile_route`
 into DES segments: a hyper leg → an n-space **run out** past the origin star's
 hyper limit + `hyper_cruise` (accel/coast/decel at apparent = band-multiplier × real velocity) + an n-space
-**approach** to the target body; a wormhole leg → `wormhole_transit` (instant +
-fixed `buffer_normal_s`). (The run-out/approach are the mundane impeller legs to
-and from the hyper limit — *not* the Honorverse band "climb/descent".) Every
+**approach** to the target body; a wormhole leg → an n-space **run out to the
+junction nexus** (Sprint 037, host-originating legs only) + `wormhole_queue` +
+`wormhole_transit` (instant + fixed `buffer_normal_s`). (The run-out/approach are
+the mundane impeller legs to and from the hyper limit — *not* the Honorverse band
+"climb/descent".) Every
 parameter (bands, per-star `hyper_limit_lmin`, distances, buffer) is **read from
 the artifact** via new `Universe` accessors — the engine stays a configurable
 physics box. In-system positions are heliocentric per system; an interstellar

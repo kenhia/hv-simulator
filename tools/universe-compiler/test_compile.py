@@ -21,7 +21,7 @@ def test_compiles_catalog(tmp_path) -> None:
 
     con = sqlite3.connect(out)
     # schema_meta version recorded.
-    assert con.execute("SELECT version FROM schema_meta").fetchone()[0] == "0.4.0"
+    assert con.execute("SELECT version FROM schema_meta").fetchone()[0] == "0.5.0"
     # Ids are system-namespaced (no Sol/Manticore "titan" collision).
     bid = con.execute("SELECT id FROM bodies WHERE name='Manticore'").fetchone()[0]
     assert bid == "manticore:manticore"
@@ -47,6 +47,16 @@ def test_compiles_catalog(tmp_path) -> None:
     assert con.execute("SELECT count(DISTINCT transponder) FROM ships").fetchone()[0] == n_ships
     assert con.execute("SELECT code FROM nations WHERE id='solarian-league'").fetchone()[0] == 1
     assert con.execute("SELECT count(*) FROM nations WHERE code IS NULL").fetchone()[0] == 0
+    # Junction nexus location (Sprint 037): Manticore's is canon (7 light-hours =
+    # 420 lmin); every junction gets a fabricated bearing (never NULL).
+    mant = con.execute(
+        "SELECT nexus_dist_lmin, nexus_bearing_deg "
+        "FROM wormhole_junctions WHERE id='manticore-junction'"
+    ).fetchone()
+    assert mant[0] == 420.0 and mant[1] is not None
+    assert con.execute(
+        "SELECT count(*) FROM wormhole_junctions WHERE nexus_bearing_deg IS NULL"
+    ).fetchone()[0] == 0
     con.close()
 
 

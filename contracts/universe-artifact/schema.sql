@@ -1,4 +1,10 @@
--- Universe artifact — compiled SQLite schema (CONTRACT v0.4.0)
+-- Universe artifact — compiled SQLite schema (CONTRACT v0.5.0)
+-- v0.5.0 (Sprint 037): wormhole_junctions gains the in-system nexus location —
+--   nexus_dist_lmin (radial distance from the host primary; canon for Manticore =
+--   420 lmin / 7 light-hours, fabricated default otherwise) + nexus_bearing_deg
+--   (fabricated, canon:false, deterministic per junction). Lets the engine fly a
+--   ship out to the junction before it queues, and the UI draw the nexus where the
+--   ship actually rests. Additive columns only.
 -- v0.4.0 (Sprint 019): wormhole_junctions.traffic_intensity — a fabricated
 --   (canon:false) per-junction mean-queue-depth knob driving the wormhole queue
 --   resolver's phantom-traffic stream (busy junction -> deeper queue).
@@ -142,6 +148,13 @@ CREATE TABLE wormhole_junctions (
     -- Fabricated (canon:false) mean queue depth a ship expects to find on arrival;
     -- the wormhole queue resolver's phantom-traffic mean. NULL -> no queue modelled.
     traffic_intensity REAL,
+    -- In-system location of the nexus (central node) in the host system, so a ship
+    -- flies out to it before queuing (Sprint 037). Radial distance from the host
+    -- primary in light-minutes (canon for Manticore = 420 lmin / 7 light-hours;
+    -- fabricated default otherwise) at a fabricated (canon:false), deterministic
+    -- bearing. In-system point = nexus_dist_lmin * unit(nexus_bearing_deg), Z~0.
+    nexus_dist_lmin   REAL,
+    nexus_bearing_deg REAL,
     canon             INTEGER NOT NULL DEFAULT 1
 );
 

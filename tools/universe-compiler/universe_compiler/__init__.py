@@ -15,15 +15,31 @@ model. Referenced-but-unbuilt systems/nations are stubbed so FKs hold.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import pathlib
 import sqlite3
 
-CONTRACT_VERSION = "0.4.0"
+CONTRACT_VERSION = "0.5.0"
+
+# Fabricated (canon:false) nexus radial distance when canon gives none, in
+# light-minutes. 7 light-hours (Manticore's canon figure) as a plausible default.
+_FABRICATED_NEXUS_DIST_LMIN = 420.0
 
 
 def _b(v: object) -> int:
     return 1 if v else 0
+
+
+def _fabricated_bearing_deg(seed_id: str) -> float:
+    """Deterministic in-system bearing in [0, 360) from a stable id hash.
+
+    Canon gives the nexus a radial distance, not a direction; the bearing is
+    fabricated (canon:false) but frozen — the id never changes, so the same
+    junction always lands on the same bearing (like the galactic-frame jitter).
+    """
+    h = int(hashlib.md5(seed_id.encode()).hexdigest(), 16)
+    return (h % 360_000) / 1000.0
 
 
 def _int(v: object) -> int | None:
@@ -405,14 +421,23 @@ def _load_hyperspace(con: sqlite3.Connection, doc: dict) -> dict[str, float]:
 def _load_wormholes(con: sqlite3.Connection, doc: dict) -> None:
     for j in doc.get("junctions", []):
         traffic = j.get("traffic") or {}
+        # Nexus in-system location: canon radial distance where given (Manticore's
+        # 7 light-hours), a fabricated default otherwise, at a fabricated bearing.
+        nexus_pos = (j.get("nexus") or {}).get("position") or {}
+        dist_lh = nexus_pos.get("distance_from_primary_lighthours")
+        nexus_dist_lmin = dist_lh * 60.0 if dist_lh is not None else _FABRICATED_NEXUS_DIST_LMIN
+        nexus_bearing_deg = _fabricated_bearing_deg(j["id"])
         con.execute(
             "INSERT INTO wormhole_junctions "
-            "(id,name,host_system_id,traffic_intensity,canon) VALUES (?,?,?,?,?)",
+            "(id,name,host_system_id,traffic_intensity,nexus_dist_lmin,nexus_bearing_deg,canon) "
+            "VALUES (?,?,?,?,?,?,?)",
             (
                 j["id"],
                 j.get("name"),
                 j.get("host_system_id"),
                 traffic.get("mean_queue_depth"),
+                nexus_dist_lmin,
+                nexus_bearing_deg,
                 _b(j.get("canon")),
             ),
         )

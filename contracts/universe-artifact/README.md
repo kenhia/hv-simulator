@@ -1,4 +1,4 @@
-# Universe artifact — contract v0.4.0
+# Universe artifact — contract v0.5.0
 
 The **compiled, read-only SQLite** the engine loads to know the galaxy. It is the
 seam between the data side (authored JSON in `data/`) and the engine: the
@@ -24,7 +24,8 @@ the tools, the engine, and a possible future Rust engine independent.
   (planets + moons via `parent_body_id`), `belts`, `places` (stations/nexus/forts,
   `rides_on_body_id` = engine `Station(parent=...)`).
 - **Network:** `wormhole_junctions` (+ `traffic_intensity`, a fabricated mean
-  queue depth feeding the queue resolver), `wormhole_links` (edges),
+  queue depth feeding the queue resolver; + `nexus_dist_lmin`/`nexus_bearing_deg`,
+  the in-system nexus location a ship flies out to before queuing), `wormhole_links` (edges),
   `transit_model` (the queue/destabilization coefficients), `hyperspace_bands`,
   `hyper_limits`.
 - **Fleet:** `ship_classes` (carries `normal_g`/`max_g`), `ships`.

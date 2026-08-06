@@ -30,6 +30,9 @@ export interface Junction {
   name: string;
   host_system_id: string | null;
   traffic_intensity: number | null;
+  // In-system nexus point in the host system (km+AU); null for a junction with no
+  // nexus distance. The ⚲ marker + queued ships hold here (Sprint 037).
+  nexus_position: Position | null;
 }
 
 async function getJSON<T>(path: string): Promise<T> {

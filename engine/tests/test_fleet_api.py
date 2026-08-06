@@ -84,6 +84,9 @@ def artifact_path(tmp_path) -> str:
         "INSERT INTO transit_model (id,formula,coeff_a,coeff_b,buffer_normal_s,buffer_emergency_s,"
         "canon) VALUES (1,'A',0.0,0.0,300,120,0)"
     )
+    # No nexus location on bj: the run-out-to-nexus (Sprint 037) is unit-tested in
+    # test_route; here the queue/board tests want ships queued right at WORM_AT, so
+    # a nexus-less junction (queue-in-place) keeps them time-focused.
     con.execute(
         "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,canon) "
         "VALUES ('bj','BJ','beta',3.0,1)"

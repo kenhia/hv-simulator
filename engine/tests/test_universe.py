@@ -79,8 +79,9 @@ def artifact_path(tmp_path) -> str:
         "UPDATE star_systems SET coord_x_ly=21.9,coord_y_ly=0,coord_z_ly=533.9 WHERE id='yeltsin'"
     )
     con.execute(
-        "INSERT INTO wormhole_junctions (id,name,host_system_id,canon) VALUES (?,?,?,1)",
-        ("mj", "Manticore Junction", "manticore"),
+        "INSERT INTO wormhole_junctions (id,name,host_system_id,nexus_dist_lmin,"
+        "nexus_bearing_deg,canon) VALUES (?,?,?,?,?,1)",
+        ("mj", "Manticore Junction", "manticore", 420.0, 90.0),
     )
     con.execute(
         "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
@@ -168,6 +169,17 @@ def test_resolver_and_determinism(universe: Universe) -> None:
     )
 
 
+def test_junction_nexus_position(universe: Universe) -> None:
+    # 420 lmin at bearing 90 deg -> along +Y in the host system frame, Z ~ 0.
+    p = universe.junction_nexus_position("mj")
+    assert p is not None
+    assert p.norm() == pytest.approx(420.0 * LMIN_M, rel=1e-9)
+    assert p.y == pytest.approx(420.0 * LMIN_M, rel=1e-9)
+    assert p.x == pytest.approx(0.0, abs=1.0) and p.z == 0.0
+    # Unknown junction (or one with no nexus distance) -> None.
+    assert universe.junction_nexus_position("nope") is None
+
+
 def test_inter_system_distance(universe: Universe) -> None:
     # Directly wormhole-linked -> canon span.
     canon = inter_system_distance(universe, "manticore", "yeltsin")
@@ -192,6 +204,10 @@ def test_systems_endpoints(artifact_path: str) -> None:
     assert any(b["id"] == "manticore:manticore" for b in bodies)
     assert client.get("/systems/nope/bodies").status_code == 404
     assert len(client.get("/wormholes").json()) == 1
-    assert len(client.get("/junctions").json()) == 1
+    junctions = client.get("/junctions").json()
+    assert len(junctions) == 1
+    # The nexus in-system point is exposed (km+AU) for the UI marker + queued ships.
+    nexus = junctions[0]["nexus_position"]
+    assert nexus is not None and nexus["au"]["y"] > 0
     dist = client.get("/systems/manticore/distance/yeltsin").json()
     assert dist["distance_ly"] == 99 and dist["method"] == "wormhole-canon"
