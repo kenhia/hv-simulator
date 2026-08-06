@@ -97,6 +97,24 @@ class Universe:
         ).fetchone()
         return dict(r) if r else None
 
+    def junction_nexus_position(
+        self, junction_id: str, when: datetime | None = None
+    ) -> Vec3 | None:
+        """The junction's nexus point in its host system's heliocentric frame (m).
+
+        ``nexus_dist_lmin * unit(nexus_bearing_deg)`` in the in-system XY plane
+        (Z~0, like other in-system placement). The radial distance is canon where
+        known (Manticore = 7 light-hours); the bearing is fabricated (canon:false).
+        None if the junction is unknown or carries no nexus distance. ``when`` is
+        accepted for call-site symmetry — the nexus is static (barycenter-relative).
+        """
+        j = self.wormhole_junction(junction_id)
+        if j is None or j.get("nexus_dist_lmin") is None:
+            return None
+        dist_m = j["nexus_dist_lmin"] * LMIN_M
+        bearing = math.radians(j.get("nexus_bearing_deg") or 0.0)
+        return Vec3(dist_m * math.cos(bearing), dist_m * math.sin(bearing), 0.0)
+
     def wormhole_links(self) -> list[dict]:
         return [dict(r) for r in self.con.execute("SELECT * FROM wormhole_links ORDER BY id")]
 

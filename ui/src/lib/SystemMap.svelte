@@ -97,10 +97,15 @@
   }
   const markers = $derived.by((): JunctionMarker[] => {
     const jName = new Map(junctions.map((j) => [j.id, j.name]));
-    const out: Omit<JunctionMarker, 'world'>[] = [];
+    const out: (Omit<JunctionMarker, 'world'> & { world?: Vec2 })[] = [];
     for (const j of junctions) {
-      if (j.host_system_id === systemId)
-        out.push({ junctionId: j.id, label: `⚲ ${j.name}`, host: true });
+      if (j.host_system_id !== systemId) continue;
+      // The host nexus sits at the engine-reported in-system point (Sprint 037) —
+      // the same place a queued ship rests, so marker and ship agree.
+      const w = j.nexus_position
+        ? { x: j.nexus_position.au.x, y: j.nexus_position.au.y }
+        : undefined;
+      out.push({ junctionId: j.id, label: `⚲ ${j.name}`, host: true, world: w });
     }
     for (const l of links) {
       if (l.transit !== 'instant' || l.to_system_id !== systemId || !l.junction_id) continue;
@@ -110,11 +115,14 @@
         host: false
       });
     }
-    return out.map((m, i) => ({ ...m, world: nexusWorld(i) }));
+    // Termini (and any host without an engine nexus) get a fabricated bearing.
+    let fab = 0;
+    return out.map((m) => ({ ...m, world: m.world ?? nexusWorld(fab++) }));
   });
 
   // Fabricated in-system nexus point (canon gives a radius, not a bearing): place
-  // markers on distinct bearings at NEXUS_AU.
+  // markers on distinct bearings at NEXUS_AU. Used for termini in non-host systems
+  // (the host nexus comes from the engine).
   function nexusWorld(i: number): Vec2 {
     const a = i * 0.7; // first one "north" (+y = up), then fan out
     return { x: NEXUS_AU * Math.sin(a), y: NEXUS_AU * Math.cos(a) };
@@ -318,13 +326,13 @@
 
     for (const sh of here) {
       if (grouped.has(sh.transponder)) continue; // shown on the body's leader instead
-      // A queued / transiting ship's reported position is the star centre (the
-      // wait position is immaterial); draw it at the junction nexus instead.
+      // Host-system queues report their real nexus point (Sprint 037), so use it;
+      // fall back to the nexus/terminus marker only when the engine reports the
+      // star centre (a non-host queue whose in-system point isn't modelled, #77).
       const queued = sh.phase === 'queued' || sh.phase === 'wormhole_transit';
-      const at =
-        queued && markers.length
-          ? markers[0].world
-          : { x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) };
+      const reported = { x: kmToAu(sh.posKm.x), y: kmToAu(sh.posKm.y) };
+      const atStar = Math.hypot(reported.x, reported.y) < 1e-3;
+      const at = queued && atStar && markers.length ? markers[0].world : reported;
       const p = worldToScreen(at, cam, width, height);
       const speed = queued ? 0 : Math.hypot(sh.velKmS.x, sh.velKmS.y);
       const color = factionColor(sh.transponder);

@@ -16,6 +16,10 @@ frame; inter-system kinds (``hyper_cruise``, ``wormhole_transit``) added in Spri
   junction the ship waits at, and the sorted transit-open instants of everything
   ahead of it once the fleet resolver has fixed the queue (used for ``position``).
   Open-ended (``t_end is None``) until the resolver runs.
+- ``nexus_pos`` — a ``wormhole_queue`` segment (Sprint 037): where the ship holds
+  while queued, in ``from_system``'s heliocentric frame — the junction nexus it ran
+  out to. None when the leg is non-host-originating (the queue point isn't modelled
+  in that frame yet); the model then falls back to the star centre.
 """
 
 from __future__ import annotations
@@ -43,6 +47,7 @@ class Segment:
     to_system: str | None = None  # hyper / wormhole destination
     junction: str | None = None  # wormhole_queue: the junction being transited
     queue_ahead: tuple[datetime, ...] | None = None  # wormhole_queue: transit-opens ahead
+    nexus_pos: Vec3 | None = None  # wormhole_queue: hold point (from_system frame); None -> centre
     band: dict | None = None  # hyper_cruise: the band {band_order, name, velocity_multiplier}
 
     @property

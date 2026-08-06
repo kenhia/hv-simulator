@@ -9,6 +9,22 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-08-04 — Junction nexus location (Sprint 037, contract v0.5.0)
+
+Not new worlds — a schema/data addition. `wormhole_junctions` gained an in-system
+**nexus location** so a ship flies out to the junction before it queues (fixing the
+"teleport to the queue" bug, #76):
+
+- **`nexus_dist_lmin`** — radial distance of the nexus (central node) from the host
+  primary. **Canon** for the **Manticore Junction** at **420 lmin (7 light-hours,
+  SI1)**; a fabricated default (also 420 lmin) elsewhere (e.g. Erewhon), `canon:false`.
+- **`nexus_bearing_deg`** — fabricated (`canon:false`), deterministic per junction
+  (a stable id hash), since canon fixes the radius but not the direction.
+
+The in-system nexus point is `nexus_dist_lmin · unit(nexus_bearing_deg)` (Z~0) in
+the host system's heliocentric frame. No systems/bodies/ships changed; both built
+junctions (Manticore, Erewhon) carry the new fields.
+
 ## 2026-06-19 — ATV ship intake: ATV Singularity (Sprint 034, non-canon)
 
 Community ship intake for the All-The-Vibes fleet. Added an `atv-add-ship` skill

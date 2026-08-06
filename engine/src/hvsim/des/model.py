@@ -21,7 +21,8 @@ Segment kinds (Sprint 014 added the two inter-system kinds):
   expressed in the galactic frame.
 - ``wormhole_queue`` — waiting in a junction's transit queue (Sprint 019); an
   open-ended segment fixed by the fleet queue resolver. Reports phase ``queued``
-  with a queue position; the ship holds at the nexus in the origin system.
+  with a queue position; the ship holds at the nexus in the origin system (its
+  in-system point, ``Segment.nexus_pos``, once it has run out there — Sprint 037).
 - ``wormhole_transit`` — near-instant junction translation; reports arrival in
   the destination system.
 """
@@ -103,9 +104,11 @@ def evaluate(
         return st.position, st.velocity, "hyper_cruise"
     if segment.kind == "wormhole_queue":
         # Holding at the nexus in the origin system, waiting for a transit slot.
-        # Reported at the star centre (origin of the from_system frame); the
-        # queue position is read separately via :func:`queue_position`.
-        return ZERO, ZERO, "queued"
+        # The ship ran out to the nexus (Sprint 037), so it holds there in the
+        # from_system frame; ``nexus_pos`` is None only for a non-host-originating
+        # leg whose queue point isn't modelled yet — then fall back to the star
+        # centre. The queue position is read separately via :func:`queue_position`.
+        return (segment.nexus_pos or ZERO), ZERO, "queued"
     if segment.kind == "wormhole_transit":
         # Near-instant translation; reported at the destination star centre
         # (origin of the to_system frame). Position precision is immaterial.

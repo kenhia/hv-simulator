@@ -400,7 +400,15 @@ def create_app(
     @app.get("/junctions")
     def list_junctions() -> list[dict]:
         u = app.state.universe
-        return [] if u is None else u.wormhole_junctions()
+        if u is None:
+            return []
+        out = []
+        for j in u.wormhole_junctions():
+            pos = u.junction_nexus_position(j["id"])
+            # nexus_position: the host-system in-system point (km+AU) the ship runs
+            # out to and holds while queued; the UI draws the ⚲ marker there.
+            out.append({**j, "nexus_position": position_out(pos).model_dump() if pos else None})
+        return out
 
     @app.get("/junctions/{junction_id}/queue", response_model=JunctionQueue)
     def get_junction_queue(

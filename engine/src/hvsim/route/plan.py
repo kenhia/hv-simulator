@@ -17,16 +17,20 @@ distances, and the wormhole buffer **from the artifact** — and emits the DES
   (warship 0.6c / merchant 0.5c) over the galactic-frame distance. (NB: "run out"/
   "approach" are the mundane n-space legs to and from the hyper limit — *not* the
   Honorverse band "climb/descent", which is translating between hyperspace bands.)
-- ``wormhole`` — a junction translation: instant + the fixed safety buffer.
+- ``wormhole`` — a junction translation: an n-space **run out to the nexus** (when
+  the leg originates in the junction's host system), then the queue + instant
+  translation. The queue's open-ended safety-buffer wait is fixed by the resolver.
 
 v1 simplifications (documented): band-climb time + the per-band translation
 bleed-off are treated as noise (the ship just flies its max band). The
 run-out and the hyper cruise both decelerate to rest at the hyper limit, which
 trivially satisfies the translation-velocity limits (<=0.3c entering Alpha from
 n-space, <=0.2c x mult exiting) — modelling translate-while-moving at those caps is
-a future refinement. A wormhole leg fires from wherever the ship is (no explicit
-hop to the nexus). Route-*finding* lives in the `tools/nav-planner` tool, which
-emits a filed route (see `to_filed` / `from_filed`); routes can also be hand-filed.
+a future refinement. A host-originating wormhole leg runs out to the nexus first
+(Sprint 037); a leg from a terminus in another system does not (per-terminus entry
+points are deferred, #77). Route-*finding* lives in the `tools/nav-planner` tool,
+which emits a filed route (see `to_filed` / `from_filed`); routes can also be
+hand-filed.
 """
 
 from __future__ import annotations
@@ -43,6 +47,7 @@ from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
 NSPACE, HYPER, WORMHOLE = "nspace", "hyper", "wormhole"
 _ZAXIS = Vec3(0.0, 0.0, 1.0)  # arbitrary radial when a position is at the star centre
+_NEXUS_EPS_M = 1.0e6  # within 1000 km of the nexus -> already there, skip the run-out
 
 # Fallbacks when a ship carries no band profile (a plain in-system Ship): a
 # generic merchant — Delta band at 0.5c. Real ships supply their own via the
@@ -212,11 +217,30 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
             if link is None:
                 raise ValueError(f"no wormhole link {system} -> {leg.to_system}")
             junction = link.get("junction_id")
-            # Arrival at the junction is `when`. The transit slot depends on the
-            # junction's dynamic state at arrival (phantom + other ships), so the
-            # queue segment is OPEN-ENDED: the fleet resolver fixes its t_end (the
-            # transit-open) and shifts everything downstream by the wait. Until
-            # then, downstream is timed as if the wait were zero.
+            j = u.wormhole_junction(junction) if junction else None
+            host = j.get("host_system_id") if j else None
+            nexus = u.junction_nexus_position(junction) if junction else None
+
+            # Run out to the nexus before queuing (Sprint 037). The nexus lives in
+            # the junction's host system, so this only applies when the leg
+            # originates there; a ship at a terminus in another system reaches the
+            # wormhole via that system's terminus (per-terminus entry is #77,
+            # deferred). Skip when already at the nexus (a straight-through transit
+            # from another terminus emerges there).
+            hold: Vec3 | None = None
+            if nexus is not None and system == host:
+                hold = nexus
+                if (pos - nexus).norm() > _NEXUS_EPS_M:
+                    run = Trajectory.between(pos, nexus, accel, v_cap)
+                    run_end = when + timedelta(seconds=run.duration)
+                    add(Segment(seq, "transit", when, run_end, trajectory=run, system=system))
+                    when, pos = run_end, nexus
+
+            # Arrival at the junction is `when` (after the run-out). The transit slot
+            # depends on the junction's dynamic state at arrival (phantom + other
+            # ships), so the queue segment is OPEN-ENDED: the fleet resolver fixes
+            # its t_end (the transit-open) and shifts everything downstream by the
+            # wait. Until then, downstream is timed as if the wait were zero.
             add(
                 Segment(
                     seq,
@@ -226,6 +250,7 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
                     from_system=system,
                     to_system=leg.to_system,
                     junction=junction,
+                    nexus_pos=hold,
                 )
             )
             # Instant translation once the slot opens (provisionally at arrival).
@@ -234,7 +259,11 @@ def compile_route(route: Route, u: Universe) -> CompiledRoute:  # noqa: C901 - l
                     seq, "wormhole_transit", when, when, from_system=system, to_system=leg.to_system
                 )
             )
-            when, system, pos = when, leg.to_system, Vec3(0.0, 0.0, 0.0)
+            # Emerge in the destination system: at the nexus if that is the junction's
+            # host (the ship exits the central node), else at the terminus (unmodelled
+            # in-system point -> star centre for now).
+            at_host = nexus is not None and leg.to_system == host
+            when, system, pos = when, leg.to_system, (nexus if at_host else Vec3(0.0, 0.0, 0.0))
 
         else:
             raise ValueError(f"unknown leg mode: {leg.mode!r}")

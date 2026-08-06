@@ -16,11 +16,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from hvsim.des import OpenEndedSegment
+from hvsim.des import OpenEndedSegment, Segment
 from hvsim.des.model import segment_end
 from hvsim.flightplan import Ship
 from hvsim.kinematics import SPEED_OF_LIGHT
 from hvsim.route import (
+    CompiledRoute,
     NotAtOrigin,
     Route,
     RouteLeg,
@@ -128,8 +129,8 @@ def artifact_path(tmp_path) -> str:
         "canon) VALUES (1,'A*sqrt(M)+B*M^2',0.01684,6.9e-13,300,120,0)"
     )
     con.execute(
-        "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,canon) "
-        "VALUES ('bj','BJ','beta',3.0,1)"
+        "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,"
+        "nexus_dist_lmin,nexus_bearing_deg,canon) VALUES ('bj','BJ','beta',3.0,420,30,1)"
     )
     con.execute(
         "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
@@ -164,12 +165,14 @@ def _deliverable(ship: Ship) -> Route:
 
 
 def test_route_compiles_expected_segment_kinds(u: Universe) -> None:
-    # The wormhole leg decomposes into an open-ended queue + the instant transit.
+    # The host-originating wormhole leg (beta hosts bj) decomposes into a run-out to
+    # the nexus (transit), the open-ended queue, and the instant transit (Sprint 037).
     c = resolve_route(compile_route(_deliverable(WARSHIP), u), u, "1.1.1")
     kinds = [s.kind for s in c.segments]
     assert kinds == [
         "transit",
         "hyper_cruise",
+        "transit",  # run out to the beta nexus before queuing
         "wormhole_queue",
         "wormhole_transit",
         "transit",
@@ -272,8 +275,7 @@ def test_run_to_limit_uses_hyper_limit_from_artifact(u: Universe) -> None:
 def test_wormhole_leg_is_open_ended_until_resolved(u: Universe) -> None:
     # compile_route leaves the queue open; the resolver fixes its end.
     c = compile_route(_deliverable(WARSHIP), u)
-    q = c.segments[2]
-    assert q.kind == "wormhole_queue"
+    q = next(s for s in c.segments if s.kind == "wormhole_queue")
     assert q.from_system == "beta" and q.to_system == "gamma" and q.junction == "bj"
     assert q.t_end is None  # open-ended
     # The open-ended boundary is the resolver seam: unresolved, segment_end raises.
@@ -283,27 +285,82 @@ def test_wormhole_leg_is_open_ended_until_resolved(u: Universe) -> None:
 
 def test_resolved_wormhole_queue_serialises_through_the_buffer(u: Universe) -> None:
     c = resolve_route(compile_route(_deliverable(WARSHIP), u), u, "1.1.1")
-    q = c.segments[2]
-    assert q.kind == "wormhole_queue" and q.t_end is not None
+    qi = next(i for i, s in enumerate(c.segments) if s.kind == "wormhole_queue")
+    q = c.segments[qi]
+    assert q.t_end is not None
     # bj knob is 3 -> some phantom ahead; each clears at the 300 s buffer (tau << buffer
     # for these masses), so the wait is a whole number of buffers.
     wait = q.duration_s
     assert wait >= 0.0 and wait % 300.0 == pytest.approx(0.0, abs=1e-6)
     # The instant translation sits right at the transit-open.
-    wh = c.segments[3]
+    wh = c.segments[qi + 1]
     assert wh.kind == "wormhole_transit" and wh.duration_s == pytest.approx(0.0)
     assert wh.t_start == q.t_end
 
 
+# --- Run out to the junction nexus before queuing (Sprint 037, #76) --------------
+
+
+def test_host_wormhole_runs_out_to_nexus_before_queuing(u: Universe) -> None:
+    # A host-originating wormhole leg (beta hosts bj) flies to the nexus first, then
+    # queues there — no instant teleport into the queue.
+    c = compile_route(_worm_route(WARSHIP, DEPART), u)
+    assert [s.kind for s in c.segments] == ["transit", "wormhole_queue", "wormhole_transit"]
+    run, q = c.segments[0], c.segments[1]
+    assert run.t_end == q.t_start and q.t_start > DEPART  # queue begins after the run-out
+    nexus = u.junction_nexus_position("bj")
+    start = resolve_position(u, "beta", "beta:p1", DEPART)
+    assert run.trajectory.profile.distance == pytest.approx((nexus - start).norm(), rel=1e-6)
+    # The queue segment carries the nexus hold point so a queued ship rests there.
+    assert q.nexus_pos is not None and (q.nexus_pos - nexus).norm() < 1.0
+
+
+def test_run_out_to_nexus_is_a_realistic_clock(u: Universe) -> None:
+    # 420 lmin (7 light-hours) is a real in-system leg — order of a day, not instant.
+    run = compile_route(_worm_route(WARSHIP, DEPART), u).segments[0]
+    assert 0.5 * 86_400 < run.duration_s < 2.0 * 86_400
+
+
+def test_queued_ship_holds_at_the_nexus(u: Universe) -> None:
+    # While queued, the ship reports the nexus point in its origin system frame
+    # (superseding the old star-centre report), so map + ship agree.
+    c = resolve_route(compile_route(_worm_route(WARSHIP, DEPART), u), u, "1.1.1")
+    q = _queue_seg(c)
+    st = simulation_for_route(c, u).state(q.t_start + timedelta(seconds=1))
+    assert st.phase == "queued" and st.system == "beta" and st.frame == "heliocentric"
+    nexus = u.junction_nexus_position("bj")
+    assert (st.position - nexus).norm() < 1.0
+
+
+def test_straight_through_transit_skips_the_run_out(u: Universe) -> None:
+    # gamma:p1 ->(wormhole)-> beta ->(wormhole)-> gamma. Leg 1 originates at a terminus
+    # system (no host nexus in-frame -> no run-out) and emerges at the beta nexus;
+    # leg 2 is already at the nexus -> its run-out is skipped. So no transit anywhere.
+    route = Route(
+        WARSHIP,
+        "gamma",
+        "gamma:p1",
+        [RouteLeg("wormhole", "beta"), RouteLeg("wormhole", "gamma")],
+        DEPART,
+    )
+    kinds = [s.kind for s in compile_route(route, u).segments]
+    assert kinds == ["wormhole_queue", "wormhole_transit", "wormhole_queue", "wormhole_transit"]
+
+
 def _worm_route(ship: Ship, depart: datetime) -> Route:
-    # A bare junction hop from the junction host system: arrival == depart_at, so
-    # queue interleaving is exercised without hyper-leg timing in the way.
+    # A junction hop from the junction host system (beta hosts bj): the ship runs
+    # out to the nexus first (Sprint 037), then queues. Queue interleaving is
+    # exercised without hyper-leg timing in the way.
     return Route(ship, "beta", "beta:p1", [RouteLeg("wormhole", "gamma")], depart)
+
+
+def _queue_seg(c: CompiledRoute) -> Segment:
+    return next(s for s in c.segments if s.kind == "wormhole_queue")
 
 
 def test_wormhole_queue_position_counts_down(u: Universe) -> None:
     c = resolve_route(compile_route(_worm_route(WARSHIP, DEPART), u), u, "1.1.1")
-    q = c.segments[0]
+    q = _queue_seg(c)
     sim = simulation_for_route(c, u)
     seen = [
         sim.state(q.t_start + timedelta(seconds=s)).queue_position
@@ -321,13 +378,14 @@ def test_two_real_ships_interleave_at_a_junction(u: Universe) -> None:
     cA = compile_route(_worm_route(WARSHIP, DEPART), u)
     cB = compile_route(_worm_route(WARSHIP, DEPART), u)
     rA, rB = resolve_fleet([(cA, "1.1.1"), (cB, "1.1.2")], u)
-    qA, qB = rA.segments[0], rB.segments[0]
-    assert qA.kind == "wormhole_queue" and qB.kind == "wormhole_queue"
-    assert qA.t_start == qB.t_start == DEPART  # both arrive together
+    qA, qB = _queue_seg(rA), _queue_seg(rB)
+    # Identical run-outs -> both reach the nexus (and so the queue) together.
+    assert qA.t_start == qB.t_start and qA.t_start > DEPART
     # A (lower stable key) goes first; B serialises strictly behind it.
     assert qB.t_end > qA.t_end
-    sa = simulation_for_route(rA, u).state(DEPART).queue_position
-    sb = simulation_for_route(rB, u).state(DEPART).queue_position
+    # Both are queued once they reach the nexus (identical run-outs -> same instant).
+    sa = simulation_for_route(rA, u).state(qA.t_start).queue_position
+    sb = simulation_for_route(rB, u).state(qB.t_start).queue_position
     assert sb > sa  # B is deeper in the queue (behind A)
 
 
@@ -337,7 +395,7 @@ def test_queue_resolution_is_deterministic(u: Universe) -> None:
             (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.1"),
             (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.2"),
         ]
-        return [r.segments[0].t_end for r in resolve_fleet(items, u)]
+        return [_queue_seg(r).t_end for r in resolve_fleet(items, u)]
 
     assert ends() == ends()  # same routes + seed -> identical queues
 
