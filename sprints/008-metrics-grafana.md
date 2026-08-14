@@ -1,6 +1,6 @@
 # Sprint 008 — Prometheus /metrics + Grafana "Ship Status" (Phase 1.5 / M8)
 
-Implements milestone **M8** from `planning/004-project-plan.md`. Makes the live
+Implements milestone **M8** from `sprints/planning/004-project-plan.md`. Makes the live
 deployment observable: a Prometheus `/metrics` endpoint on the API, scraped by
 the existing Prometheus on `kubsdb`, surfaced in a Grafana "Ship Status"
 dashboard.

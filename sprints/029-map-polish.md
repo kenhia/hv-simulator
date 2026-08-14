@@ -3,7 +3,7 @@
 Four UI polish items that make the maps legible and the interaction smooth in a
 live demo. All client-side — the engine already serves the data each needs.
 
-Plan: [`planning/007`](../planning/007-ui-vision.md) · KWIs #71 / #74 / #75 / #70.
+Plan: [`sprints/planning/007`](planning/007-ui-vision.md) · KWIs #71 / #74 / #75 / #70.
 Second sprint of the demo-first arc (028 made the maps *look right*; 029 makes them
 *read right*).
 

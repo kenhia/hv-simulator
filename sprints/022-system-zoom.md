@@ -5,7 +5,7 @@ The technically defining Phase 2.5 sprint: descend from the galaxy graph into a
 breadcrumb that grows on the way down. This is the level-of-detail (LOD) spine the
 whole UI hangs on; 023 (live ships) and 024 (queue panels) ride on it.
 
-Vision: [`planning/007`](../planning/007-ui-vision.md). Builds on 021's galaxy graph
+Vision: [`sprints/planning/007`](planning/007-ui-vision.md). Builds on 021's galaxy graph
 + camera/renderer modules.
 
 ## Goal
@@ -135,7 +135,7 @@ source of truth and a future "?" overlay can render it.
 - [ ] Side Data Panel: bodies + places.
 - [ ] Vitest (scene/projection/breadcrumb) + engine endpoint tests; `just check` +
       `just contracts` green.
-- [ ] Deploy to kubsdb + demo; CLAUDE.md + `planning/007` (mark 022 landed) updated.
+- [ ] Deploy to kubsdb + demo; CLAUDE.md + `sprints/planning/007` (mark 022 landed) updated.
 
 ## Acceptance criteria
 

@@ -1,6 +1,6 @@
 # Sprint 006 — Sol-map dashboard widget (Phase 1 / M5)
 
-Completes milestone **M5** from `planning/004-project-plan.md` — the last open
+Completes milestone **M5** from `sprints/planning/004-project-plan.md` — the last open
 Phase 1 item. Closes out Phase 1 before the Phase 1.5 operational work.
 
 ## Goal
@@ -89,7 +89,7 @@ proving the API shape is right and giving a first way to *watch* ships move.
   `/bodies` refreshes every ~5 min. Dead-reckoning keeps motion smooth between
   polls, so the 15 s figure is about freshness (new ships, plan changes), not
   animation. 1.0c was considered and rejected — no ship reaches it.
-- This sprint also carries the **Phase 1.5 plan edit** to `planning/004` (added
+- This sprint also carries the **Phase 1.5 plan edit** to `sprints/planning/004` (added
   last session, currently uncommitted) onto its branch — it lands with this PR.
 - Inner planets cluster near the Sun at an 11 AU extent; acceptable for v1. If it
   bugs us, a log-radial option or an inner/outer toggle is an easy follow-up.

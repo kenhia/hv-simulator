@@ -6,7 +6,7 @@ to the live fleet. The first **Controller** surface — Observer + write actions
 consuming 026's `POST /plan` and the existing `POST /fleet/routes` /
 `DELETE /fleet/{tp}/route`.
 
-Plan: [`planning/007`](../planning/007-ui-vision.md) (Controller section).
+Plan: [`sprints/planning/007`](planning/007-ui-vision.md) (Controller section).
 
 ## Goal
 

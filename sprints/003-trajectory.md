@@ -1,6 +1,6 @@
 # Sprint 003 — Trajectory math (the moving-target intercept)
 
-Implements milestone **M2** from `planning/004-project-plan.md`.
+Implements milestone **M2** from `sprints/planning/004-project-plan.md`.
 
 ## Goal
 

@@ -63,7 +63,7 @@ row → select/locate that ship). Reuses the 032 `atBodyGroups` grouping.
       distances + current-leg/final labels (UI).
 - [ ] #78: openable per-planet ships-at-rest panel (count + searchable list).
 - [ ] `just check` (+ `contracts` if `StateOut`/`/fleet` schema changes); docs
-      (CLAUDE.md / planning/007); reconcile #72/#73/#78/#81 to resolved on ship.
+      (CLAUDE.md / sprints/planning/007); reconcile #72/#73/#78/#81 to resolved on ship.
 
 ## Acceptance criteria
 - Board sorts by all four modes; filters still apply; default is transponder.

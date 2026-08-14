@@ -6,7 +6,7 @@ move smoothly via dead-reckoning between polls, and a **Fleet Board** rail lists
 the fleet with a **Ship Timeline** for those under way. This is the prime
 motivator — time + patience made visible — realized on the 021/022 map.
 
-Vision: [`planning/007`](../planning/007-ui-vision.md). Builds on 022's scenes +
+Vision: [`sprints/planning/007`](planning/007-ui-vision.md). Builds on 022's scenes +
 camera + chrome.
 
 ## Goal

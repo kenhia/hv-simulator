@@ -7,7 +7,7 @@ adds **no new travel**: the bar is **byte-for-byte parity** with today's Phase 1
 single-system behavior, proving the new model reproduces the old one with zero
 drift before anything is built on it.
 
-Per `planning/006` (decision #3, *DES-core-first*): retrofitting the core later
+Per `sprints/planning/006` (decision #3, *DES-core-first*): retrofitting the core later
 is exactly the "start over" we're avoiding, and the DES model costs little even
 when no queues exist yet — so we build it first and put 2b on it.
 

@@ -2,7 +2,7 @@
 
 Two demo-polish UI tweaks (no engine changes). Repeating routes → 033.
 
-Plan: [`planning/007`](../planning/007-ui-vision.md). All in `ui/`.
+Plan: [`sprints/planning/007`](planning/007-ui-vision.md). All in `ui/`.
 
 ## Goal
 

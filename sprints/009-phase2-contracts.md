@@ -1,6 +1,6 @@
 # Sprint 009 — Monorepo + boundary contracts (Phase 2.0)
 
-Implements **Phase 2.0** from `planning/004-project-plan.md` (design in `006`).
+Implements **Phase 2.0** from `sprints/planning/004-project-plan.md` (design in `006`).
 The foundation sprint for the galaxy re-founding: restructure into a monorepo,
 migrate the dataset in, and **freeze the two boundary contracts** that let us
 "build in Python now, port the engine to Rust later" cheaply. **No new engine

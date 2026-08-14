@@ -1,6 +1,6 @@
 // Faction colours keyed on the transponder's nation code (its first component,
 // from data/transponder-codes.json). A fixed default palette for now;
-// user-remappable schemes are deferred (planning/007) — keep this the one seam.
+// user-remappable schemes are deferred (sprints/planning/007) — keep this the one seam.
 
 interface Faction {
   name: string;

@@ -2,13 +2,18 @@
 
 Lightweight execution tracking — deliberately *not* a spec framework (no SpecKit,
 no ATV). Each sprint is one short markdown file you and Claude can both read at a
-glance. The planning docs in `planning/` say *what we're building and why*;
+glance. The planning docs in `sprints/planning/` say *what we're building and why*;
 the sprints here say *what we're doing next and how we'll know it's done*.
+
+This layout is the [kprojects](https://github.com/kenhia/kprojects) minimal
+harness (adopted in Sprint 038): `planning/` for design docs — `roadmap.md` is
+the Now/Next/Later view — and `review/` for the more formal reviews that arrive
+as the project matures.
 
 ## Convention
 
 - One file per sprint: `NNN-short-name.md`, numbered in order.
-- Sprints map roughly to the milestones in `planning/004-project-plan.md`.
+- Sprints map roughly to the milestones in `sprints/planning/004-project-plan.md`.
 - Keep each sprint **small enough to finish and verify** — if a task list grows
   past ~8 items or mixes unrelated concerns, split it.
 

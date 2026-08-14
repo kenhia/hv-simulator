@@ -1,6 +1,6 @@
 # Sprint 004 — Flight-plan compiler (the canonical merchant run)
 
-Implements milestone **M3** from `planning/004-project-plan.md`.
+Implements milestone **M3** from `sprints/planning/004-project-plan.md`.
 
 ## Goal
 

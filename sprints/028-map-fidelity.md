@@ -11,7 +11,7 @@ visual problems in a live demo:
   Draconis, Manticore, Basilisk all stack. Spread them with a deterministic
   **bearing-arc** jitter.
 
-Plan: [`planning/007`](../planning/007-ui-vision.md) · KWIs
+Plan: [`sprints/planning/007`](planning/007-ui-vision.md) · KWIs
 [#69](.) / [#68](.). First sprint of the **demo-first** post-027 arc.
 
 ## Goal

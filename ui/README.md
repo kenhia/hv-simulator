@@ -2,7 +2,7 @@
 
 A **SvelteKit (Svelte 5) + Canvas-2D** web app for the Honorverse simulator,
 consuming the engine API. Vision + stack + the sprint slice are in
-[`planning/007`](../planning/007-ui-vision.md).
+[`sprints/planning/007`](../sprints/planning/007-ui-vision.md).
 
 **Sprint 021 (this):** the **galaxy graph** — placed systems as nodes in the
 galactic frame, wormhole links as edges, pan/zoom, click a system → Side Data

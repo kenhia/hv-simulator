@@ -5,7 +5,7 @@ A **dedicated expansion sprint** (data, not engine): grow the dataset via the
 (not compiler stubs), and the registry has more ships. First, teach the skills to
 place new systems *naturally* so the batch lands well.
 
-Plan: demo-first roadmap (`planning/007`) · KWIs #79 (skill update) + #66 (nations).
+Plan: demo-first roadmap (`sprints/planning/007`) · KWIs #79 (skill update) + #66 (nations).
 Driven by the `expand-galaxy` orchestrator → scribes → pipeline → verify → changelog.
 
 > **Demo tomorrow (2026-06-19).** Keep this batch tight and solid; the scope below

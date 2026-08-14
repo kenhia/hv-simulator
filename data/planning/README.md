@@ -1,7 +1,7 @@
 # Planning — Honorverse-Data
 
 Decision and roadmap notes for the **data** project (distinct from the
-`hv-simulator` repo's own `planning/` folder, which plans the *engine*). This
+`hv-simulator` repo's own `sprints/planning/` folder, which plans the *engine*). This
 folder answers "what do we still need, and in what order" so the dataset stays
 ahead of what the simulator needs.
 

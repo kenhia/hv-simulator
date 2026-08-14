@@ -101,7 +101,7 @@ only this sprint.
 - [ ] `contracts/engine-openapi.yaml`: `JunctionQueue.ship_id` -> `transponder`;
       confirm the endpoint matches the implementation.
 - [ ] `just queue-board` demo; CLAUDE.md + galaxy-changelog (if data/contract) +
-      `planning/007` (mark 020 landed) updated; deploy + shakedown on kubsdb.
+      `sprints/planning/007` (mark 020 landed) updated; deploy + shakedown on kubsdb.
 
 ## Acceptance criteria
 
@@ -125,6 +125,6 @@ only this sprint.
 - **Implements a pre-declared contract.** `engine-openapi.yaml` anticipated this
   endpoint; 020 makes it real, reconciling `ship_id` -> `transponder`.
 - **Grafana checkpoint.** New data surface -> capture the time-series now (depth +
-  wait); the dashboard work stays on the deferred ops track (`planning/007`).
+  wait); the dashboard work stays on the deferred ops track (`sprints/planning/007`).
 - **Per-query fleet resolution** is acceptable at current scale; revisit if/when
   the active fleet reaches hundreds.
