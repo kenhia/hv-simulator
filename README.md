@@ -16,7 +16,7 @@ and percent-complete, dead-reckoned smoothly between polls.*
 Early development. Phase 1 (the in-system Sol ship simulator) is complete;
 **Phase 2** is expanding it to the galaxy (multi-system, hyperspace, wormholes).
 
-- Design: [`planning/004-project-plan.md`](planning/004-project-plan.md) is the
+- Design: [`sprints/planning/004-project-plan.md`](sprints/planning/004-project-plan.md) is the
   authoritative plan. (`001`–`003` are earlier exploratory transcripts.)
 - Execution: [`sprints/`](sprints/) — one short spec + task list per sprint.
 
@@ -76,7 +76,8 @@ tools/       standalone tools (universe-compiler, etc.) — each its own pyproje
 data/        Honorverse dataset, JSON source of truth — CC BY-SA 3.0 (own LICENSE)
 contracts/   universe-artifact SQL DDL + engine OpenAPI (the language-agnostic seam)
 ui/          Phase 2.5 front-end (placeholder)
-deploy/ grafana/ planning/ sprints/   ops, observability, design, sprint specs
+sprints/     sprint records + `planning/` (design docs) + `review/`
+deploy/ grafana/                      ops, observability
 justfile     workspace orchestration
 ```
 

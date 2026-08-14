@@ -13,7 +13,7 @@ and **without a game loop**. The per-trip mechanics stay the existing compiled
 segments; the route just analytically defines an infinite sequence of cycles and we
 evaluate the active one at query time. KWI #59.
 
-Plan: `planning/004` (no-loop principle), `planning/007` (slice 035). Engine + a
+Plan: `sprints/planning/004` (no-loop principle), `sprints/planning/007` (slice 035). Engine + a
 thin UI surface. **L** sprint.
 
 ## The load-bearing principle (read first)

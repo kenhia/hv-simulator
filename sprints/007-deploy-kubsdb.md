@@ -1,6 +1,6 @@
 # Sprint 007 — Deploy to kubsdb (Phase 1.5 / M6)
 
-Implements milestone **M6** from `planning/004-project-plan.md` (Phase 1.5 —
+Implements milestone **M6** from `sprints/planning/004-project-plan.md` (Phase 1.5 —
 Operate & Observe). First real deployment: the simulator runs as a persistent
 service on `kubsdb`, in real time, managed from a root `justfile`.
 

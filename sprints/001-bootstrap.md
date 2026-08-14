@@ -14,7 +14,7 @@ on a trivial test and `ruff` is clean, so every later sprint starts from green.
   (`ephemeris/`, `kinematics/`, `flightplan/`, `api/`, `clock/`), each with an
   `__init__.py` so imports resolve.
 - One placeholder test proving the toolchain runs.
-- A top-level `README.md` pointing at `planning/` and `sprints/`.
+- A top-level `README.md` pointing at `sprints/planning/` and `sprints/`.
 
 ## Out of scope
 
@@ -32,7 +32,7 @@ on a trivial test and `ruff` is clean, so every later sprint starts from green.
       `pytest` (testpaths) in `pyproject.toml`.
 - [x] Create `src/hvsim/` + the five subpackages, each with `__init__.py`.
 - [x] Add `tests/test_smoke.py` that imports `hvsim` and asserts a trivial truth.
-- [x] Write top-level `README.md` (what the project is, link to `planning/004`
+- [x] Write top-level `README.md` (what the project is, link to `sprints/planning/004`
       and `sprints/`).
 - [x] Commit on a branch; verify the acceptance criteria below.
 
@@ -46,7 +46,7 @@ on a trivial test and `ruff` is clean, so every later sprint starts from green.
 ## Notes / decisions
 
 - Toolchain (uv / ruff / pytest, `src/` layout) is fixed in
-  `planning/004-project-plan.md`. Once this sprint lands, update `CLAUDE.md` to
+  `sprints/planning/004-project-plan.md`. Once this sprint lands, update `CLAUDE.md` to
   replace the "planned toolchain (not yet set up)" section with the real commands.
 
 ## Outcome — DONE

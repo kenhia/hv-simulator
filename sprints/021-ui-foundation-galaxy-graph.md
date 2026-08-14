@@ -4,7 +4,7 @@ The first Phase 2.5 sprint and the **stack proof**: stand up the `ui/` front-end
 end-to-end — scaffold → build → serve → **deploy to kubsdb** — on the easiest real
 data (the static galaxy graph), so the whole toolchain is de-risked before we climb
 the hard LOD-zoom spine (022) or add live ships (023). Vision + stack are fixed in
-[`planning/007`](../planning/007-ui-vision.md); this sprint settles the serving-model
+[`sprints/planning/007`](planning/007-ui-vision.md); this sprint settles the serving-model
 specifics it left open.
 
 ## Goal
@@ -65,7 +65,7 @@ engine (same-origin) and reachable on kubsdb. No live ships, no system zoom yet.
 ## Scope
 
 1. Scaffold `ui/` (SvelteKit + TS + Vite, adapter-static); `ui/README.md` updated
-   to point at the real app + `planning/007`.
+   to point at the real app + `sprints/planning/007`.
 2. API client (typed) for `/systems`, `/wormholes`, `/junctions`.
 3. Canvas-2D galaxy graph: nodes + edges, camera (pan/zoom), node hit-testing.
 4. Chrome: At-a-glance, legend, Side Data Panel (click a system).
@@ -96,7 +96,7 @@ engine (same-origin) and reachable on kubsdb. No live ships, no system zoom yet.
 - [ ] `just ui-dev` / `ui-build` / `ui-check`; fold `ui-check` into `just check`.
 - [ ] Multi-stage Dockerfile (Node build → Python runtime); `just deploy` bundles it.
 - [ ] Vitest unit (projection/camera); `svelte-check` clean; `just check` green.
-- [ ] Deploy to kubsdb + demo; CLAUDE.md + `planning/007` (mark 021 landed) updated.
+- [ ] Deploy to kubsdb + demo; CLAUDE.md + `sprints/planning/007` (mark 021 landed) updated.
 
 ## Acceptance criteria
 

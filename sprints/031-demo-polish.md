@@ -3,7 +3,7 @@
 Three small, high-payoff tweaks for the demo. (Repeating routes — the old 031 —
 moved to **032**.)
 
-Plan: [`planning/007`](../planning/007-ui-vision.md). Touches `ui/` + a small engine
+Plan: [`sprints/planning/007`](planning/007-ui-vision.md). Touches `ui/` + a small engine
 state addition. Builds on the Observer (023–025) and the rich-popup brainstorm #72.
 
 ## Goal

@@ -2,7 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project status
+<!-- kproject:begin — managed by kprojects; do not edit inside this block -->
+## kproject conventions
+
+This project uses the kproject minimal harness
+(<https://github.com/kenhia/kprojects>). Keep context small; prefer doing
+over ceremony.
+
+### Layout
+
+- `sprints/` — the project's evolution, one record per PR-sized unit of
+  work (a "sprint")
+  - `planning/` — planning docs; at minimum `roadmap.md` (the general plan)
+  - `review/` — more formal reviews as the project matures
+  - sprint records: `###-<short-name>.md` for small projects, or a
+    `###-<short-name>/` directory of files for larger/more formal ones
+  - a sprint record is one informal narrative: goal, decisions, what
+    shipped, follow-ups — written during the sprint, not after
+- `docs/` — project documentation, architecture, usage
+- `.scratch/` — git-ignored scratch space for user or agent ephemera;
+  use it instead of /tmp
+- `justfile` — dev recipes; default recipe is `@just --list`; `just check`
+  runs the CI gates; `just deploy` (or variants) if the project deploys
+- `.env` — git-ignored; tokens and environment vars
+
+### Workflow
+
+- One sprint ≈ one PR. Sprint proposals and work items are managed in
+  `korg`; durable cross-project knowledge goes in `klams`.
+- If the korg or klams MCP tools are unavailable in your session, say so
+  up front — don't silently work around missing infrastructure.
+- TDD preferred: write the failing test first when practical.
+
+### Tooling preferences
+
+- Python managed by `uv`; lint/format with `ruff`; typecheck with `ty`
+  (astral toolchain)
+- License is MIT unless specifically directed otherwise
+<!-- kproject:end -->
+
+## Project
+
+### Project status
 
 Early development, executed sprint by sprint. Done so far: project skeleton
 (Sprint 001); `ephemeris` (Sprint 002 — analytic positions + `where-is` CLI,
@@ -40,8 +81,8 @@ plus deterministic real-ship interleaving. Sprint 020 brought the queue to the
 interleaving on the board), surfaces `queue_position` on `/fleet`, implements the
 contracted `GET /junctions/{id}/queue` (the "you are #3" board — real ships +
 phantom, `just queue-board`), and emits per-junction queue-depth/wait metrics for
-Prometheus/Grafana. Design is in `planning/006`. **Phase 2.5 (first-class UI) is
-underway** (`planning/007`): a SvelteKit (Svelte 5) + Canvas-2D map app in `ui/`.
+Prometheus/Grafana. Design is in `sprints/planning/006`. **Phase 2.5 (first-class UI) is
+underway** (`sprints/planning/007`): a SvelteKit (Svelte 5) + Canvas-2D map app in `ui/`.
 Sprint 021 landed the foundation + **galaxy graph** — placed systems as nodes in
 the galactic frame, wormhole links as edges, pan/zoom, click → Side Data Panel,
 At-a-glance + legend. Sprint 022 added the **LOD spine**: double-click / `Enter` /
@@ -140,13 +181,19 @@ positions), while Honorverse systems use fabricated orbits. No inter-system
 snapshot of the artifact (built-vs-stubbed systems, counts of bodies/classes/ships/
 links) so changelog entries are generated from truth, not memory.
 
-- `planning/004-project-plan.md` is the authoritative design; read it first.
+**Harness:** Sprint 038 put the repo on the **kprojects minimal harness** — the
+managed block above, `sprints/{planning,review}/`, and the root `planning/`
+folded in as `sprints/planning/`. No behaviour changed; `just check` was already
+the gate and was left as-is.
+
+- `sprints/planning/004-project-plan.md` is the authoritative design; read it first.
   (`001`–`003` are earlier M365 Copilot transcripts kept for context.)
+  `sprints/planning/roadmap.md` is the Now/Next/Later view.
 - `sprints/` holds one short spec + task list per sprint. Check the highest-
   numbered file for what's in flight; a sprint is done only when every
   acceptance criterion in it is verified.
 
-## What this project is
+### What this project is
 
 An "Honorverse" (David Weber) space-travel simulator. The **core value is
 realism of the clock**: ships take real wall-clock hours/days/weeks to reach
@@ -154,7 +201,7 @@ their destinations, and the system reports where everything is *right now*.
 It is deliberately **not** fast or flashy — do not optimize toward arcade-speed
 travel or heavy graphics.
 
-## Architecture intent (read before designing anything)
+### Architecture intent (read before designing anything)
 
 The system is decomposed so that the physics never mixes with world-building.
 This separation is load-bearing — preserve it:
@@ -175,7 +222,7 @@ This separation is load-bearing — preserve it:
   The ship simulator gains only new *segment kinds* (e.g. `hyper_cruise`,
   `wormhole_transit`); route planning and worldgen live outside it.
 
-### Physics facts that constrain the math (verified in `004`)
+#### Physics facts that constrain the math (verified in `004`)
 
 - Newtonian kinematics with a velocity cap (0.6c). Reaching 0.6c at 250 g needs
   ~44 AU of runway, so the cap rarely engages in-system; relativity is a 2–6%
@@ -190,7 +237,7 @@ This separation is load-bearing — preserve it:
 Keep `ephemeris` and `kinematics` as **pure functions** so they are testable
 without running the service.
 
-## Monorepo layout (since Sprint 009 / Phase 2.0)
+### Monorepo layout (since Sprint 009 / Phase 2.0)
 
 ```
 engine/      the hvsim engine — Python package + FastAPI service (MIT)
@@ -198,7 +245,8 @@ tools/       standalone tools, each its own pyproject (universe-compiler, etc.)
 data/        Honorverse dataset, JSON source of truth — SEPARATE license (CC BY-SA)
 contracts/   the language-agnostic seam: universe-artifact SQL DDL + engine OpenAPI
 ui/          Phase 2.5 front-end — SvelteKit + Canvas-2D galaxy app (Sprint 021)
-deploy/ grafana/ planning/ sprints/   ops, observability, design docs
+sprints/     sprint records + `planning/` (design docs) + `review/`
+deploy/ grafana/                      ops, observability
 justfile     workspace orchestration
 ```
 
@@ -207,7 +255,7 @@ The **engine is the only Python project at the moment**; it lives in `engine/`
 stays MIT. `contracts/` is versioned and frozen per minor version — it's what
 keeps a future engine-only Rust port (and the tools/UI) decoupled.
 
-## Toolchain & commands
+### Toolchain & commands
 
 Managed with `uv`. Python `>=3.12` (resolves to 3.13). **Engine commands run in
 `engine/`:**

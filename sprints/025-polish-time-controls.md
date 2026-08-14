@@ -6,7 +6,7 @@ UI), **faction colours**, **layer toggles**, and a **help overlay** wiring the
 reserved keymap. Plus a couple of cheap polish wins. After this, Observer is
 "done"; the Controller (Flight Planner) is the next phase.
 
-Vision: [`planning/007`](../planning/007-ui-vision.md). Builds on 023's sim clock
+Vision: [`sprints/planning/007`](planning/007-ui-vision.md). Builds on 023's sim clock
 + live loop.
 
 ## Scope is tiered (polish balloons — trim at review)

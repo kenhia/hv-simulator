@@ -5,7 +5,7 @@ The first Controller sprint and an **engine** one: relocate the route-finder int
 HTTP and preview them before filing. No UI yet (that's 027) — this lays the
 endpoint the Flight Planner consumes.
 
-Plan + decisions: [`planning/007`](../planning/007-ui-vision.md) (Controller
+Plan + decisions: [`sprints/planning/007`](planning/007-ui-vision.md) (Controller
 section, resolved 2026-06-18).
 
 ## Goal

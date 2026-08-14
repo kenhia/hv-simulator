@@ -6,7 +6,7 @@ shows who's waiting and counts down **#3 → #2 → #1 → pops**. The engine si
 consumer**, so a lighter, UI-only sprint riding on 022's system scene + 023's live
 clock.
 
-Vision: [`planning/007`](../planning/007-ui-vision.md).
+Vision: [`sprints/planning/007`](planning/007-ui-vision.md).
 
 ## Goal
 

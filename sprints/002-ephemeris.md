@@ -1,6 +1,6 @@
 # Sprint 002 — Ephemeris (where is Saturn right now?)
 
-Implements milestone **M1** from `planning/004-project-plan.md`.
+Implements milestone **M1** from `sprints/planning/004-project-plan.md`.
 
 ## Goal
 
