@@ -10,6 +10,7 @@ import type {
   SystemBody,
   SystemDetail
 } from './api';
+import { cycleLabel } from './planner';
 
 function whenShort(iso: string | null): string {
   return iso ? iso.replace('T', ' ').slice(0, 16) : '—';
@@ -60,6 +61,7 @@ export function shipStateRows(s: ShipState, e: FleetEntry, ship?: ShipCatalogEnt
     rows.push(['to destination', distanceText(s.distance_to_destination_km)]);
   }
   if (s.queue_position != null) rows.push(['queue', `#${s.queue_position}`]);
+  if (s.cycle != null) rows.push(['repeating', `↻ ${cycleLabel(s.cycle, s.cycles)}`]);
   if (ship?.ship_class) rows.push(['class', ship.ship_class]);
   rows.push(['nation', ship?.nation_code ?? (s.transponder ?? e.transponder).split('.')[0]]);
   return { title: e.ship, kind: 'ship', rows };
@@ -74,6 +76,7 @@ export function shipRows(e: FleetEntry): Detail {
     ['progress', e.percent_complete != null ? `${Math.round(e.percent_complete * 100)}%` : '—']
   ];
   if (e.queue_position != null) rows.push(['queue', `#${e.queue_position}`]);
+  if (e.cycle != null) rows.push(['repeating', `↻ ${cycleLabel(e.cycle, e.cycles)}`]);
   return { title: e.ship, kind: 'ship', rows };
 }
 

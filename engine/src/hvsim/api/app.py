@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -26,14 +27,16 @@ from hvsim.flightplan import FlightPlan, Ship, Waypoint, compile_plan, state_at
 from hvsim.kinematics import ZERO, Vec3
 from hvsim.route import (
     FILED_ROUTE_SCHEMA,
-    CompiledRoute,
+    REPEATING_ROUTE_SCHEMA,
+    ActiveRoute,
     NotAtOrigin,
     compile_route,
-    fly_filed_route,
-    from_filed,
+    compiled_at,
+    fly_filed,
     plan_route_multi,
     resolve_fleet_junctions,
     resolve_route,
+    route_graph,
     simulation_for_route,
     to_filed,
 )
@@ -128,6 +131,8 @@ def create_app(
     app.state.universe = (
         Universe.open(universe_db) if universe_db and Path(universe_db).exists() else None
     )
+    if app.state.universe is not None:
+        route_graph(app.state.universe)  # precompute the static route topology (#64)
 
     def get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -238,31 +243,38 @@ def create_app(
             select(RouteRow).where(RouteRow.transponder == transponder, RouteRow.status == "active")
         ).first()
 
-    def route_compiled(row: RouteRow) -> CompiledRoute:
-        u = require_universe()
-        compiled = compile_route(from_filed(json.loads(row.filed_json), u), u)
-        # Single-route resolve (phantom traffic only) for the POST echo + the
-        # at-origin guard. The read paths use resolved_fleet() for real interleaving.
-        return resolve_route(compiled, u, row.transponder)
+    def route_active(row: RouteRow, when: datetime | None = None) -> ActiveRoute:
+        """What ``row`` is flying at ``when`` — the cycle of a repeating route (#59).
 
-    def resolved_fleet(session: Session):
+        Single-route resolve (phantom traffic only) for the POST echo + the
+        at-origin guard. The read paths use resolved_fleet() for real interleaving.
+        """
+        u = require_universe()
+        active = compiled_at(json.loads(row.filed_json), u, when or app.state.clock.now())
+        return replace(active, compiled=resolve_route(active.compiled, u, row.transponder))
+
+    def resolved_fleet(session: Session, when: datetime):
         """Resolve every active route together (real-ship interleaving, Sprint 020).
 
-        Returns ``(by_transponder, junction_servers)`` — the resolved CompiledRoute
-        per ship and the per-junction servers backing the queue board. One fold per
-        request; deterministic in the active fleet + seed.
+        Returns ``(by_transponder, junction_servers)`` — the resolved
+        :class:`ActiveRoute` per ship and the per-junction servers backing the queue
+        board. A repeating route contributes the cycle it is flying at ``when``
+        (#59). One fold per request; deterministic in the active fleet + seed.
         """
         u = require_universe()
         rows = session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
-        items = [
-            (compile_route(from_filed(json.loads(r.filed_json), u), u), r.transponder) for r in rows
-        ]
-        routes, servers = resolve_fleet_junctions(items, u)
-        by_tp = {tp: rt for (_, tp), rt in zip(items, routes, strict=True)}
+        active = [(r.transponder, compiled_at(json.loads(r.filed_json), u, when)) for r in rows]
+        items = [(a.compiled, tp) for tp, a in active]
+        # Filing order decides contested junction slots, so an in-flight ship never
+        # loses its place to a ship filed after it departed (Sprint 039, #67).
+        filed_at = {r.transponder: r.created_at for r in rows}
+        routes, servers = resolve_fleet_junctions(items, u, filed_at=filed_at)
+        by_tp = {tp: replace(a, compiled=rt) for (tp, a), rt in zip(active, routes, strict=True)}
         return by_tp, servers
 
-    def state_out(compiled: CompiledRoute, transponder: str, when: datetime) -> StateOut:
+    def state_out(active: ActiveRoute, transponder: str, when: datetime) -> StateOut:
         u = require_universe()
+        compiled = active.compiled
         st = simulation_for_route(compiled, u).state(when)
         depart, arrival = compiled.depart_at, compiled.arrival
         span = (arrival - depart).total_seconds()
@@ -295,6 +307,8 @@ def create_app(
             frame=st.frame,
             transponder=transponder,
             queue_position=st.queue_position,
+            cycle=active.cycle,
+            cycles=active.cycles,
             band=(
                 BandOut(
                     order=st.band["band_order"],
@@ -311,7 +325,7 @@ def create_app(
         u = app.state.universe
         if u is None:
             return []
-        _, servers = resolved_fleet(session)
+        _, servers = resolved_fleet(session, when)
         out: list[tuple[str, int, float]] = []
         for j in u.wormhole_junctions():
             if j.get("traffic_intensity") is None:
@@ -325,7 +339,8 @@ def create_app(
             out.append((j["id"], depth, wait))
         return out
 
-    def compiled_route_out(compiled: CompiledRoute, transponder: str, status: str) -> RouteOut:
+    def compiled_route_out(active: ActiveRoute, transponder: str, status: str) -> RouteOut:
+        compiled = active.compiled
         segments = [
             SegmentOut(
                 seq=s.seq,
@@ -349,10 +364,12 @@ def create_app(
             total_duration_seconds=total,
             total_duration_human=human_duration(total),
             segments=segments,
+            cycle=active.cycle,
+            cycles=active.cycles,
         )
 
-    def route_out(row: RouteRow) -> RouteOut:
-        return compiled_route_out(route_compiled(row), row.transponder, row.status)
+    def route_out(row: RouteRow, when: datetime | None = None) -> RouteOut:
+        return compiled_route_out(route_active(row, when), row.transponder, row.status)
 
     def clock_out() -> ClockOut:
         c = app.state.clock
@@ -425,7 +442,7 @@ def create_app(
         junction = u.wormhole_junction(junction_id)
         if junction is None:
             raise HTTPException(404, f"unknown junction {junction_id!r}")
-        _, servers = resolved_fleet(session)
+        _, servers = resolved_fleet(session, when)
         server = servers.get(junction_id)
         entries = []
         if server is not None:
@@ -704,7 +721,7 @@ def create_app(
             raise HTTPException(422, str(e)) from e
         return PlanOut(
             filed=to_filed(route, body.ship),
-            route=compiled_route_out(compiled, body.ship, "planned"),
+            route=compiled_route_out(ActiveRoute(compiled), body.ship, "planned"),
         )
 
     @app.post("/fleet/routes", response_model=RouteOut, status_code=201)
@@ -713,27 +730,50 @@ def create_app(
         if u.ship_by_transponder(body.ship) is None:
             raise HTTPException(404, f"no ship with transponder {body.ship!r}")
         depart = as_utc(body.depart_at) if body.depart_at else app.state.clock.now()
-        doc = {
-            "schema": FILED_ROUTE_SCHEMA,
-            "ship": body.ship,
-            "origin": {"system": body.origin.system, "body": body.origin.body},
-            "depart_at": depart.isoformat(),
-            "legs": [
-                {
-                    "mode": lg.mode,
-                    "to_system": lg.to_system,
-                    "to_body": lg.to_body,
-                    "layover_s": lg.layover_s,
-                }
-                for lg in body.legs
-            ],
-        }
+        origin = {"system": body.origin.system, "body": body.origin.body}
+        if body.repeat is None:
+            doc = {
+                "schema": FILED_ROUTE_SCHEMA,
+                "ship": body.ship,
+                "origin": origin,
+                "depart_at": depart.isoformat(),
+                "legs": [
+                    {
+                        "mode": lg.mode,
+                        "to_system": lg.to_system,
+                        "to_body": lg.to_body,
+                        "layover_s": lg.layover_s,
+                    }
+                    for lg in body.legs
+                ],
+            }
+        else:
+            # A loop the ship lives on: the legs are one cycle, and the per-stop
+            # layover ranges supersede their fixed layover_s (#59).
+            rep = body.repeat
+            layovers = [{"min_s": r.min_s, "max_s": r.max_s} for r in rep.layovers] or [
+                {"min_s": lg.layover_s, "max_s": lg.layover_s} for lg in body.legs
+            ]
+            doc = {
+                "schema": REPEATING_ROUTE_SCHEMA,
+                "ship": body.ship,
+                "origin": origin,
+                "start_at": depart.isoformat(),
+                "legs": [
+                    {"mode": lg.mode, "to_system": lg.to_system, "to_body": lg.to_body}
+                    for lg in body.legs
+                ],
+                "repeat": {
+                    "layovers": layovers,
+                    "cycles": rep.cycles,
+                    "seed": rep.seed,
+                    "rules": [r.model_dump() for r in rep.rules],
+                },
+            }
         existing = active_route(session, body.ship)
-        current = simulation_for_route(route_compiled(existing), u) if existing else None
+        current = simulation_for_route(route_active(existing).compiled, u) if existing else None
         try:
-            fly_filed_route(
-                doc, u, current=current, now=app.state.clock.now(), dev=app.state.dev_clock
-            )
+            fly_filed(doc, u, current=current, now=app.state.clock.now(), dev=app.state.dev_clock)
         except NotAtOrigin as e:
             raise HTTPException(409, str(e)) from e
         except ValueError as e:
@@ -749,7 +789,8 @@ def create_app(
         )
         session.add(row)
         session.commit()
-        return route_out(row)
+        # Echo the cycle that was *filed* (cycle 1), not whatever is flying now.
+        return route_out(row, when=depart)
 
     @app.get("/fleet/{transponder}/state", response_model=StateOut)
     def get_route_state(
@@ -757,8 +798,9 @@ def create_app(
     ) -> StateOut:
         if active_route(session, transponder) is None:
             raise HTTPException(404, f"no active route for {transponder!r}")
-        by_tp, _ = resolved_fleet(session)
-        return state_out(by_tp[transponder], transponder, resolve_when(at))
+        when = resolve_when(at)
+        by_tp, _ = resolved_fleet(session, when)
+        return state_out(by_tp[transponder], transponder, when)
 
     @app.get("/fleet/{transponder}/route", response_model=RouteOut)
     def get_fleet_route(transponder: str, session: Session = Depends(get_db)) -> RouteOut:
@@ -787,9 +829,10 @@ def create_app(
         """
         u = require_universe()
         when = app.state.clock.now()
-        by_tp, _ = resolved_fleet(session)
+        by_tp, _ = resolved_fleet(session, when)
         nav: dict[str, tuple[str | None, str | None] | None] = {
-            tp: simulation_for_route(c, u).navigable_location(when) for tp, c in by_tp.items()
+            tp: simulation_for_route(a.compiled, u).navigable_location(when)
+            for tp, a in by_tp.items()
         }
         out: list[ShipCatalogEntry] = []
         for s in u.ships():
@@ -817,14 +860,14 @@ def create_app(
     def get_fleet(at: datetime | None = None, session: Session = Depends(get_db)) -> FleetOut:
         when = resolve_when(at)
         u = require_universe()
-        by_tp, _ = resolved_fleet(session)  # fleet-level resolve -> real interleaving
+        by_tp, _ = resolved_fleet(session, when)  # fleet-level resolve -> real interleaving
         filed = {
             r.transponder: r.created_at
             for r in session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
         }
         entries = []
-        for transponder, compiled in by_tp.items():
-            st = state_out(compiled, transponder, when)
+        for transponder, active in by_tp.items():
+            st = state_out(active, transponder, when)
             eff = u.effective_ship_by_transponder(transponder) or {}
             entries.append(
                 FleetEntry(
@@ -836,6 +879,8 @@ def create_app(
                     percent_complete=st.percent_complete,
                     queue_position=st.queue_position,
                     filed_at=filed.get(transponder),
+                    cycle=st.cycle,
+                    cycles=st.cycles,
                 )
             )
         return FleetOut(when=when, ships=entries)

@@ -35,8 +35,9 @@ hand-filed.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from hvsim.des import Segment, Simulation
 from hvsim.flightplan import Ship
@@ -318,6 +319,7 @@ def resolve_fleet_junctions(
     u: Universe,
     *,
     seed: int = SIM_SEED,
+    filed_at: Mapping[str, datetime] | None = None,
 ) -> tuple[list[CompiledRoute], dict[str, JunctionServer]]:
     """Resolve the fleet's queues *and* return the per-junction servers.
 
@@ -326,53 +328,59 @@ def resolve_fleet_junctions(
     whose ``.transits`` / ``.snapshot(when)`` back the junction queue board.
 
     ``items`` pairs each compiled route with its **ship key** (the transponder —
-    the phantom-traffic draw is seeded by it). Junction-transit events are folded
-    in **global arrival order** (tie: ship key): the earliest *ready* queue (all
-    earlier queues in its own route resolved, so its arrival reflects upstream
-    waits) resolves first against its junction's server, then its route's
-    downstream segments shift by the wait. Returns new CompiledRoutes; a route
-    with no wormhole is returned unchanged.
+    the phantom-traffic draw is seeded by it). Routes are folded in **filing
+    order** (``filed_at[key]``, falling back to the route's departure; tie: ship
+    key), each route's queues in turn so a later junction arrival carries its own
+    earlier wait. Because a junction booking never moves once made (see
+    :class:`~hvsim.queue.JunctionServer`), a route filed later can never perturb
+    an earlier filer's slot or ETA — Sprint 039, #67.
+
+    Queue *positions* are repaired from the finished calendar at the end of the
+    fold: a first-fit booking can land a later-folded ship ahead of an
+    earlier-folded one, and ``#N`` has to agree with the junction board.
+
+    Returns new CompiledRoutes; a route with no wormhole is returned unchanged.
     """
     segs: list[list[Segment]] = [list(c.segments) for c, _ in items]
     keys = [k for _, k in items]
     masses = [(c.route.ship.mass_tons or DEFAULT_SHIP_MASS_T) for c, _ in items]
     built: dict[str, JunctionServer | None] = {}  # cache incl. knob-less (None) junctions
 
+    def filing(ri: int) -> tuple[datetime, str]:
+        when = (filed_at or {}).get(keys[ri]) or items[ri][0].route.depart_at
+        # Filing times come off a DB column and may be naive; the fallback is not.
+        return (when if when.tzinfo else when.replace(tzinfo=UTC), keys[ri])
+
     # All wormhole_queue segments, by route, in order.
     queues: dict[int, list[int]] = {
         ri: [i for i, s in enumerate(route_segs) if s.kind == "wormhole_queue"]
         for ri, route_segs in enumerate(segs)
     }
-    resolved: set[tuple[int, int]] = set()
-    total = sum(len(v) for v in queues.values())
 
-    while len(resolved) < total:
-        # Ready queues: the earliest unresolved queue in each route (its arrival
-        # reflects all prior waits). Pick the globally earliest by (arrival, key).
-        ready: list[tuple[datetime, str, int, int]] = []
-        for ri, idxs in queues.items():
-            nxt = next((i for i in idxs if (ri, i) not in resolved), None)
-            if nxt is not None:
-                ready.append((segs[ri][nxt].t_start, keys[ri], ri, nxt))
-        ready.sort(key=lambda r: (r[0], r[1]))
-        _, _, ri, si = ready[0]
+    for ri in sorted(queues, key=filing):
+        for si in queues[ri]:
+            seg = segs[ri][si]  # re-read: an earlier queue's wait shifted this one
+            junction_id = seg.junction or ""
+            if junction_id not in built:
+                built[junction_id] = _junction_server(u, junction_id, seed)  # may be None
+            server = built[junction_id]
 
-        seg = segs[ri][si]
-        junction_id = seg.junction or ""
-        if junction_id not in built:
-            built[junction_id] = _junction_server(u, junction_id, seed)  # may be None
-        server = built[junction_id]
+            arrival = seg.t_start
+            if server is None:
+                transit_open = arrival  # no knob -> instant transit
+            else:
+                transit_open = server.serve(arrival, masses[ri], keys[ri]).transit_open
 
-        arrival = seg.t_start
-        if server is None:
-            transit_open, ahead = arrival, ()  # no knob -> instant transit
-        else:
-            res = server.serve(arrival, masses[ri], keys[ri])
-            transit_open, ahead = res.transit_open, res.ahead_opens
+            segs[ri][si] = replace(seg, t_end=transit_open)
+            _shift(segs[ri], si + 1, transit_open - arrival)
 
-        segs[ri][si] = replace(seg, t_end=transit_open, queue_ahead=ahead)
-        _shift(segs[ri], si + 1, transit_open - arrival)
-        resolved.add((ri, si))
+    # Positions, from the finished calendar (see the docstring).
+    for ri, idxs in queues.items():
+        for si in idxs:
+            seg = segs[ri][si]
+            server = built.get(seg.junction or "")
+            ahead = server.ahead_of(seg.t_end) if server is not None and seg.t_end else ()
+            segs[ri][si] = replace(seg, queue_ahead=ahead)
 
     routes = [
         CompiledRoute(c.route, route_segs, final_system=c.final_system, final_body=c.final_body)
@@ -387,13 +395,14 @@ def resolve_fleet(
     u: Universe,
     *,
     seed: int = SIM_SEED,
+    filed_at: Mapping[str, datetime] | None = None,
 ) -> list[CompiledRoute]:
     """Fix every open-ended ``wormhole_queue`` segment across a set of routes.
 
     The queue-only view of :func:`resolve_fleet_junctions` (drops the junction
     servers). See it for the folding semantics.
     """
-    return resolve_fleet_junctions(items, u, seed=seed)[0]
+    return resolve_fleet_junctions(items, u, seed=seed, filed_at=filed_at)[0]
 
 
 def resolve_route(

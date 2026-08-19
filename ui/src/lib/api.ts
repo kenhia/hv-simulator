@@ -150,6 +150,8 @@ export interface ShipState {
   queue_position: number | null;
   band: Band | null; // set only in hyper; velocity is then the *apparent* speed
   acceleration: Accel | null; // current felt accel (null at rest/coast)
+  cycle: number | null; // repeating routes: the cycle in flight (1-based)
+  cycles: number | null; // ...out of this many; null = forever
 }
 
 export interface FleetEntry {
@@ -161,6 +163,8 @@ export interface FleetEntry {
   percent_complete: number | null;
   queue_position: number | null;
   filed_at: string | null; // when the route was filed (board sort by file time)
+  cycle: number | null; // repeating routes: the cycle in flight (1-based)
+  cycles: number | null; // ...out of this many; null = forever
 }
 
 export interface RouteSegment {
@@ -182,6 +186,8 @@ export interface RouteOut {
   total_duration_seconds: number;
   total_duration_human: string;
   segments: RouteSegment[];
+  cycle: number | null; // for a repeating route these are the ACTIVE cycle's segments
+  cycles: number | null;
 }
 
 export const fetchClock = () => getJSON<ClockOut>('/clock');
@@ -244,12 +250,23 @@ export interface FiledLeg {
   layover_s: number;
 }
 
+// Turns a filed round trip into a loop the ship lives on (Sprint 039, #59).
+// Layovers are drawn per cycle from each stop's range; the engine never stores
+// them. `cycles: null` is forever.
+export interface RepeatSpec {
+  layovers: { min_s: number; max_s: number }[]; // index-aligned with legs
+  cycles: number | null;
+  seed: number;
+  rules: { every: number; stop: number; layover_s: number }[];
+}
+
 export interface FiledRoute {
   schema: string;
   ship: string;
   origin: { system: string; body: string };
   depart_at: string;
   legs: FiledLeg[];
+  repeat?: RepeatSpec;
 }
 
 export interface PlanRequest {

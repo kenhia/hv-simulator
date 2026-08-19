@@ -17,7 +17,9 @@ const e = (transponder: string, phase: string, ship?: string, filed_at?: string)
   eta: null,
   percent_complete: null,
   queue_position: null,
-  filed_at: filed_at ?? null
+  filed_at: filed_at ?? null,
+  cycle: null,
+  cycles: null
 });
 
 const roster: FleetEntry[] = [

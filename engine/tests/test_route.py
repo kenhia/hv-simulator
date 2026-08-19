@@ -1,21 +1,19 @@
 """Multi-mode interstellar routes: leg->segment decomposition + the band model.
 
-Self-contained: builds a tiny artifact from the contract DDL (systems, the
-Weber hyper-band columns + model row, ship classes/ships with an override, a
-wormhole link) so the route compiler can be exercised without the real data/
-artifact. Checks the segment decomposition, the Weber band speed model
+Runs against the tiny self-contained artifact in ``conftest`` (three systems, the
+Weber bands, ship classes with an override, a wormhole junction), so nothing here
+needs the real ``data/`` artifact. Checks the segment decomposition, the Weber band speed model
 (apparent = multiplier x real velocity), the climb-to-hyper-limit, the wormhole
 buffer, effective-stat (class + override) resolution, band gating, and coast.
 """
 
 from __future__ import annotations
 
-import pathlib
-import sqlite3
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import pytest
 
+from conftest import DEPART, WARSHIP
 from hvsim.des import OpenEndedSegment, Segment
 from hvsim.des.model import segment_end
 from hvsim.flightplan import Ship
@@ -28,122 +26,18 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    plan_route,
     resolve_fleet,
+    resolve_fleet_junctions,
     resolve_route,
+    route_graph,
     ship_from_artifact,
     simulation_for_route,
+    speed_class,
     to_filed,
 )
+from hvsim.route.graph import HYPER_LEG_OVERHEAD_S, hops, routing_table
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
-
-DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
-DEPART = datetime(1890, 1, 1, tzinfo=UTC)
-# A ship that cruises Eta (multiplier 4294) at warship 0.6c.
-WARSHIP = Ship("Test Warship", 600.0, 0.6, max_hyper_band=7, hyper_cruise_velocity_c=0.6)
-
-
-@pytest.fixture
-def artifact_path(tmp_path) -> str:
-    db = tmp_path / "u.db"
-    con = sqlite3.connect(db)
-    con.executescript(DDL.read_text())
-    con.execute("INSERT INTO schema_meta (version) VALUES ('test')")
-
-    def system(sid: str, z_ly: float) -> None:
-        con.execute(
-            "INSERT INTO star_systems (id,name,canon,is_binary,coord_x_ly,coord_y_ly,coord_z_ly) "
-            "VALUES (?,?,1,0,0,0,?)",
-            (sid, sid, z_ly),
-        )
-
-    def star(sid: str, sysid: str, limit_lmin: float) -> None:
-        con.execute(
-            "INSERT INTO stars (id,system_id,name,role,mass_solar,hyper_limit_lmin,canon) "
-            "VALUES (?,?,?,'primary',1.0,?,1)",
-            (sid, sysid, sid, limit_lmin),
-        )
-
-    def planet(sid: str, sysid: str, star_id: str, a_au: float) -> None:
-        con.execute(
-            "INSERT INTO bodies (id,system_id,parent_star_id,name,type,orbit_index,canon,"
-            "orbit_determined,a_au,e,i_deg,l_deg,long_peri_deg,long_node_deg,period_days) "
-            "VALUES (?,?,?,?,'planet',3,1,1,?,0,0,0,0,0,?)",
-            (sid, sysid, star_id, sid, a_au, 365.25 * a_au**1.5),
-        )
-
-    system("alpha", 0.0)
-    system("beta", 40.0)
-    system("gamma", 71.0)
-    star("alpha:s", "alpha", 20.0)
-    star("beta:s", "beta", 20.0)
-    star("gamma:s", "gamma", 22.0)
-    planet("alpha:p1", "alpha", "alpha:s", 1.0)
-    planet("alpha:far", "alpha", "alpha:s", 150.0)  # long n-space leg (forces coast)
-    planet("beta:p1", "beta", "beta:s", 1.0)
-    planet("gamma:p1", "gamma", "gamma:s", 1.5)
-
-    # Hyper bands (Weber chart): Delta, Eta, Theta usable; Iota unattainable.
-    for order, name, mult, bleed, unatt in [
-        (4, "Delta", 2178, 72, 0),
-        (7, "Eta", 4294, 56, 0),
-        (8, "Theta", 5000, 52, 0),
-        (9, "Iota", 6000, 48, 1),
-    ]:
-        con.execute(
-            "INSERT INTO hyperspace_bands (band_order,name,velocity_multiplier,multiplier_canon,"
-            "translation_bleed_off_pct,bleed_off_canon,unattainable,canon) "
-            "VALUES (?,?,?,1,?,1,?,1)",
-            (order, name, mult, bleed, unatt),
-        )
-    con.execute(
-        "INSERT INTO hyperspace_model (id,warship_real_velocity_c,merchant_real_velocity_c,"
-        "non_crash_translation_c,alpha_entry_max_velocity_c,canon) VALUES (1,0.6,0.5,0.2,0.3,1)"
-    )
-
-    # A warship class (Eta, 0.6c) + a merchant class (Delta, 0.5c).
-    con.execute(
-        "INSERT INTO ship_classes (id,name,navy,hull_classification,max_g,max_hyper_band,"
-        "real_cruise_velocity_c,mass_tons,singleton,canon) VALUES "
-        "('warbird','Warbird','TSN','BC',600,7,0.6,2500000,0,1)"
-    )
-    con.execute(
-        "INSERT INTO ship_classes (id,name,max_g,max_hyper_band,real_cruise_velocity_c,"
-        "mass_tons,singleton,canon) VALUES ('hauler','Hauler',200,4,0.5,5000000,0,1)"
-    )
-    # war-1 inherits the class; war-2 has a Theta upgrade override; haul-1 is a merchant.
-    con.execute(
-        "INSERT INTO ships (id,name,class_id,transponder,canon) "
-        "VALUES ('war-1','War One','warbird','1.1.1',1)"
-    )
-    con.execute(
-        "INSERT INTO ships (id,name,class_id,ovr_max_hyper_band,transponder,canon) "
-        "VALUES ('war-2','War Two','warbird',8,'1.1.2',1)"
-    )
-    con.execute(
-        "INSERT INTO ships (id,name,class_id,transponder,canon) "
-        "VALUES ('haul-1','Haul One','hauler','1.2.1',1)"
-    )
-
-    con.execute(
-        "INSERT INTO transit_model (id,formula,coeff_a,coeff_b,buffer_normal_s,buffer_emergency_s,"
-        "canon) VALUES (1,'A*sqrt(M)+B*M^2',0.01684,6.9e-13,300,120,0)"
-    )
-    con.execute(
-        "INSERT INTO wormhole_junctions (id,name,host_system_id,traffic_intensity,"
-        "nexus_dist_lmin,nexus_bearing_deg,canon) VALUES ('bj','BJ','beta',3.0,420,30,1)"
-    )
-    con.execute(
-        "INSERT INTO wormhole_links (id,junction_id,from_system_id,to_system_id,distance_ly,"
-        "transit,canon) VALUES ('wl','bj','beta','gamma',31,'instant',1)"
-    )
-    con.commit()
-    con.close()
-    return str(db)
-
-
-@pytest.fixture
-def u(artifact_path: str) -> Universe:
-    return Universe.open(artifact_path)
 
 
 def _deliverable(ship: Ship) -> Route:
@@ -389,6 +283,42 @@ def test_two_real_ships_interleave_at_a_junction(u: Universe) -> None:
     assert sb > sa  # B is deeper in the queue (behind A)
 
 
+def test_a_later_filing_cannot_move_an_earlier_ship_slot(u: Universe) -> None:
+    # #67: A files first but reaches the junction a few minutes *after* B, which
+    # filed later. Arrival-ordered folding let B book first and push A's ETA out;
+    # filing-ordered booking must leave A untouched and make B give way instead.
+    early, late = DEPART, DEPART + timedelta(hours=1)
+    a = compile_route(_worm_route(WARSHIP, DEPART + timedelta(minutes=5)), u)
+    b = compile_route(_worm_route(WARSHIP, DEPART), u)
+    filed = {"1.1.1": early, "1.1.2": late}
+
+    a_alone = resolve_fleet([(a, "1.1.1")], u, filed_at=filed)[0]
+    b_alone = resolve_fleet([(b, "1.1.2")], u, filed_at=filed)[0]
+    a_fleet, b_fleet = resolve_fleet([(a, "1.1.1"), (b, "1.1.2")], u, filed_at=filed)
+
+    assert _queue_seg(b_fleet).t_start < _queue_seg(a_fleet).t_start  # B gets there first
+    assert _queue_seg(a_fleet).t_end == _queue_seg(a_alone).t_end  # ...but A keeps its slot
+    assert a_fleet.arrival == a_alone.arrival  # ...so the ETA A was quoted still holds
+    assert _queue_seg(b_fleet).t_end > _queue_seg(b_alone).t_end  # the later filer gives way
+
+
+def test_queue_positions_agree_with_the_junction_board(u: Universe) -> None:
+    # Positions are repaired from the finished calendar, so a ship's reported #N
+    # matches what the board shows present ahead of it at that instant.
+    items = [
+        (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.1"),
+        (compile_route(_worm_route(WARSHIP, DEPART + timedelta(hours=2)), u), "1.1.2"),
+    ]
+    routes, servers = resolve_fleet_junctions(items, u)
+    server = servers["bj"]
+    for compiled, tp in zip(routes, ("1.1.1", "1.1.2"), strict=True):
+        q = _queue_seg(compiled)
+        when = q.t_start + timedelta(seconds=1)
+        board = server.snapshot(when)
+        reported = simulation_for_route(compiled, u).state(when).queue_position
+        assert reported == [t.transponder for t in board].index(tp) + 1
+
+
 def test_queue_resolution_is_deterministic(u: Universe) -> None:
     def ends() -> list[datetime]:
         items = [
@@ -518,3 +448,75 @@ def test_fly_filed_route_guard(u: Universe) -> None:
 
 def current_arrival(u: Universe) -> datetime:
     return compile_route(_deliverable(WARSHIP), u).arrival
+
+
+# --- Route-finding over the precomputed graph (Sprint 039, #64) -----------------
+
+
+def test_route_graph_is_built_once_per_artifact(u: Universe) -> None:
+    assert route_graph(u) is route_graph(u)
+    g = route_graph(u)
+    assert g.systems == ("alpha", "beta", "gamma")
+    assert g.wormhole_adj == {"beta": ("gamma",), "gamma": ("beta",)}
+    assert g.distance_ly("alpha", "beta") == pytest.approx(40.0)
+    assert g.distance_ly("beta", "alpha") == g.distance_ly("alpha", "beta")
+
+
+def test_routing_table_is_cached_per_speed_class(u: Universe) -> None:
+    g, k = route_graph(u), speed_class(u, WARSHIP)
+    first = routing_table(g, k, "alpha")
+    assert routing_table(g, k, "alpha") is first  # same speed class -> the same table
+    slower = speed_class(
+        u, Ship("Hauler", 200.0, 0.5, max_hyper_band=4, hyper_cruise_velocity_c=0.5)
+    )
+    assert slower > k  # a Delta merchant costs more seconds per light-year
+    assert routing_table(g, slower, "alpha") is not first
+
+
+def test_finder_prefers_the_junction_hop(u: Universe) -> None:
+    # alpha -> gamma is 71 ly direct, or 40 ly of hyper to beta then a ~free
+    # wormhole. The junction wins, and the arriving leg is an in-system hop.
+    route = plan_route(u, "war-1", "alpha", "alpha:p1", "gamma", "gamma:p1", DEPART)
+    assert [(lg.mode, lg.to_system) for lg in route.legs] == [
+        ("hyper", "beta"),
+        ("wormhole", "gamma"),
+        ("nspace", "gamma"),
+    ]
+    assert route.legs[-1].to_body == "gamma:p1"
+
+
+def test_found_path_is_time_optimal(u: Universe) -> None:
+    # Brute-force every simple path over the 3 placed systems and check the finder
+    # returns one of minimum weight (the graph swap must not change the topology).
+    g, k = route_graph(u), speed_class(u, WARSHIP)
+
+    def weight(path: list[tuple[str, str]], origin: str) -> float:
+        total, node = 0.0, origin
+        for mode, nxt in path:
+            total += (
+                g.distance_ly(node, nxt) * k + HYPER_LEG_OVERHEAD_S
+                if mode == "hyper"
+                else g.buffer_s
+            )
+            node = nxt
+        return total
+
+    def simple_paths(origin: str, dest: str, seen: tuple[str, ...] = ()):
+        for nxt in g.systems:
+            if nxt == origin or nxt in seen:
+                continue
+            modes = ["hyper"] + (["wormhole"] if nxt in g.wormhole_adj.get(origin, ()) else [])
+            for mode in modes:
+                if nxt == dest:
+                    yield [(mode, nxt)]
+                else:
+                    for rest in simple_paths(nxt, dest, (*seen, origin)):
+                        yield [(mode, nxt), *rest]
+
+    for origin in g.systems:
+        for dest in g.systems:
+            if origin == dest:
+                continue
+            found = hops(g, k, origin, dest)
+            best = min(weight(p, origin) for p in simple_paths(origin, dest))
+            assert weight(found, origin) == pytest.approx(best)

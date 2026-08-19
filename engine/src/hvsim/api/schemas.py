@@ -83,14 +83,47 @@ class PlanRequest(BaseModel):
     depart_at: datetime | None = None
 
 
+class LayoverRangeIn(BaseModel):
+    """One stop's layover range on a repeating route (equal bounds == fixed)."""
+
+    min_s: float = Field(ge=0)
+    max_s: float = Field(ge=0)
+
+
+class CycleRuleIn(BaseModel):
+    """Override a stop's layover on every N-th cycle ("every 5th trip, 12 h")."""
+
+    every: int = Field(ge=1)
+    stop: int = Field(ge=0)
+    layover_s: float = Field(ge=0)
+
+
+class RepeatIn(BaseModel):
+    """Turn a filed route into a loop the ship lives on (Sprint 039, #59).
+
+    ``layovers`` is index-aligned with the legs and supersedes their ``layover_s``;
+    ``cycles`` is null for forever. The last leg must return to the origin.
+    """
+
+    layovers: list[LayoverRangeIn] = Field(default_factory=list)
+    cycles: int | None = Field(default=None, ge=1)
+    seed: int = 0
+    rules: list[CycleRuleIn] = Field(default_factory=list)
+
+
 class FiledRouteIn(BaseModel):
-    """A planner-produced filed route (the nav-planner JSON body). Ship by transponder."""
+    """A planner-produced filed route (the nav-planner JSON body). Ship by transponder.
+
+    With ``repeat`` set, the legs describe **one cycle** of a repeating itinerary
+    rather than a one-shot trip, and the route is filed as a repeating route.
+    """
 
     model_config = {"extra": "ignore"}  # ignore the doc's "schema" marker
     ship: str  # transponder (nation.class.hull)
     origin: FiledOriginIn
     legs: list[FiledLegIn] = Field(min_length=1)
     depart_at: datetime | None = None
+    repeat: RepeatIn | None = None
 
 
 # --- responses ------------------------------------------------------------------
@@ -144,6 +177,10 @@ class StateOut(BaseModel):
     frame: str = "heliocentric"  # heliocentric | galactic
     transponder: str | None = None
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
+    # Repeating routes (#59): the cycle being flown (1-based) out of `cycles` (null
+    # == forever). Both null for a one-shot route.
+    cycle: int | None = None
+    cycles: int | None = None
     # Set only in hyper: velocity (above) is the *apparent* speed; real = apparent /
     # band.velocity_multiplier. Lets the UI show "0.382c real · 1640c apparent (Zeta)".
     band: BandOut | None = None
@@ -193,6 +230,9 @@ class RouteOut(BaseModel):
     total_duration_seconds: float
     total_duration_human: str
     segments: list[SegmentOut]
+    # For a repeating route these are the *active cycle's* segments (#59).
+    cycle: int | None = None
+    cycles: int | None = None
 
 
 class PlanOut(BaseModel):
@@ -211,6 +251,8 @@ class FleetEntry(BaseModel):
     percent_complete: float | None
     queue_position: int | None = None  # set while phase == "queued" (1 == next to transit)
     filed_at: datetime | None = None  # when the route was filed (for board sort)
+    cycle: int | None = None  # repeating routes: the cycle in flight (1-based)
+    cycles: int | None = None  # ... out of this many (null == forever)
 
 
 class FleetOut(BaseModel):

@@ -118,3 +118,33 @@ def test_snapshot_excludes_not_yet_arrived() -> None:
     snap = server.snapshot(T0)
     assert all(t.arrival <= T0 for t in snap)  # ship-2 + its phantom not present yet
     assert all(t.transponder != "ship-2" for t in snap)
+
+
+# --- Reservations: a later insert never moves an earlier one (Sprint 039, #67) ---
+
+
+def test_later_insert_does_not_move_an_earlier_reservation() -> None:
+    server = _server(6.0)
+    first = server.serve(T0 + timedelta(hours=2), 2.5e6, "ship-1")  # arrives later
+    before = first.transit_open
+    server.serve(T0, 2.5e6, "ship-2")  # inserted afterwards, arrives earlier
+    # ship-1 was already reserved: its slot is untouched by the newcomer.
+    assert first.transit_open == before
+    assert [t.transit_open for t in server.transits if t.transponder == "ship-1"] == [before]
+
+
+def test_an_earlier_arrival_uses_the_idle_nexus_before_a_later_reservation() -> None:
+    server = _server(0.0)  # quiet: no phantom, so the arithmetic is exact
+    late = server.serve(T0 + timedelta(hours=2), 2.5e6, "ship-1")
+    early = server.serve(T0, 2.5e6, "ship-2")
+    # The nexus is idle at T0 — ship-2 transits immediately rather than waiting
+    # for the ship that reserved a slot two hours out.
+    assert early.transit_open == T0
+    assert late.transit_open == T0 + timedelta(hours=2)
+
+
+def test_a_block_that_does_not_fit_the_gap_goes_after_it() -> None:
+    server = _server(0.0)
+    blocker = server.serve(T0 + timedelta(seconds=BUFFER / 2), 2.5e6, "ship-1")
+    later = server.serve(T0, 2.5e6, "ship-2")  # its 300 s block can't fit in 150 s
+    assert later.transit_open >= blocker.transit_open + timedelta(seconds=BUFFER)

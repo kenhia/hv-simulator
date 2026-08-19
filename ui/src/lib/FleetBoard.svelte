@@ -9,6 +9,7 @@
     type SortMode
   } from './board';
   import { nationName } from './nation';
+  import { cycleLabel } from './planner';
   import { phaseStyle } from './phase';
   import ShipTimeline from './ShipTimeline.svelte';
 
@@ -127,6 +128,9 @@
                 : ''}">{phaseStyle(e.phase).glyph}</span
             >
             <span class="nm">{e.ship}</span>
+            {#if e.cycle != null}
+              <span class="cyc" title={cycleLabel(e.cycle, e.cycles)}>↻{e.cycle}</span>
+            {/if}
           </button>
         </div>
         {#if e.transponder === selected && selectedRoute}
@@ -248,6 +252,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .cyc {
+    margin-left: auto;
+    padding-left: 4px;
+    color: var(--muted);
+    font-size: 11px;
   }
   .empty {
     padding: 4px;

@@ -123,8 +123,22 @@ convention.
   `/metrics`; queue depth/wait are time-series for future panels.
 - **rAF (`requestAnimationFrame`)** `[ui]` — the browser's per-frame callback; drives
   the live dead-reckoning redraw loop (Sprint 023).
+- **repeating route / cycle** `[sim][proj]` — an itinerary a ship *lives on*: a
+  round trip plus per-stop layover **ranges**, a seed and a cycle count (null =
+  forever). One pass round the loop is a **cycle**; the layover for a given cycle
+  is derived from `hash(seed, cycle, stop)` rather than stored, and a query walks
+  to the cycle covering that instant (Sprint 039, `hvsim.route.repeat`).
+- **reservation calendar** `[sim]` — how a junction schedules transits since Sprint
+  039: each ship books a contiguous block into the earliest gap at or after its
+  arrival, and a booked block never moves. That is what keeps a filed ship's slot
+  safe from ships filed after it.
 - **resolver (fleet resolver)** `[sim]` — the step that fixes open-ended segments
-  (queue slots) by folding all filed ships' junction arrivals in time order.
+  (queue slots) by folding all filed routes in **filing** order against each
+  junction's reservation calendar.
+- **route graph** `[sim]` — the precomputed static topology (placed systems,
+  all-pairs distances, wormhole adjacency) the route-finder searches, built once
+  per artifact with a Dijkstra table cached per ship **speed class**
+  (`hvsim.route.graph`, Sprint 039).
 - **RMN / GSN / RHN (PN) / SLN / IAN** `[lore]` — the navies: Royal Manticoran /
   Grayson Space / Republic of Haven (People's) / Solarian League / Imperial
   Andermani.
