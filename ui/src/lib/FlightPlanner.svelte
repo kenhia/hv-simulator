@@ -8,7 +8,17 @@
     type System,
     type SystemBody
   } from './api';
-  import { canPlan, defaultLayoverS, routeSystems, toPlanRequest, type Waypoint } from './planner';
+  import {
+    canPlan,
+    DEFAULT_REPEAT,
+    defaultLayoverS,
+    loopWaypoints,
+    repeatSpec,
+    routeSystems,
+    toPlanRequest,
+    type RepeatOptions,
+    type Waypoint
+  } from './planner';
   import ShipTimeline from './ShipTimeline.svelte';
 
   let {
@@ -36,6 +46,9 @@
   let plan = $state<PlanResult | null>(null);
   let error = $state('');
   let busy = $state(false);
+  // Repeat: the itinerary loops back to the origin and the ship lives on it (#59).
+  let repeat = $state(false);
+  let repeatOpts = $state<RepeatOptions>({ ...DEFAULT_REPEAT });
 
   const ship = $derived(catalog.find((c) => c.transponder === tp) ?? null);
   const ready = $derived(canPlan(tp, origin, waypoints));
@@ -105,11 +118,25 @@
     invalidate();
   }
 
+  function setRepeat(on: boolean) {
+    repeat = on;
+    invalidate();
+  }
+  function setRepeatOpt(patch: Partial<RepeatOptions>) {
+    repeatOpts = { ...repeatOpts, ...patch };
+    invalidate();
+  }
+
   async function doPlan() {
     error = '';
     busy = true;
     try {
-      plan = await postPlan(toPlanRequest(tp, origin, waypoints));
+      // A repeating route is a round trip, so preview one whole cycle: the
+      // itinerary plus the leg home.
+      const stops = repeat
+        ? loopWaypoints(origin, waypoints, repeatOpts.minLayoverH * 3600)
+        : waypoints;
+      plan = await postPlan(toPlanRequest(tp, origin, stops));
       onpreview?.(routeSystems(plan.filed));
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -124,7 +151,10 @@
     error = '';
     busy = true;
     try {
-      await postFleetRoute(plan.filed);
+      const filed = repeat
+        ? { ...plan.filed, repeat: repeatSpec(plan.filed, repeatOpts) }
+        : plan.filed;
+      await postFleetRoute(filed);
       onpreview?.(null);
       onfiled?.(tp);
       onclose?.();
@@ -192,6 +222,53 @@
   {/each}
   <button class="add" onclick={addWaypoint} disabled={!tp}>+ destination</button>
 
+  <label class="rep"
+    ><input
+      type="checkbox"
+      checked={repeat}
+      onchange={(e) => setRepeat(e.currentTarget.checked)}
+    />repeat — the ship lives on this loop</label
+  >
+  {#if repeat}
+    <div class="rep-opts">
+      <span class="muted">layover</span>
+      <input
+        class="lay"
+        type="number"
+        min="0"
+        step="0.5"
+        value={repeatOpts.minLayoverH}
+        title="minimum layover at each stop (hours)"
+        onchange={(e) => setRepeatOpt({ minLayoverH: Number(e.currentTarget.value) })}
+      />
+      <span class="muted">–</span>
+      <input
+        class="lay"
+        type="number"
+        min="0"
+        step="0.5"
+        value={repeatOpts.maxLayoverH}
+        title="maximum layover at each stop (hours)"
+        onchange={(e) => setRepeatOpt({ maxLayoverH: Number(e.currentTarget.value) })}
+      />h
+      <input
+        class="lay cyc"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="∞"
+        value={repeatOpts.cycles ?? ''}
+        title="number of cycles (blank = forever)"
+        onchange={(e) =>
+          setRepeatOpt({ cycles: e.currentTarget.value ? Number(e.currentTarget.value) : null })}
+      />
+      <span class="muted">cycles</span>
+    </div>
+    <div class="muted note">
+      returns to {origin.body || 'the origin'} each cycle; layovers vary in range
+    </div>
+  {/if}
+
   <div class="actions">
     <button onclick={doPlan} disabled={!ready || busy}>Plan</button>
     <button class="primary" onclick={doSubmit} disabled={!plan || busy}>Submit</button>
@@ -200,7 +277,10 @@
   {#if error}<div class="err">{error}</div>{/if}
   {#if plan}
     <div class="preview">
-      <div>ETA {plan.route.total_duration_human} · {plan.route.segments.length} segments</div>
+      <div>
+        {repeat ? 'cycle' : 'ETA'}
+        {plan.route.total_duration_human} · {plan.route.segments.length} segments
+      </div>
       <ShipTimeline route={plan.route} />
       <div class="muted">arrive {plan.route.arrival.slice(0, 16).replace('T', ' ')}</div>
     </div>
@@ -228,6 +308,26 @@
   label {
     display: block;
     margin: 6px 0;
+  }
+  .rep {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .rep-opts {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+  }
+  .cyc {
+    margin-left: auto;
+  }
+  .note {
+    font-size: 11px;
+    margin-top: 2px;
   }
   .seg-label {
     color: var(--muted);

@@ -57,6 +57,11 @@ seed:
 fleet:
     ./deploy/fleet.sh {{base_url}}
 
+# File repeating couriers so the galaxy runs itself (Sprint 039). Defaults to the
+# deployed host; pass a base to override (e.g. http://localhost:4667).
+seed-routes base=("http://" + host + ":" + port):
+    python3 tools/seed-routes.py {{base}}
+
 # Print a junction's live transit queue (the "you are #3" board). Args: [junction] [at]
 queue-board junction="manticore-junction" at="":
     ./deploy/queue-board.sh {{junction}} {{base_url}} "{{at}}"

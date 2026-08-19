@@ -159,9 +159,28 @@ inserts the run-out, skipping it for a straight-through transit already at the
 nexus), the `wormhole_queue` now **reports the nexus position** so a queued ship
 rests there, and `GET /junctions` exposes `nexus_position` so the UI marker + the
 ship agree. Per-terminus entry points on the non-host side stay deferred (#77).
-Next: **repeating routes** (#59, spec at `sprints/035-repeating-routes.md`, korg
-#185). Grafana dashboards are a deferred parallel track. A UI/lore glossary lives
-in `docs/terminology.md`.
+Sprint 039 (**nav & routing**, korg #185) landed the three route/queue-mechanics
+items. **Repeating routes** (#59, executing the standing design in
+`sprints/035-repeating-routes.md`): a ship can be filed on an itinerary it *lives
+on* — `hvsim.route.repeat` holds a round-trip template (legs, per-stop layover
+**ranges**, seed, optional `every-N` rules, forever or N cycles), layovers are
+derived from `hash(seed, cycle, stop)` rather than stored, and `route_at` walks
+memoized cycle boundaries to compile **only** the cycle covering the queried
+instant — still lazy, analytic and tick-free. The filed doc is a new schema
+(**`hvsim.repeating-route/v1`**) in the same `RouteRow` (no DB change);
+`compiled_at`/`fly_filed` dispatch either schema, so every read path resolves the
+active cycle and `cycle`/`cycles` surface on `StateOut`/`RouteOut`/the board (a
+**↻ cycle N** badge + a Flight Planner **repeat** toggle). `just seed-routes`
+files repeating couriers so the map bustles unattended. **Queue fairness** (#67):
+a junction is now a **reservation calendar** (first-fit booking that never moves)
+and the fleet resolver folds in **filing order**, so a route filed later can never
+push an earlier filer's slot or ETA — while an early arrival still uses an idle
+nexus; positions are repaired from the finished calendar so `#N` matches the
+board. **Route graph** (#64): `hvsim.route.graph` precomputes the static topology
+once per artifact and caches a Dijkstra table per ship **speed class**
+(`k = T_year / (band mult x cruise c)` s/ly); the finder costs only that scalar
+plus the dynamic last mile. Grafana dashboards are a deferred parallel track. A
+UI/lore glossary lives in `docs/terminology.md`.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,

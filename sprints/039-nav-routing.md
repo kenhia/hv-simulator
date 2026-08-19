@@ -77,18 +77,66 @@ compiles just that one.
 
 ## Tasks
 
-- [ ] #67: reservation-calendar `JunctionServer` + filing-order fold + position
+- [x] #67: reservation-calendar `JunctionServer` + filing-order fold + position
       repair pass; tests (a later filing cannot move an earlier one; a later
       arrival still uses an idle nexus; determinism preserved).
-- [ ] #67: API passes `filed_at` from `RouteRow.created_at`.
-- [ ] #64: `RouteGraph` + cached routing tables; identical routes to the naive
-      search; cache hit proven by test.
-- [ ] #59: engine `repeat` module + schema round-trip + `route_at`; tests.
-- [ ] #59: API accepts the repeating schema, resolves the active cycle on every
+- [x] #67: API passes `filed_at` from `RouteRow.created_at`.
+- [x] #64: `RouteGraph` + cached routing tables; found path proven time-optimal
+      against brute force; cache hit proven by test.
+- [x] #59: engine `repeat` module + schema round-trip + `route_at`; tests.
+- [x] #59: API accepts the repeating schema, resolves the active cycle on every
       read path, reports `cycle`/`cycles`; tests.
-- [ ] #59: UI repeat toggle + ↻ cycle indicator; `api.ts` types.
-- [ ] #59: `just seed-routes`.
-- [ ] `just check` + `just contracts` + `just ui-check` green; CLAUDE.md note.
+- [x] #59: UI repeat toggle + ↻ cycle indicator; `api.ts` types.
+- [x] #59: `just seed-routes`.
+- [x] `just check` + `just contracts` + `just ui-check` green; CLAUDE.md note.
+
+## What shipped
+
+**#67.** `JunctionServer` is a reservation calendar: `serve()` first-fits the
+ship's block (its phantom back-to-back, then itself, then the nexus
+destabilisation) into the earliest gap at or after arrival that clears every
+existing booking, and a booking never moves. `resolve_fleet_junctions` folds in
+filing order (`filed_at`, from `RouteRow.created_at`; tie: ship key), so an
+earlier filer's slot and ETA are invariant under anything filed later — while a
+ship arriving at an idle nexus still transits at once instead of waiting for a
+slot booked hours out. Positions are recomputed from the finished calendar
+(`JunctionServer.ahead_of`) so the reported `#N` matches the junction board even
+when a first-fit landed a later-folded ship in an earlier gap.
+
+**#64.** `hvsim.route.graph` reads the navigable topology once per artifact
+(placed systems, all-pairs distances, wormhole adjacency, buffer) and caches a
+Dijkstra predecessor table per `(speed class, origin)`. The speed class is one
+scalar — `k = T_year / (band multiplier x cruise c)`, seconds per light-year —
+because every hyper edge weighs `dist_ly * k + overhead`. `find.py` shrank to
+that scalar plus leg assembly; the last mile is still solved per request by
+`compile_route`. Warmed at app startup.
+
+**#59.** `hvsim.route.repeat` carries the template (round-trip legs, per-stop
+layover ranges, seed, `every-N` rules, forever or N cycles). `route_at` walks
+memoized cycle boundaries and compiles only the covering cycle — lazy and
+analytic, no background tick; a cold walk to cycle 573 costs ~600 ms and 8 ms
+memoized. A cycle crossing a junction resolves its queue in isolation for the
+*boundary* only (deterministic in seed+junction+ship), while the cycle handed
+back is unresolved like any route, so the fleet resolver treats it identically.
+`compiled_at`/`fly_filed` dispatch either filed schema; `cycle`/`cycles` surface
+on `StateOut`, `RouteOut` and the board. `RouteRow` is unchanged — the repeating
+doc is just a different schema in the same `filed_json`.
+
+Verified live: `just seed-routes` files three couriers (a Sol freight run, a
+Manticore binary shuttle, and a Manticore↔Trevor's Star junction run), and a
+`?at=` sweep shows them at cycles 41 / 42 / 11 after 30 days, one of them queued
+at the junction.
+
+### Notes / deferred
+
+- A repeating cycle's boundary uses the isolated (phantom-only) queue resolve, so
+  heavy fleet-level contention can shift the *active* cycle slightly against its
+  boundary. Keeping boundaries a pure function of the template is worth that.
+- The rule list stays v1 (`every-N` overrides on one stop). A richer DSL,
+  mid-cycle re-routing and cargo modelling remain out of scope.
+- The Flight Planner repeat toggle was verified by type-check + unit tests on its
+  pure helpers and by exercising the identical request shape end-to-end through
+  `seed-routes.py`; it was not clicked through in a browser.
 
 ## Acceptance criteria
 
