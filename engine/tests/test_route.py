@@ -28,12 +28,17 @@ from hvsim.route import (
     compile_route,
     fly_filed_route,
     from_filed,
+    plan_route,
     resolve_fleet,
+    resolve_fleet_junctions,
     resolve_route,
+    route_graph,
     ship_from_artifact,
     simulation_for_route,
+    speed_class,
     to_filed,
 )
+from hvsim.route.graph import HYPER_LEG_OVERHEAD_S, hops, routing_table
 from hvsim.universe import LMIN_M, LY_M, Universe, resolve_position
 
 DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
@@ -389,6 +394,42 @@ def test_two_real_ships_interleave_at_a_junction(u: Universe) -> None:
     assert sb > sa  # B is deeper in the queue (behind A)
 
 
+def test_a_later_filing_cannot_move_an_earlier_ship_slot(u: Universe) -> None:
+    # #67: A files first but reaches the junction a few minutes *after* B, which
+    # filed later. Arrival-ordered folding let B book first and push A's ETA out;
+    # filing-ordered booking must leave A untouched and make B give way instead.
+    early, late = DEPART, DEPART + timedelta(hours=1)
+    a = compile_route(_worm_route(WARSHIP, DEPART + timedelta(minutes=5)), u)
+    b = compile_route(_worm_route(WARSHIP, DEPART), u)
+    filed = {"1.1.1": early, "1.1.2": late}
+
+    a_alone = resolve_fleet([(a, "1.1.1")], u, filed_at=filed)[0]
+    b_alone = resolve_fleet([(b, "1.1.2")], u, filed_at=filed)[0]
+    a_fleet, b_fleet = resolve_fleet([(a, "1.1.1"), (b, "1.1.2")], u, filed_at=filed)
+
+    assert _queue_seg(b_fleet).t_start < _queue_seg(a_fleet).t_start  # B gets there first
+    assert _queue_seg(a_fleet).t_end == _queue_seg(a_alone).t_end  # ...but A keeps its slot
+    assert a_fleet.arrival == a_alone.arrival  # ...so the ETA A was quoted still holds
+    assert _queue_seg(b_fleet).t_end > _queue_seg(b_alone).t_end  # the later filer gives way
+
+
+def test_queue_positions_agree_with_the_junction_board(u: Universe) -> None:
+    # Positions are repaired from the finished calendar, so a ship's reported #N
+    # matches what the board shows present ahead of it at that instant.
+    items = [
+        (compile_route(_worm_route(WARSHIP, DEPART), u), "1.1.1"),
+        (compile_route(_worm_route(WARSHIP, DEPART + timedelta(hours=2)), u), "1.1.2"),
+    ]
+    routes, servers = resolve_fleet_junctions(items, u)
+    server = servers["bj"]
+    for compiled, tp in zip(routes, ("1.1.1", "1.1.2"), strict=True):
+        q = _queue_seg(compiled)
+        when = q.t_start + timedelta(seconds=1)
+        board = server.snapshot(when)
+        reported = simulation_for_route(compiled, u).state(when).queue_position
+        assert reported == [t.transponder for t in board].index(tp) + 1
+
+
 def test_queue_resolution_is_deterministic(u: Universe) -> None:
     def ends() -> list[datetime]:
         items = [
@@ -518,3 +559,75 @@ def test_fly_filed_route_guard(u: Universe) -> None:
 
 def current_arrival(u: Universe) -> datetime:
     return compile_route(_deliverable(WARSHIP), u).arrival
+
+
+# --- Route-finding over the precomputed graph (Sprint 039, #64) -----------------
+
+
+def test_route_graph_is_built_once_per_artifact(u: Universe) -> None:
+    assert route_graph(u) is route_graph(u)
+    g = route_graph(u)
+    assert g.systems == ("alpha", "beta", "gamma")
+    assert g.wormhole_adj == {"beta": ("gamma",), "gamma": ("beta",)}
+    assert g.distance_ly("alpha", "beta") == pytest.approx(40.0)
+    assert g.distance_ly("beta", "alpha") == g.distance_ly("alpha", "beta")
+
+
+def test_routing_table_is_cached_per_speed_class(u: Universe) -> None:
+    g, k = route_graph(u), speed_class(u, WARSHIP)
+    first = routing_table(g, k, "alpha")
+    assert routing_table(g, k, "alpha") is first  # same speed class -> the same table
+    slower = speed_class(
+        u, Ship("Hauler", 200.0, 0.5, max_hyper_band=4, hyper_cruise_velocity_c=0.5)
+    )
+    assert slower > k  # a Delta merchant costs more seconds per light-year
+    assert routing_table(g, slower, "alpha") is not first
+
+
+def test_finder_prefers_the_junction_hop(u: Universe) -> None:
+    # alpha -> gamma is 71 ly direct, or 40 ly of hyper to beta then a ~free
+    # wormhole. The junction wins, and the arriving leg is an in-system hop.
+    route = plan_route(u, "war-1", "alpha", "alpha:p1", "gamma", "gamma:p1", DEPART)
+    assert [(lg.mode, lg.to_system) for lg in route.legs] == [
+        ("hyper", "beta"),
+        ("wormhole", "gamma"),
+        ("nspace", "gamma"),
+    ]
+    assert route.legs[-1].to_body == "gamma:p1"
+
+
+def test_found_path_is_time_optimal(u: Universe) -> None:
+    # Brute-force every simple path over the 3 placed systems and check the finder
+    # returns one of minimum weight (the graph swap must not change the topology).
+    g, k = route_graph(u), speed_class(u, WARSHIP)
+
+    def weight(path: list[tuple[str, str]], origin: str) -> float:
+        total, node = 0.0, origin
+        for mode, nxt in path:
+            total += (
+                g.distance_ly(node, nxt) * k + HYPER_LEG_OVERHEAD_S
+                if mode == "hyper"
+                else g.buffer_s
+            )
+            node = nxt
+        return total
+
+    def simple_paths(origin: str, dest: str, seen: tuple[str, ...] = ()):
+        for nxt in g.systems:
+            if nxt == origin or nxt in seen:
+                continue
+            modes = ["hyper"] + (["wormhole"] if nxt in g.wormhole_adj.get(origin, ()) else [])
+            for mode in modes:
+                if nxt == dest:
+                    yield [(mode, nxt)]
+                else:
+                    for rest in simple_paths(nxt, dest, (*seen, origin)):
+                        yield [(mode, nxt), *rest]
+
+    for origin in g.systems:
+        for dest in g.systems:
+            if origin == dest:
+                continue
+            found = hops(g, k, origin, dest)
+            best = min(weight(p, origin) for p in simple_paths(origin, dest))
+            assert weight(found, origin) == pytest.approx(best)

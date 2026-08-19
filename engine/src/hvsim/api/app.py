@@ -34,6 +34,7 @@ from hvsim.route import (
     plan_route_multi,
     resolve_fleet_junctions,
     resolve_route,
+    route_graph,
     simulation_for_route,
     to_filed,
 )
@@ -128,6 +129,8 @@ def create_app(
     app.state.universe = (
         Universe.open(universe_db) if universe_db and Path(universe_db).exists() else None
     )
+    if app.state.universe is not None:
+        route_graph(app.state.universe)  # precompute the static route topology (#64)
 
     def get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -257,7 +260,10 @@ def create_app(
         items = [
             (compile_route(from_filed(json.loads(r.filed_json), u), u), r.transponder) for r in rows
         ]
-        routes, servers = resolve_fleet_junctions(items, u)
+        # Filing order decides contested junction slots, so an in-flight ship never
+        # loses its place to a ship filed after it departed (Sprint 039, #67).
+        filed_at = {r.transponder: r.created_at for r in rows}
+        routes, servers = resolve_fleet_junctions(items, u, filed_at=filed_at)
         by_tp = {tp: rt for (_, tp), rt in zip(items, routes, strict=True)}
         return by_tp, servers
 

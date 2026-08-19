@@ -14,20 +14,26 @@ Two sources of queue depth:
   Poisson(mean) with masses, a **pure function of (seed, junction, ship-key)** —
   so depth varies (quiet -> ~immediate; busy -> deep) but is fully reproducible.
 - **Real ships** — other filed ships transiting the same junction serialise
-  ahead by arrival time (stable-key tiebreak), so two real ships interleave
+  around one another on the junction's calendar, so two real ships interleave
   deterministically.
 
-The junction is modelled as a single FCFS server (`JunctionServer`): items are
-served back-to-back through their ``interval``; a ship's **transit-open** time is
-when the server reaches it, and its **position(t)** counts the transit-opens
-still ahead. Real ships and a ship's own phantom share one ordered timeline, so
-position is consistent with the resolved time.
+The junction is modelled as a **reservation calendar** (`JunctionServer`): each
+ship books one contiguous block (its phantom back-to-back, then itself) into the
+earliest gap at or after its arrival, and a booked block never moves. A ship's
+**transit-open** time is when its own slot in that block comes up, and its
+**position(t)** counts the transit-opens still ahead. Real ships and a ship's own
+phantom share one ordered timeline, so position is consistent with the resolved
+time.
+
+Booking rather than a monotone cursor is what makes the schedule **stable**: the
+fleet resolver folds routes in **filing** order, so a route filed later can never
+perturb an earlier filer's slot (Sprint 039, #67) — while a ship arriving at an
+idle nexus still transits at once rather than waiting on a slot booked further out.
 
 v1 simplification (documented): each real ship samples its *own* phantom
-background; reals additionally serialise behind one another in time. Multi-
-wormhole routes resolve queue-by-queue in global arrival order (a ship's later
-junction arrival shifts with its earlier wait) — exact for the single-wormhole
-routes that exist today.
+background. Multi-wormhole routes resolve queue-by-queue along each route (a
+ship's later junction arrival shifts with its earlier wait) — exact for the
+single-wormhole routes that exist today.
 """
 
 from __future__ import annotations
@@ -129,7 +135,20 @@ class TransitResolution:
 
 @dataclass
 class JunctionServer:
-    """A single junction's FCFS server, accumulating transits across ships."""
+    """A single junction's server: a **reservation calendar** of transit blocks.
+
+    Each served ship books one contiguous block — its phantom-ahead back-to-back,
+    then itself — into the earliest gap at or after its arrival that no existing
+    reservation overlaps. First-fit, so:
+
+    - a reservation, once booked, **never moves** (Sprint 039, #67 — a ship filed
+      later cannot push an earlier filer's slot), and
+    - a ship arriving at an idle nexus transits immediately even if a later
+      arrival has already booked a slot further out.
+
+    Serving therefore no longer has to happen in arrival order; the fleet resolver
+    folds in **filing** order and gets a schedule that is stable as ships are added.
+    """
 
     junction_id: str
     coeff_a: float
@@ -137,40 +156,64 @@ class JunctionServer:
     buffer_s: float
     mean_depth: float
     seed: int = SIM_SEED
-    busy_until: datetime | None = None
-    _opens: list[datetime] = field(default_factory=list)  # all transit-opens so far, sorted
+    # Booked [start, end) blocks, sorted and non-overlapping.
+    _booked: list[tuple[datetime, datetime]] = field(default_factory=list)
     transits: list[Transit] = field(default_factory=list)  # every occupant (real + phantom)
 
+    @property
+    def opens(self) -> list[datetime]:
+        """Every transit-open instant booked so far, sorted."""
+        return sorted(t.transit_open for t in self.transits)
+
+    def _first_fit(self, arrival: datetime, span_s: float) -> datetime:
+        """Earliest start >= ``arrival`` where a ``span_s`` block clears every booking."""
+        span = timedelta(seconds=span_s)
+        start = arrival
+        for b_start, b_end in self._booked:  # sorted, non-overlapping
+            if b_end <= start:
+                continue
+            if b_start - start >= span:  # the gap before this booking is big enough
+                return start
+            start = b_end
+        return start
+
     def serve(self, arrival: datetime, mass_tons: float, ship_key: str) -> TransitResolution:
-        """Resolve a ship arriving at ``arrival``; advance the server past it.
+        """Resolve a ship arriving at ``arrival``; book its block on the calendar.
 
-        The ship's phantom-ahead are served first (from when the junction is free
-        of earlier real traffic), then the ship itself. Everything ahead of the
-        ship's transit-open is its queue position.
+        The ship's phantom-ahead transit first (they are what it finds in front of
+        it), then the ship itself, then the nexus destabilises for its interval.
+        Everything opening before the ship's own transit-open is its queue position.
         """
-        free = arrival if self.busy_until is None else max(arrival, self.busy_until)
-        ahead = [t for t in self._opens if t < free]  # earlier reals + their phantom
+        phantom = phantom_masses(self.seed, self.junction_id, ship_key, self.mean_depth)
+        steps = [interval(m, self.coeff_a, self.coeff_b, self.buffer_s) for m in phantom]
+        span = sum(steps) + interval(mass_tons, self.coeff_a, self.coeff_b, self.buffer_s)
 
-        # Phantom ships this ship finds ahead, serialised from `free`. They share
-        # this ship's arrival so they only surface while the ship is actually queued.
-        for m in phantom_masses(self.seed, self.junction_id, ship_key, self.mean_depth):
-            p_open = free
-            ahead.append(p_open)
-            self._opens.append(p_open)
-            self.transits.append(Transit(None, m, arrival, p_open))
-            step = interval(m, self.coeff_a, self.coeff_b, self.buffer_s)
-            free = p_open + timedelta(seconds=step)
+        start = self._first_fit(arrival, span)
+        self._booked.append((start, start + timedelta(seconds=span)))
+        self._booked.sort()
 
-        # The ship itself transits when the server reaches it, then busies the nexus.
-        transit_open = free
-        self._opens.append(transit_open)
-        self._opens.sort()
+        # Phantom share the real ship's arrival, so they only surface in a snapshot
+        # while that ship is actually queued.
+        cursor, ahead = start, [t for t in self.opens if t < start]
+        for m, step in zip(phantom, steps, strict=True):
+            ahead.append(cursor)
+            self.transits.append(Transit(None, m, arrival, cursor))
+            cursor += timedelta(seconds=step)
+
+        transit_open = cursor
         self.transits.append(Transit(ship_key, mass_tons, arrival, transit_open))
-        self.busy_until = transit_open + timedelta(
-            seconds=interval(mass_tons, self.coeff_a, self.coeff_b, self.buffer_s)
-        )
         ahead.sort()
         return TransitResolution(transit_open=transit_open, ahead_opens=tuple(ahead))
+
+    def ahead_of(self, transit_open: datetime) -> tuple[datetime, ...]:
+        """Every booked transit-open strictly before ``transit_open``, sorted.
+
+        The authoritative "what is in front of me" once the whole fleet has been
+        folded — a first-fit insert can land a later-served ship *ahead* of an
+        earlier-served one, so positions are repaired from this at the end of the
+        fold rather than frozen at serve time.
+        """
+        return tuple(t for t in self.opens if t < transit_open)
 
     def snapshot(self, when: datetime) -> list[Transit]:
         """The queue present at ``when``: occupants with arrival <= when < transit_open.

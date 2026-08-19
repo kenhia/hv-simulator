@@ -183,7 +183,7 @@ def test_routes_need_artifact(tmp_path) -> None:
 WORM_AT = "1890-01-01T00:00:00+00:00"
 
 
-def _file_wormhole(client: TestClient, transponder: str) -> None:
+def _file_wormhole(client: TestClient, transponder: str, depart: str = WORM_AT) -> None:
     """File a bare beta -> gamma junction hop (arrival == depart, so queues interleave)."""
     r = client.post(
         "/fleet/routes",
@@ -191,7 +191,7 @@ def _file_wormhole(client: TestClient, transponder: str) -> None:
             "schema": "hvsim.filed-route/v1",
             "ship": transponder,
             "origin": {"system": "beta", "body": "beta:p1"},
-            "depart_at": WORM_AT,
+            "depart_at": depart,
             "legs": [{"mode": "wormhole", "to_system": "gamma"}],
         },
     )
@@ -210,6 +210,28 @@ def test_fleet_board_interleaves_queue(client: TestClient) -> None:
     assert a["phase"] == b["phase"] == "queued"
     # Real-ship interleaving: B (higher transponder) sits strictly behind A.
     assert a["queue_position"] is not None and b["queue_position"] > a["queue_position"]
+
+
+def test_a_later_filing_does_not_move_an_earlier_ships_eta(client: TestClient) -> None:
+    # #67: 1.1.2 files first, departing (and so arriving at the junction) 5 minutes
+    # after 1.1.1, which files second. The newcomer must not push the earlier
+    # filer's slot — the ETA it was quoted at filing time still holds.
+    _file_wormhole(client, "1.1.2", depart="1890-01-01T00:05:00+00:00")
+    quoted = client.get("/fleet/1.1.2/route").json()["arrival"]
+    _file_wormhole(client, "1.1.1")
+    assert client.get("/fleet/1.1.2/route").json()["arrival"] == quoted
+    # The later filer is the one that gives way (it queues behind, despite arriving
+    # first), so the fold really did contend for the slot.
+    queued_at = max(
+        next(
+            sg["t_start"]
+            for sg in client.get(f"/fleet/{tp}/route").json()["segments"]
+            if sg["kind"] == "wormhole_queue"
+        )
+        for tp in ("1.1.1", "1.1.2")
+    )
+    ships = {s["transponder"]: s for s in client.get(f"/fleet?at={_q(queued_at)}").json()["ships"]}
+    assert ships["1.1.1"]["queue_position"] > ships["1.1.2"]["queue_position"]
 
 
 def test_junction_queue_endpoint(client: TestClient) -> None:

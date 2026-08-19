@@ -10,114 +10,56 @@ ship's estimated hyper time) and **wormhole** edges from the link graph (weight 
 the junction buffer, so a junction hop wins whenever one helps). The finder picks
 the *topology* (which systems, which modes); :func:`compile_route` stays the source
 of truth for the executed clock.
+
+The topology itself is precomputed: :mod:`hvsim.route.graph` reads the artifact's
+navigable shape once and caches a predecessor table per (speed class, origin), so
+this module's job is reduced to the ship's speed class plus the last mile — the
+in-system legs the compiler solves against live body positions (#64).
 """
 
 from __future__ import annotations
 
-import heapq
-import math
-from collections import defaultdict
 from datetime import datetime, timedelta
 
 from hvsim.clock import T_YEAR
 from hvsim.flightplan import Ship
 from hvsim.universe import Universe
 
+from .graph import HYPER_LEG_OVERHEAD_S, hops, route_graph
 from .plan import NSPACE, Route, RouteLeg, ship_from_artifact
 
 HYPER, WORMHOLE = "hyper", "wormhole"
-# A flat per-hyper-leg n-space allowance (run-out + approach) so the search
-# slightly prefers fewer hyper hops; the engine computes the real overhead.
-HYPER_LEG_OVERHEAD_S = 6 * 3600.0
 _YEAR_S = T_YEAR.total_seconds()
 
 
-def _distance_ly(u: Universe, a: str, b: str) -> float | None:
-    ca, cb = u.coordinates(a), u.coordinates(b)
-    if ca is None or cb is None:
-        return None
-    return math.dist(ca, cb)
+def speed_class(u: Universe, ship: Ship) -> float:
+    """The ship's hyper cost per light-year (s/ly) — its routing speed class.
 
-
-def _hyper_time_s(u: Universe, ship: Ship, a: str, b: str) -> float | None:
-    """Estimated hyper travel time (s) for ``ship`` between systems a and b."""
-    dist_ly = _distance_ly(u, a, b)
-    if dist_ly is None:
-        return None
+    ``k = T_year / (band multiplier x real cruise velocity)``. Everything else in a
+    hyper edge's weight is the distance and a flat leg overhead, so two ships with
+    the same ``k`` route identically and share a cached table.
+    """
     band = u.hyperspace_band(ship.max_hyper_band or 4)
     mult = (band or {}).get("velocity_multiplier")
-    real_v = ship.hyper_cruise_velocity_c or 0.5
     if not mult:
-        return None
-    apparent_c = mult * real_v
-    return dist_ly / apparent_c * _YEAR_S + HYPER_LEG_OVERHEAD_S
+        raise ValueError(f"band {ship.max_hyper_band} has no velocity multiplier")
+    return _YEAR_S / (mult * (ship.hyper_cruise_velocity_c or 0.5))
 
 
-def _placed_systems(u: Universe) -> set[str]:
-    return {s["id"] for s in u.systems() if u.coordinates(s["id"]) is not None}
-
-
-def _wormhole_adjacency(u: Universe) -> dict[str, set[str]]:
-    # Only true wormholes (transit == "instant") are junction hops; the table also
-    # holds hyper_leg / transfer annotations (transit None) that are NOT wormholes.
-    adj: dict[str, set[str]] = defaultdict(set)
-    for link in u.wormhole_links():
-        a, b = link.get("from_system_id"), link.get("to_system_id")
-        if a and b and link.get("transit") == "instant":
-            adj[a].add(b)
-            adj[b].add(a)
-    return adj
+def hyper_time_s(u: Universe, ship: Ship, a: str, b: str) -> float | None:
+    """Estimated hyper travel time (s) for ``ship`` between systems a and b."""
+    d = route_graph(u).distance_ly(a, b)
+    return None if d is None else d * speed_class(u, ship) + HYPER_LEG_OVERHEAD_S
 
 
 def _search(u: Universe, ship: Ship, origin: str, dest: str) -> list[tuple[str, str]]:
     """Min-time hops origin->dest as (mode, to_system); raises if unreachable."""
-    placed = _placed_systems(u)
-    for sysid in (origin, dest):
-        if sysid not in placed:
-            raise ValueError(f"system {sysid!r} is not placed (no coordinates)")
-    worm = _wormhole_adjacency(u)
-    buffer_s = (u.transit_model() or {}).get("buffer_normal_s") or 0.0
-
-    dist = {origin: 0.0}
-    prev: dict[str, tuple[str, str]] = {}  # node -> (from_node, mode)
-    pq: list[tuple[float, str]] = [(0.0, origin)]
-    while pq:
-        d, node = heapq.heappop(pq)
-        if node == dest:
-            break
-        if d > dist.get(node, math.inf):
-            continue
-        edges: list[tuple[str, str, float]] = []
-        for nb in worm.get(node, ()):  # wormhole edges (cheap)
-            if nb in placed:
-                edges.append((nb, WORMHOLE, buffer_s))
-        for nb in placed:  # hyper edges (all pairs)
-            if nb != node:
-                t = _hyper_time_s(u, ship, node, nb)
-                if t is not None:
-                    edges.append((nb, HYPER, t))
-        for nb, mode, w in edges:
-            nd = d + w
-            if nd < dist.get(nb, math.inf):
-                dist[nb] = nd
-                prev[nb] = (node, mode)
-                heapq.heappush(pq, (nd, nb))
-
-    if dest not in prev and dest != origin:
-        raise ValueError(f"no route from {origin!r} to {dest!r}")
-    hops: list[tuple[str, str]] = []
-    node = dest
-    while node != origin:
-        frm, mode = prev[node]
-        hops.append((mode, node))
-        node = frm
-    hops.reverse()
-    return hops
+    return hops(route_graph(u), speed_class(u, ship), origin, dest)
 
 
-def _legs(hops: list[tuple[str, str]], dest_system: str, dest_body: str) -> list[RouteLeg]:
+def _legs(path: list[tuple[str, str]], dest_system: str, dest_body: str) -> list[RouteLeg]:
     """Turn (mode, system) hops into RouteLegs ending at the destination body."""
-    legs = [RouteLeg(mode=mode, to_system=sysid) for mode, sysid in hops]
+    legs = [RouteLeg(mode=mode, to_system=sysid) for mode, sysid in path]
     if not legs:
         # Same-system trip: a single n-space hop to the body.
         return [RouteLeg(NSPACE, dest_system, dest_body)]

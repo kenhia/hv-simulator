@@ -8,7 +8,8 @@ configurable physics box. Route-*finding* is Sprint 015's nav-planner; routes
 here are hand-filed.
 """
 
-from .find import plan_route, plan_route_multi
+from .find import plan_route, plan_route_multi, speed_class
+from .graph import RouteGraph, route_graph
 from .plan import (
     FILED_ROUTE_SCHEMA,
     CompiledRoute,
@@ -31,6 +32,7 @@ from .plan import (
 __all__ = [
     "FILED_ROUTE_SCHEMA",
     "CompiledRoute",
+    "RouteGraph",
     "NotAtOrigin",
     "Route",
     "RouteLeg",
@@ -43,8 +45,10 @@ __all__ = [
     "resolve_fleet",
     "resolve_fleet_junctions",
     "resolve_route",
+    "route_graph",
     "ship_from_artifact",
     "ship_from_transponder",
     "simulation_for_route",
+    "speed_class",
     "to_filed",
 ]
