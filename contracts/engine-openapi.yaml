@@ -286,13 +286,20 @@ components:
             eta: { type: [string, "null"], format: date-time }
             percent_complete: { type: [number, "null"] }
             queue: { $ref: "#/components/schemas/QueuePosition" }
+            cycle: { type: [integer, "null"], description: repeating routes — the cycle in flight }
+            cycles: { type: [integer, "null"], description: total cycles; null = forever }
 
     RouteCreate:
       type: object
       required: [legs]
-      description: A pre-planned ordered list of legs (from the nav planner).
+      description: >
+        A pre-planned ordered list of legs (from the nav planner). With `repeat`
+        set the legs describe ONE CYCLE of an itinerary the ship lives on and the
+        route is filed as `hvsim.repeating-route/v1`; the last leg must return to
+        the origin.
       properties:
         depart_at: { type: [string, "null"], format: date-time }
+        repeat: { $ref: "#/components/schemas/RepeatSpec" }
         legs:
           type: array
           items:
@@ -306,6 +313,33 @@ components:
               band: { type: [string, "null"], description: hyperspace band name }
               layover_seconds: { type: number, default: 0 }
 
+    RepeatSpec:
+      type: [object, "null"]
+      description: >
+        Turns a filed round trip into a loop. Layovers are derived per cycle from
+        seed+cycle+stop within each range (deterministic, never stored per trip);
+        no background tick is involved — a query walks to the covering cycle.
+      properties:
+        layovers:
+          type: array
+          description: per-stop layover range, index-aligned with legs (supersedes layover_seconds)
+          items:
+            type: object
+            properties:
+              min_s: { type: number }
+              max_s: { type: number }
+        cycles: { type: [integer, "null"], description: null = forever }
+        seed: { type: integer, default: 0 }
+        rules:
+          type: array
+          description: "every-N overrides (e.g. every 5th trip, a 12 h crew rotation)"
+          items:
+            type: object
+            properties:
+              every: { type: integer }
+              stop: { type: integer }
+              layover_s: { type: number }
+
     Route:
       type: object
       properties:
@@ -316,6 +350,8 @@ components:
         arrival: { type: string, format: date-time }
         total_duration_seconds: { type: number }
         legs: { type: array, items: { type: object } }
+        cycle: { type: [integer, "null"], description: repeating routes — the active cycle (1-based) }
+        cycles: { type: [integer, "null"], description: total cycles; null = forever }
 
     Junction:
       type: object

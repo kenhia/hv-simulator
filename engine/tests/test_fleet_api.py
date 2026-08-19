@@ -5,11 +5,13 @@ from __future__ import annotations
 import pathlib
 import sqlite3
 import urllib.parse
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
 
 from hvsim.api.app import create_app
+from hvsim.clock import SimClock
 
 DDL = pathlib.Path(__file__).resolve().parents[2] / "contracts" / "universe-artifact" / "schema.sql"
 
@@ -393,3 +395,92 @@ def test_ship_catalog_under_way(artifact_path: str, tmp_path) -> None:
     by = {s["transponder"]: s for s in dev.get("/fleet/ships").json()}
     assert by["1.1.1"]["under_way"] is True
     assert by["1.1.1"]["location_body"] is None
+
+
+# --- Repeating routes over HTTP (Sprint 039, #59) -------------------------------
+
+
+@pytest.fixture
+def loop_client(artifact_path: str, tmp_path) -> TestClient:
+    """A client whose sim clock sits at the routes' 1890 epoch.
+
+    Repeating routes are walked from their start to *now*, so a fixture clock
+    parked in 2026 would make every query walk four millennia of cycles. Real
+    deployments file from the current instant; the tests should too.
+    """
+    db = tmp_path / "api.db"
+    return TestClient(
+        create_app(
+            database_url=f"sqlite:///{db}",
+            universe_db=artifact_path,
+            dev_clock=False,
+            clock=SimClock(sim_epoch=datetime(1890, 1, 1, tzinfo=UTC)),
+        )
+    )
+
+
+# A courier loop: alpha:p1 -> beta:p1 (hyper) -> home again, layovers 1-4 h.
+LOOP = {
+    "ship": "1.1.1",
+    "origin": {"system": "alpha", "body": "alpha:p1"},
+    "depart_at": DEPART,
+    "legs": [
+        {"mode": "hyper", "to_system": "beta", "to_body": "beta:p1"},
+        {"mode": "hyper", "to_system": "alpha", "to_body": "alpha:p1"},
+    ],
+    "repeat": {"layovers": [{"min_s": 3600, "max_s": 14400}, {"min_s": 7200, "max_s": 21600}]},
+}
+
+
+def test_file_a_repeating_route(loop_client: TestClient) -> None:
+    r = loop_client.post("/fleet/routes", json=LOOP)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["cycle"] == 1 and body["cycles"] is None  # cycle 1 of forever
+    assert body["segments"][-1]["kind"] == "layover"  # ends holding at the origin
+
+
+def test_a_repeating_ship_never_arrives(loop_client: TestClient) -> None:
+    loop_client.post("/fleet/routes", json=LOOP)
+    first = loop_client.get("/fleet/1.1.1/route").json()
+    # Sample well past the first cycle: the ship is on a later cycle, still flying.
+    later = loop_client.get(f"/fleet/1.1.1/state?at={_q(first['arrival'])}").json()
+    assert later["phase"] != "arrived"
+    assert later["cycle"] > 1
+
+
+def test_repeating_state_is_stable_when_requeried(loop_client: TestClient) -> None:
+    loop_client.post("/fleet/routes", json=LOOP)
+    at = "1890-01-20T00:00:00+00:00"
+    a = loop_client.get(f"/fleet/1.1.1/state?at={_q(at)}").json()
+    b = loop_client.get(f"/fleet/1.1.1/state?at={_q(at)}").json()
+    assert a == b  # analytic, not stateful — the whole point
+
+
+def test_the_board_shows_the_cycle(loop_client: TestClient) -> None:
+    loop_client.post("/fleet/routes", json=LOOP)
+    at = "1890-01-20T00:00:00+00:00"
+    entry = loop_client.get(f"/fleet?at={_q(at)}").json()["ships"][0]
+    assert entry["cycle"] >= 1 and entry["cycles"] is None
+
+
+def test_a_finite_loop_ends_arrived_at_its_origin(loop_client: TestClient) -> None:
+    r = loop_client.post("/fleet/routes", json={**LOOP, "repeat": {**LOOP["repeat"], "cycles": 2}})
+    assert r.status_code == 201, r.text
+    st = loop_client.get(f"/fleet/1.1.1/state?at={_q('1900-01-01T00:00:00+00:00')}").json()
+    assert st["phase"] == "arrived"
+    assert st["cycle"] == 2 and st["cycles"] == 2
+    assert st["system"] == "alpha"
+
+
+def test_a_one_shot_route_reports_no_cycle(loop_client: TestClient) -> None:
+    loop_client.post("/fleet/routes", json=ROUTE)
+    st = loop_client.get("/fleet/1.1.1/state").json()
+    assert st["cycle"] is None and st["cycles"] is None
+
+
+def test_a_loop_must_return_to_its_origin(loop_client: TestClient) -> None:
+    bad = {**LOOP, "legs": LOOP["legs"][:1]}  # ends at beta:p1
+    r = loop_client.post("/fleet/routes", json=bad)
+    assert r.status_code == 422
+    assert "return to its origin" in r.json()["detail"]
