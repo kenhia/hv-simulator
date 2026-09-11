@@ -227,6 +227,24 @@ def route_at(rep: RepeatingRoute, when: datetime, u: Universe) -> tuple[int, Com
     return cycle, compile_cycle(rep, cycle, starts[cycle], u)
 
 
+def cycle_window(
+    rep: RepeatingRoute, cycle: int, u: Universe
+) -> tuple[datetime | None, datetime | None]:
+    """The half-open ``[start, end)`` over which ``cycle`` is the active one.
+
+    Reads the boundaries :func:`route_at` already memoized, so this costs nothing
+    beyond a dict lookup -- call it after ``route_at`` for the same cycle. ``start``
+    is None for cycle 0 (which covers every instant before its end, including
+    pre-departure) and ``end`` is None for the last cycle of a finite route, which
+    stays active forever after because the ship holds at its origin.
+    """
+    starts = _starts(rep, u)
+    start = starts[cycle] if cycle > 0 else None
+    if rep.cycles is not None and cycle + 1 >= rep.cycles:
+        return start, None
+    return start, (starts[cycle + 1] if cycle + 1 < len(starts) else None)
+
+
 # -- The filed document (same seam as a one-shot route) --------------------------
 
 
@@ -299,11 +317,20 @@ class ActiveRoute:
 
     ``cycle`` is 1-based for display (``cycle 3 of 5``) and None for a one-shot
     route; ``cycles`` is the total, or None for a forever loop.
+
+    ``valid_from``/``valid_until`` are the half-open interval over which *this*
+    compilation is the active one -- the active cycle's boundaries. Both are None
+    for a one-shot route, whose compilation does not depend on the queried instant
+    at all, and ``valid_until`` is None for the final cycle of a finite route (the
+    ship holds there). A caller memoizing a resolve keys on them; nothing else
+    needs them.
     """
 
     compiled: CompiledRoute
     cycle: int | None = None
     cycles: int | None = None
+    valid_from: datetime | None = None
+    valid_until: datetime | None = None
 
 
 def compiled_at(doc: dict, u: Universe, when: datetime) -> ActiveRoute:
@@ -315,7 +342,8 @@ def compiled_at(doc: dict, u: Universe, when: datetime) -> ActiveRoute:
     if is_repeating(doc):
         rep = from_filed(doc, u)
         cycle, compiled = route_at(rep, when, u)
-        return ActiveRoute(compiled, cycle + 1, rep.cycles)
+        start, end = cycle_window(rep, cycle, u)
+        return ActiveRoute(compiled, cycle + 1, rep.cycles, start, end)
     return ActiveRoute(compile_route(one_shot_from_filed(doc, u), u))
 
 

@@ -66,16 +66,62 @@ export class LiveFleet {
 
   private samples = new Map<string, ShipSample>();
   private timers: ReturnType<typeof setInterval>[] = [];
+  private hidden = false;
+  private onVisibility: (() => void) | null = null;
 
   start(): void {
     void this.pollClock();
     void this.pollFleet();
+    this.startTimers();
+    // A backgrounded tab must not keep the engine busy: every poll it makes is
+    // work nobody is looking at, and a forgotten dashboard would do it forever
+    // (#477). Dead reckoning means a hidden tab loses nothing by skipping them,
+    // and one refresh on the way back catches it up.
+    if (typeof document !== 'undefined') {
+      this.onVisibility = () => this.setHidden(document.visibilityState === 'hidden');
+      document.addEventListener('visibilitychange', this.onVisibility);
+      this.onVisibility(); // a tab restored into the background starts paused
+    }
+  }
+
+  stop(): void {
+    this.clearTimers();
+    if (this.onVisibility && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.onVisibility);
+    }
+    this.onVisibility = null;
+  }
+
+  // Whether the poll timers are running. False while the tab is hidden.
+  get polling(): boolean {
+    return this.timers.length > 0;
+  }
+
+  // Pause or resume polling. Driven by `visibilitychange`; public so the app --
+  // and the tests, which run without a DOM -- can drive it directly.
+  setHidden(hidden: boolean): void {
+    if (hidden === this.hidden) return;
+    this.hidden = hidden;
+    if (hidden) {
+      this.clearTimers();
+      return;
+    }
+    this.startTimers();
+    // Refresh at once rather than waiting out an interval, so the board is
+    // current the moment someone looks at it again.
+    void this.pollClock();
+    void this.pollFleet();
+    void this.pollStates();
+  }
+
+  private startTimers(): void {
+    if (this.timers.length) return;
     this.timers.push(setInterval(() => void this.pollClock(), 30_000));
     this.timers.push(setInterval(() => void this.pollFleet(), 5_000));
     this.timers.push(setInterval(() => void this.pollStates(), 5_000));
   }
 
-  stop(): void {
+  private clearTimers(): void {
     for (const t of this.timers) clearInterval(t);
     this.timers = [];
   }

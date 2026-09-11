@@ -20,7 +20,9 @@ from hvsim.route.repeat import (
     CycleRule,
     LayoverSpec,
     RepeatingRoute,
+    compiled_at,
     cycle_end,
+    cycle_window,
     from_filed,
     layover_for,
     route_at,
@@ -207,3 +209,54 @@ def test_a_loop_that_does_not_return_home_is_refused(u: Universe) -> None:
 def test_a_one_shot_document_is_not_a_repeating_route(u: Universe) -> None:
     with pytest.raises(ValueError, match="unexpected repeating-route schema"):
         from_filed({"schema": "hvsim.filed-route/v1"}, u)
+
+
+# --- The active cycle's validity window (Sprint 040, for the #476 memo) ---------
+
+
+def test_cycle_window_is_the_cycle_boundaries(u: Universe) -> None:
+    rep = _courier()
+    route_at(rep, DEPART, u)  # the walk is what memoizes the boundaries this reads
+    # Cycle 0 has no lower bound: it covers every instant before its end, including
+    # the pre-departure stretch a ship sits in before start_at.
+    start, end = cycle_window(rep, 0, u)
+    assert start is None
+    assert end == cycle_end(rep, 0, DEPART, u)
+    # Cycle 1 starts exactly where cycle 0 ended — the chain the walk memoized.
+    route_at(rep, end, u)  # walk one further, so boundary 2 is known too
+    start1, end1 = cycle_window(rep, 1, u)
+    assert start1 == end
+    assert end1 is not None and end1 > start1
+
+
+def test_the_last_cycle_of_a_finite_route_never_expires(u: Universe) -> None:
+    rep = _courier(cycles=3)
+    far = DEPART + timedelta(days=3650)
+    cycle, _ = route_at(rep, far, u)
+    assert cycle == 2  # held at the last cycle
+    start, end = cycle_window(rep, cycle, u)
+    assert start is not None
+    assert end is None  # the ship holds there forever; nothing to recompile
+
+
+def test_compiled_at_reports_a_window_containing_the_query(u: Universe) -> None:
+    doc = to_filed(_courier())
+    for days in (0, 1, 5, 40):
+        when = DEPART + timedelta(days=days)
+        active = compiled_at(doc, u, when)
+        assert active.valid_from is None or active.valid_from <= when
+        assert active.valid_until is None or when < active.valid_until
+
+
+def test_a_one_shot_route_has_no_window(u: Universe) -> None:
+    """Its compilation does not depend on the queried instant, so it never expires."""
+    doc = {
+        "schema": "hvsim.filed-route/v1",
+        "ship": "1.1.1",
+        "origin": {"system": "alpha", "body": "alpha:p1"},
+        "depart_at": DEPART.isoformat(),
+        "legs": [{"mode": "nspace", "to_system": "alpha", "to_body": "alpha:far"}],
+    }
+    active = compiled_at(doc, u, DEPART)
+    assert active.valid_from is None and active.valid_until is None
+    assert active.cycle is None

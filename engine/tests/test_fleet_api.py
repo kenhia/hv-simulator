@@ -484,3 +484,79 @@ def test_a_loop_must_return_to_its_origin(loop_client: TestClient) -> None:
     r = loop_client.post("/fleet/routes", json=bad)
     assert r.status_code == 422
     assert "return to its origin" in r.json()["detail"]
+
+
+# --- Sprint 040: the memoized fleet resolve (#476) ----------------------------
+
+
+def _spy_on_compiles(monkeypatch) -> list:
+    """Record every route compile the API performs from here on."""
+    import hvsim.api.app as app_mod
+
+    seen: list = []
+    real = app_mod.compiled_at
+
+    def counting(doc, u, when):
+        seen.append(doc["ship"])
+        return real(doc, u, when)
+
+    monkeypatch.setattr(app_mod, "compiled_at", counting)
+    return seen
+
+
+def test_polling_the_board_reuses_one_resolve(client: TestClient, monkeypatch) -> None:
+    """A dashboard polling every 5s must not recompile the fleet every request."""
+    client.post("/fleet/routes", json=ROUTE)
+    client.get("/fleet")  # warm the memo
+    compiles = _spy_on_compiles(monkeypatch)
+    for _ in range(3):
+        assert len(client.get("/fleet").json()["ships"]) == 1
+    assert client.get("/fleet/1.1.1/state").status_code == 200
+    assert compiles == []  # every one of those was served from the memo
+
+
+def test_filing_a_route_invalidates_the_memo(client: TestClient, monkeypatch) -> None:
+    client.post("/fleet/routes", json=ROUTE)
+    client.get("/fleet")  # warm
+    _file_wormhole(client, "1.1.2")  # the active route-set has changed
+    compiles = _spy_on_compiles(monkeypatch)
+    assert len(client.get("/fleet").json()["ships"]) == 2
+    assert sorted(compiles) == ["1.1.1", "1.1.2"]  # recompiled, not served stale
+    compiles.clear()
+    client.get("/fleet")
+    assert compiles == []  # ...and the new route-set is memoized in its turn
+
+
+def test_aborting_a_route_invalidates_the_memo(client: TestClient) -> None:
+    client.post("/fleet/routes", json=ROUTE)
+    assert len(client.get("/fleet").json()["ships"]) == 1  # warm
+    assert client.delete("/fleet/1.1.1/route").status_code == 200
+    assert client.get("/fleet").json()["ships"] == []  # a stale memo would still show it
+
+
+def test_the_memo_does_not_outlive_a_repeating_cycle(client: TestClient) -> None:
+    """The bound that makes the memo correct: a cycle boundary must not be crossed.
+
+    Without a validity window the first query's compilation would be reused
+    forever, and the board would report cycle 1 for the rest of the ship's life.
+    """
+    r = client.post(
+        "/fleet/routes",
+        json={
+            "schema": "hvsim.filed-route/v1",
+            "ship": "1.1.1",
+            "origin": {"system": "alpha", "body": "alpha:p1"},
+            "depart_at": DEPART,
+            "legs": [
+                {"mode": "hyper", "to_system": "beta", "to_body": "beta:p1"},
+                {"mode": "hyper", "to_system": "alpha", "to_body": "alpha:p1"},
+            ],
+            "repeat": {"layovers": [{"min_s": 3600, "max_s": 7200}] * 2, "seed": 7},
+        },
+    )
+    assert r.status_code == 201, r.text
+    at_start = client.get("/fleet/1.1.1/state", params={"at": DEPART}).json()
+    assert at_start["cycle"] == 1
+    later = datetime(1890, 3, 1, tzinfo=UTC)  # many round trips downstream
+    at_later = client.get("/fleet/1.1.1/state", params={"at": later.isoformat()}).json()
+    assert at_later["cycle"] > 1

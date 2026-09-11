@@ -11,8 +11,12 @@ port := env_var_or_default("HVSIM_PORT", "4667")
 # Client-side base URL: the host publishes via tailscale serve, so plaintext
 # http://<host>:<port> no longer answers from tailnet machines.
 base_url := env_var_or_default("HVSIM_URL", "https://" + host + ".encke-wahoo.ts.net:" + port)
-image := "hvsim:latest"
+image := "hvsim:latest"     # local build tag; the registry refs are derived per build
 remote_dir := "hvsim"     # ~/hvsim on the host holds the deploy compose
+# Images travel through the homelab docker registry (k-homelab docs/deploying.md):
+# this machine pushes, the deploy host pulls. TLS comes from `tailscale serve`, so
+# there is nothing to log in to and no insecure-registries entry to distribute.
+registry := env_var_or_default("HVSIM_REGISTRY", "kubsdb.encke-wahoo.ts.net:5000")
 
 # Show available recipes.
 default:
@@ -23,17 +27,59 @@ default:
 # gitignored) so the galaxy ships inside the image.
 build:
     just compile-data
-    docker build -f engine/Dockerfile -t {{image}} .
+    docker build -f engine/Dockerfile -t {{image}} \
+        --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" .
 
-# Build, ship the image to {{host}}, and bring the stack up (real-time clock).
+# Build, push through the registry, and bring the stack up on {{host}} (real time).
 deploy: build
-    @echo ">> transferring {{image}} to {{host}} (docker save | ssh load)…"
-    docker save {{image}} | ssh {{host}} docker load
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Replaces `docker save | ssh docker load` (kwi #58, #1018). The registry is the
+    # rollback history: every build stays addressable by its commit long after
+    # :latest moves on, and rides the nightly /datastore backup -- where the old
+    # path left history as a property of one host's local image store.
+    #
+    # The version is the 12-char git short SHA. The package version is a flat 0.1.0
+    # that is not maintained per release, so a semver tag would collide on every
+    # build and name nothing; the commit is hvsim's real version.
+    rev=$(git rev-parse HEAD)
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "!! working tree is dirty: the image would be labelled $rev without being it." >&2
+        echo "   Commit first -- a build nothing can name is one nothing can roll back." >&2
+        exit 1
+    fi
+    ref="{{registry}}/hvsim:${rev:0:12}"
+    docker tag {{image}} "$ref"
+    docker tag {{image}} "{{registry}}/hvsim:latest"
+    # SHA first. If the :latest push then fails, the registry still holds a complete,
+    # named build and :latest still points at the last good one -- the safe half-state.
+    # The reverse order leaves :latest naming a build with no durable name.
+    echo ">> pushing $ref …"
+    docker push "$ref"
+    docker push "{{registry}}/hvsim:latest"
     ssh {{host}} mkdir -p {{remote_dir}}
-    scp deploy/compose.yaml {{host}}:{{remote_dir}}/compose.yaml
-    ssh {{host}} 'cd {{remote_dir}} && docker compose up -d'
-    @echo ">> waiting for health…" && sleep 3
-    @just health
+    scp deploy/compose.yaml deploy/remote-up.sh {{host}}:{{remote_dir}}/
+    ssh {{host}} bash {{remote_dir}}/remote-up.sh "$ref" "$rev"
+    echo ">> waiting for health…" && sleep 3
+    just health
+
+# Roll back to any build still in the registry: `just rollback 1a2b3c4d5e6f`.
+rollback tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Pins that image on the host without building anything. `just image-tags` lists
+    # the candidates; deploying again moves it forward. No revision is passed: a
+    # rollback runs a commit that is deliberately not the one checked out, so
+    # remote-up.sh checks the image reference instead.
+    ref="{{registry}}/hvsim:{{tag}}"
+    ssh {{host}} mkdir -p {{remote_dir}}
+    scp deploy/compose.yaml deploy/remote-up.sh {{host}}:{{remote_dir}}/
+    ssh {{host}} bash {{remote_dir}}/remote-up.sh "$ref"
+    just health
+
+# List the builds in the registry — the rollback candidates.
+image-tags:
+    @curl -fsS https://{{registry}}/v2/hvsim/tags/list | python3 -m json.tool
 
 # Check the deployed service (health + clock) from this machine.
 health:

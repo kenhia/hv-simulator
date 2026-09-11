@@ -180,7 +180,19 @@ board. **Route graph** (#64): `hvsim.route.graph` precomputes the static topolog
 once per artifact and caches a Dijkstra table per ship **speed class**
 (`k = T_year / (band mult x cruise c)` s/ly); the finder costs only that scalar
 plus the dynamic last mile. Grafana dashboards are a deferred parallel track. A
-UI/lore glossary lives in `docs/terminology.md`.
+UI/lore glossary lives in `docs/terminology.md`. Sprint 040 (**backlog-drain
+sweep**, korg #2222) touched three unrelated corners: **deploy now goes through
+the homelab docker registry** (`just deploy` tags + pushes
+`<registry>/hvsim:<short-sha>` and `:latest`, the host pulls and
+`deploy/remote-up.sh` asserts the running container's image ref + revision label;
+`just rollback <tag>` / `just image-tags`; `HVSIM_REGISTRY` in `.env`) instead of
+`docker save | ssh docker load` (#58/#1018); the **`/fleet` resolve is memoized**
+on the active route-set, cutting `GET /fleet` 56.9->11.4 ms and `/fleet/ships`
+47.6->1.9 ms on the 40-ship fleet — bounded by the active repeating **cycle
+window** (`ActiveRoute.valid_from`/`valid_until`, `repeat.cycle_window`) so it can
+never serve a stale cycle, and still a memo of a pure function rather than a tick
+(#476); and the **UI poll pauses on a hidden tab** (`LiveFleet.setHidden`,
+`visibilitychange`), which is what the 2026-07-18 kubsdb CPU spike was (#477).
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,
