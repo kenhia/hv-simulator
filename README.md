@@ -127,17 +127,27 @@ edit `HVSIM_HOST` / `HVSIM_PORT`); they default to `kubsdb:4667`. The deployed
 instance runs **real time** with the clock locked (no dev controls).
 
 ```sh
-just deploy   # build image -> ship to host (docker save | ssh load) -> compose up -> health
-just health   # curl the deployed /health and /clock
-just seed     # file a few experimental "XSS" demo ships (100 g transport .. 700 g courier)
-just fleet    # text roster of ships + current state (stopgap for the map's labels)
-just logs     # tail the deployed logs
-just down     # stop/remove the stack (the SQLite volume is preserved)
+just deploy      # build -> push to the registry -> host pulls -> compose up -> health
+just health      # curl the deployed /health and /clock
+just image-tags  # the builds in the registry — the rollback candidates
+just rollback X  # re-pin the host to build X, without rebuilding anything
+just seed        # file a few experimental "XSS" demo ships (100 g transport .. 700 g courier)
+just fleet       # text roster of ships + current state (stopgap for the map's labels)
+just logs        # tail the deployed logs
+just down        # stop/remove the stack (the SQLite volume is preserved)
 ```
 
-Image delivery is registry-free (`docker save | ssh kubsdb docker load`); a move
-to ghcr is tracked for later. SQLite lives on a named volume and the container
-is `restart: unless-stopped`, so flight plans survive restarts and host reboots.
+Images travel through the **homelab docker registry**
+(`HVSIM_REGISTRY`, default `kubsdb.encke-wahoo.ts.net:5000`): this machine
+pushes, the host pulls. TLS comes from `tailscale serve`, so there is nothing to
+log in to and no `insecure-registries` entry. Each build is pushed under its
+12-char git short SHA *and* `:latest` — the SHA tag is what `just rollback`
+reverts to, and it survives the host pruning its local images. A dirty working
+tree refuses to deploy, because the image carries the commit as a label and a
+build nothing can name is one nothing can roll back.
+
+SQLite lives on a named volume and the container is `restart: unless-stopped`,
+so flight plans survive restarts and host reboots.
 
 ## Observability
 
