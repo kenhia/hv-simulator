@@ -132,9 +132,54 @@ directly rather than the suite gaining jsdom.
 
 ## Follow-ups
 
-- **The live cutover was deliberately not run.** `just deploy` now ends in
-  `docker compose up -d` on kubsdb, and running it from the sprint branch would
-  have put unreviewed code on the live service ahead of the ship gate. The first
-  registry deploy is a post-merge action. Filed as a work item.
+- **The live cutover was deliberately not run *during* the sprint.** `just
+  deploy` ends in `docker compose up -d` on kubsdb, and running it from the
+  sprint branch would have put unreviewed code on the live service ahead of the
+  ship gate. Filed as work item #2258 and cleared by the overseer as a
+  post-merge step — see **Deployed** below, where it was carried out.
 - apt-temps **#1019** is the same conversion for a sibling repo and is
   untouched here; its shape comes from korg #1011, same as this one.
+
+## Deployed
+
+**2026-09-10, to `kubsdb`, from merged `main` `b6e37fd`** — the first hvsim
+deploy to travel through the homelab registry, and the first real exercise of
+everything this sprint built.
+
+    kubsdb.encke-wahoo.ts.net:5000/hvsim:b6e37fd86774   (+ :latest)
+
+Run after the merge rather than during the sprint, on the overseer's clearance:
+the objection was that the code was unreviewed, and after the merge it is not.
+
+What the deploy asserted, rather than assumed:
+
+- **The revision label matched**: the running container reports
+  `org.opencontainers.image.revision = b6e37fd867745883b6839f99d440f433ac1d9023`,
+  equal to the commit built. This is the check that catches a `docker compose
+  pull` that silently did nothing, and it is the reason it is part of the deploy
+  and not an afterthought.
+- **The image reference matched** the exact tag requested, and
+  `hvsim/.env` on the host now pins it, so a later hand-run `docker compose up
+  -d` resolves the same build.
+
+Verified afterwards against the deployed service:
+
+| check | result |
+|---|---|
+| `/health` | ok |
+| Fleet board | **17 ships, unchanged** across the container *recreate* — the SQLite volume carried over |
+| `/fleet` latency | ~30 ms round trip over the tailnet, stable across five polls |
+| A repeating ship (`1.1.1`) | reports **cycle 30**, not cycle 1 |
+| `/ui` | 200 |
+
+That cycle-30 reading is the one worth keeping. It is the #476 cycle-window
+bound demonstrated on the live service: a ship filed long ago has walked thirty
+cycles, and an unbounded memo would have reported cycle 1 forever. The unit test
+proves the mechanism; this proves it in the deployment that actually matters.
+
+**One asymmetry, and it exists exactly once.** The container this replaced was
+running a local `hvsim:latest` with *no* revision label — it predates the label
+and never existed in the registry. So for this one cutover the rollback target
+was that local image on the host, not a registry tag. Every future deploy rolls
+back with `just rollback <tag>`; the registry now holds `b6e37fd86774` and
+`275cb78d13ce` (the pre-merge verification build).
