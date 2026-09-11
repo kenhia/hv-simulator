@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from collections.abc import Iterator
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -93,6 +94,31 @@ DEFAULT_DB_URL = "sqlite:///hvsim.db"
 _MAP_HTML = Path(__file__).parent / "static" / "index.html"
 
 
+@dataclass(frozen=True)
+class _FleetResolve:
+    """One memoized fleet resolve: the compile + junction fold, and when it holds.
+
+    The expensive half of ``resolved_fleet`` is a pure function of the active
+    route-set, so it is cached rather than recomputed per request (#476). ``key``
+    fingerprints that route-set -- filing a route or aborting one changes it, which
+    is the whole invalidation story. ``valid_from``/``valid_until`` narrow it to the
+    span over which the *repeating* routes in the fleet are flying the cycles this
+    entry compiled (#59); a fleet of one-shot routes has no bounds, so the entry
+    holds until the route-set itself changes.
+    """
+
+    key: tuple
+    valid_from: datetime | None
+    valid_until: datetime | None
+    by_tp: dict[str, ActiveRoute]
+    servers: dict
+
+    def covers(self, when: datetime) -> bool:
+        return (self.valid_from is None or when >= self.valid_from) and (
+            self.valid_until is None or when < self.valid_until
+        )
+
+
 def _ui_dir() -> Path | None:
     """Locate the built Phase 2.5 SPA (galaxy app), or None if not built.
 
@@ -133,6 +159,11 @@ def create_app(
     )
     if app.state.universe is not None:
         route_graph(app.state.universe)  # precompute the static route topology (#64)
+    # Memoized fleet resolve (#476). The lock collapses a thundering herd of
+    # concurrent pollers onto one compute; it guards nothing mutable, since a
+    # _FleetResolve is frozen and its contents are never edited after publication.
+    app.state.fleet_resolve = None
+    app.state.fleet_resolve_lock = threading.Lock()
 
     def get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -259,18 +290,51 @@ def create_app(
         Returns ``(by_transponder, junction_servers)`` — the resolved
         :class:`ActiveRoute` per ship and the per-junction servers backing the queue
         board. A repeating route contributes the cycle it is flying at ``when``
-        (#59). One fold per request; deterministic in the active fleet + seed.
+        (#59). Deterministic in the active fleet + seed.
+
+        **Memoized** (#476): compiling every filed route and folding the junction
+        calendar is a pure function of the active route-set (plus, for a repeating
+        route, which cycle ``when`` falls in), so a dashboard polling every 5s pays
+        for it once per change rather than once per request. Only the per-ship
+        ``state(when)`` evaluation downstream is genuinely time-varying, and that
+        stays closed-form and per-request. This is a memo of a pure function, not a
+        background tick -- the no-loop discipline is unchanged.
         """
         u = require_universe()
         rows = session.scalars(select(RouteRow).where(RouteRow.status == "active")).all()
-        active = [(r.transponder, compiled_at(json.loads(r.filed_json), u, when)) for r in rows]
-        items = [(a.compiled, tp) for tp, a in active]
-        # Filing order decides contested junction slots, so an in-flight ship never
-        # loses its place to a ship filed after it departed (Sprint 039, #67).
-        filed_at = {r.transponder: r.created_at for r in rows}
-        routes, servers = resolve_fleet_junctions(items, u, filed_at=filed_at)
-        by_tp = {tp: replace(a, compiled=rt) for (tp, a), rt in zip(active, routes, strict=True)}
-        return by_tp, servers
+        # Fingerprint the route-set: a filed, aborted or re-filed route changes it and
+        # the next request recomputes. created_at is in the key because filing order
+        # decides contested junction slots (#67), so it is an input to the fold.
+        key = tuple(sorted((r.id, r.created_at.isoformat(), r.filed_json) for r in rows))
+
+        with app.state.fleet_resolve_lock:
+            cached = app.state.fleet_resolve
+            if cached is not None and cached.key == key and cached.covers(when):
+                return cached.by_tp, cached.servers
+
+            active = [(r.transponder, compiled_at(json.loads(r.filed_json), u, when)) for r in rows]
+            items = [(a.compiled, tp) for tp, a in active]
+            # Filing order decides contested junction slots, so an in-flight ship never
+            # loses its place to a ship filed after it departed (Sprint 039, #67).
+            filed_at = {r.transponder: r.created_at for r in rows}
+            routes, servers = resolve_fleet_junctions(items, u, filed_at=filed_at)
+            by_tp = {
+                tp: replace(a, compiled=rt) for (tp, a), rt in zip(active, routes, strict=True)
+            }
+
+            # This compilation holds while every repeating route stays in the cycle it
+            # was compiled for; the tightest bound wins. A one-shot route contributes
+            # neither bound -- its compilation does not depend on ``when`` at all.
+            starts = [a.valid_from for a in by_tp.values() if a.valid_from is not None]
+            ends = [a.valid_until for a in by_tp.values() if a.valid_until is not None]
+            app.state.fleet_resolve = _FleetResolve(
+                key=key,
+                valid_from=max(starts) if starts else None,
+                valid_until=min(ends) if ends else None,
+                by_tp=by_tp,
+                servers=servers,
+            )
+            return by_tp, servers
 
     def state_out(active: ActiveRoute, transponder: str, when: datetime) -> StateOut:
         u = require_universe()
