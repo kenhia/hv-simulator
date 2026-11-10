@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "silesia",
+  "name": "Silesian Confederacy",
+  "government": "Confederation",
+  "capital_system_id": "silesia",
+  "capital_planet": null,
+  "capital_city": null,
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH0, HH1, HH6, HH11, HH12, Companion, Jayne's Intelligence Review v1",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Silesian_Confederacy"],
+  "retrieved": "2026-11-09",
+
+  "lore": {
+    "summary": "A multi-system confederation of planetary governments of around sixty inhabited systems in nine sectors, bordered by the Andermani Empire and the Sidemore Republic to the galactic south-west and the Basilisk System to the north-east. Founded as an enlightened confederation, by the turn of the 20th century PD it was a byword for corrupt governments, mercenaries, piracy and insurrection, and the proving ground where the Andermani and Manticoran navies sent new officers on anti-piracy patrol. In 1921 PD it was annexed by the Andermani Empire and the Star Kingdom of Manticore; the central government handed its powers to them while the system governments were retained.",
+    "head_of_government": "Prime Minister",
+    "executive": "Cabinet, sector governors, system governors (about 75% of system governors elected, the rest appointed)",
+    "military": ["Silesian Confederate Navy", "Silesian Army"],
+    "extent": "roughly 105 ly across, about 600,000 cubic light-years",
+    "sectors": ["Breslau", "Carlton", "Hillman", "Posnan", "Sachsen", "Saginaw", "Silesia", "Terrance", "Tumult"],
+    "partition": {"pd": 1921, "by_nation_ids": ["andermani-empire", "star-kingdom-of-manticore"], "canon": true, "source": "HH12, Companion", "notes": "Partitioned between two nations, which a single `succeeded_by` cannot express, so it stays null."}
+  },
+
+  "territory": {
+    "note": "No Silesian system is built yet. `silesia` here is the Silesia System (the capital system per HH0 and Jayne's Intelligence Review v1); the compiler stubs it until a system file exists, as it does other referenced-but-unbuilt systems. The Manticoran half of the partition is already recorded in star-kingdom-of-manticore.json (protectorates).",
+    "member_systems": [
+      {"system_id": "silesia", "name": "Silesia System", "role": "capital", "canon": true, "source": "HH0, Jayne's Intelligence Review v1"}
+    ]
+  }
+}

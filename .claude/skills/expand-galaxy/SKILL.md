@@ -84,12 +84,18 @@ the scribe's job, not this skill's.
     `subtype: gas_giant`), `orbit_index`, `habitable`, and lore.
   - Spectral type drives the hyper-limit lookup; use a class the hyperspace
     table covers (O/B/A, F0–F9, G0–G9, K0–K9, M0–M9). Fabricated → flag it.
+  - **The system's nation comes in with it.** If `star_nation_id` names a nation
+    with no `data/nations/<id>.json`, the system scribe authors that record in
+    the same pass (its step 5) — `just validate-data` (in `just check`) fails on
+    a built system pointing at a compiler stub (#66).
 - **Ship class** → `honorverse-ship-scribe` (appends to
   `data/ships/ship-classes.json` `classes[]`; ships to `data/ships/ships.json`).
   - Normalize European decimal commas in infobox accel (`487,7` → `487.7`).
   - Read the unlabelled accel as **max**; the `80%` figure is normal. Use
     `max_g` for the sim.
-  - A new `affiliation_nation_id` is fine — the compiler stubs unbuilt nations.
+  - A new `affiliation_nation_id` on a ship or class is fine — the compiler
+    stubs unbuilt nations there (only a *system's* nation must be authored).
+    It still needs a code in `transponder-codes.json`.
 
 > **Editing JSON by hand:** append to existing registry files with a targeted
 > edit (match the last object's close + `]`), not a full rewrite — preserve the

@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "masada",
+  "name": "Masada",
+  "government": "Theocracy",
+  "capital_system_id": "endicott",
+  "capital_planet": "Masada",
+  "capital_city": null,
+  "founded_pd": null,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "HH2, HH3, HH5, HH9",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Masada"],
+  "retrieved": "2026-11-09",
+
+  "lore": {
+    "summary": "The theocratic star nation of the Faithful of the Church of Humanity Unchained, exiled from Grayson after losing the Grayson Civil War and settled on the planet Masada in the Endicott System. Ruled by a Chief Elder and the Council of Elders, it twice tried to conquer Grayson (1868 and 1903 PD). After its defeat in the Second Grayson-Masadan War (1903 PD) the Endicott System was occupied by the Star Kingdom of Manticore and claimed as a protectorate by right of conquest; a protectorate government and police force were in place by 1915 PD.",
+    "founded": "14th century PD (the Faithful's exile from Grayson after the Grayson Civil War); no exact year in canon, so `founded_pd` stays null.",
+    "head_of_state": "Chief Elder",
+    "legislature": "Council of Elders (its inner circle acts as the executive)",
+    "military": ["Navy of Masada"],
+    "population": "about 4.5 billion (1903 PD)",
+    "occupation": {"by_nation_id": "star-kingdom-of-manticore", "since_pd": 1903, "type": "military_occupation", "canon": true, "source": "HH3, HH5"}
+  },
+
+  "territory": {
+    "note": "Endicott is already a built system; this nation record makes its affiliation real rather than a compiler stub. The occupation is also recorded from the Manticoran side (star-kingdom-of-manticore.json, protectorates).",
+    "member_systems": [
+      {"system_id": "endicott", "name": "Endicott System", "role": "capital", "member_worlds": ["Masada"], "canon": true, "source": "HH2"}
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1.0",
+  "kind": "star_nation",
+  "id": "star-empire-of-manticore",
+  "name": "Star Empire of Manticore",
+  "government": "Constitutional Monarchy",
+  "capital_system_id": "manticore",
+  "capital_planet": "Manticore",
+  "capital_city": "Landing",
+  "founded_pd": 1921,
+  "succeeded_by": null,
+  "canon": true,
+  "source": "SI1, SI2, SI3, Companion",
+  "wiki_pages": ["https://honorverse.fandom.com/wiki/Star_Empire_of_Manticore"],
+  "retrieved": "2026-11-09",
+
+  "lore": {
+    "summary": "The federal successor of the Star Kingdom of Manticore, formed in 1921 PD when the Star Kingdom united with the Talbott Quadrant. The Monarch of Manticore (from Elizabeth III, styled Queen and Empress) is head of state, with separate prime ministers for the Old Star Kingdom and the Talbott Quadrant; foreign and economic policy, citizenship and the Manticoran dollar are shared, and the Imperial Parliament sits on Manticore.",
+    "currency": "Manticoran dollar",
+    "head_of_state": "Monarch of Manticore (House of Winton), styled Queen/King and Empress/Emperor",
+    "legislature": "Imperial Parliament (on Manticore)",
+    "military": ["Royal Manticoran Navy", "Royal Manticoran Marine Corps", "Royal Manticoran Army", "Talbott Quadrant Guard"],
+    "population": "about 27 billion humans, 12 million treecats, 700 million Medusans"
+  },
+
+  "territory": {
+    "note": "Per the Companion, the Star Empire's formal borders held twenty member systems, thirty-four protectorate systems and the Manticore Wormhole Junction with seven mapped termini. The Old Star Kingdom's systems, termini and protectorates are enumerated in star-kingdom-of-manticore.json (its predecessor, `succeeded_by` this record) and are not duplicated here; the built systems stay affiliated to the Star Kingdom record. No Talbott Quadrant system is built yet.",
+    "constituents": [
+      {"name": "Star Kingdom of Manticore", "nation_id": "star-kingdom-of-manticore", "canon": true, "source": "SI2"},
+      {"name": "Talbott Quadrant", "canon": true, "source": "SI1, SI2"}
+    ],
+    "member_systems": [
+      {"system_id": "manticore", "name": "Manticore Binary System", "role": "capital", "member_worlds": ["Manticore"], "canon": true, "source": "SI2"}
+    ]
+  }
+}

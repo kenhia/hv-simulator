@@ -209,7 +209,12 @@ on the active route-set, cutting `GET /fleet` 56.9->11.4 ms and `/fleet/ships`
 window** (`ActiveRoute.valid_from`/`valid_until`, `repeat.cycle_window`) so it can
 never serve a stale cycle, and still a memo of a pure function rather than a tick
 (#476); and the **UI poll pauses on a hidden tab** (`LiveFleet.setHidden`,
-`visibilitychange`), which is what the 2026-07-18 kubsdb CPU spike was (#477).
+`visibilitychange`), which is what the 2026-07-18 kubsdb CPU spike was (#477). Sprint 041
+(**linked nations**, korg #4472 / #66) authored the last three nation stubs —
+**Masada**, the **Silesian Confederacy**, the **Star Empire of Manticore** — so
+no nation is a compiler stub; `just validate-data` now fails a built system whose
+`star_nation_id` has no `nations/` record, and the system scribe authors a new
+system's nation in the same pass.
 
 **Galaxy data flow:** `data/` JSON (source of truth, CC BY-SA) → `just
 derive-orbits` + `just frame` (fabricated orbits + Sol-origin galactic coords,

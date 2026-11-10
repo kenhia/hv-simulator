@@ -481,8 +481,8 @@ def _load_wormholes(con: sqlite3.Connection, doc: dict) -> None:
 def _stub_missing_refs(con: sqlite3.Connection) -> dict[str, int]:
     """Insert placeholder rows for nations/systems referenced but not yet built.
 
-    The dataset references systems/nations that don't have files yet (e.g. Grayson's
-    `protectorate-of-grayson`, terminus systems). Stubbing keeps the real foreign
+    The dataset references systems/nations that don't have files yet (e.g. terminus
+    systems like `hennesy`, Silesia's capital `silesia`). Stubbing keeps the real foreign
     keys intact; a later build with those files fills them in. Returns stub counts.
     """
     have_nations = {r[0] for r in con.execute("SELECT id FROM nations")}
