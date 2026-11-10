@@ -68,6 +68,26 @@ secondarily from the Honorverse Wiki.
 | 2026-06-14 | Astra class | https://honorverse.fandom.com/wiki/Astra_class |
 | 2026-06-14 | Atlas class (Manticore) | https://honorverse.fandom.com/wiki/Atlas_class_(Manticore) |
 | 2026-06-14 | RMMS Artemis | https://honorverse.fandom.com/wiki/RMMS_Artemis |
+| 2026-06-15 | Beowulf (planet) | https://honorverse.fandom.com/wiki/Beowulf_(planet) |
+| 2026-06-15 | San Martin | https://honorverse.fandom.com/wiki/San_Martin |
+| 2026-06-15 | Sigma Draconis System | https://honorverse.fandom.com/wiki/Sigma_Draconis_System |
+| 2026-06-15 | Trevor's Star System | https://honorverse.fandom.com/wiki/Trevor's_Star_System |
+| 2026-06-18 | Andermani Empire | https://honorverse.fandom.com/wiki/Andermani_Empire |
+| 2026-06-18 | Durandel System | https://honorverse.fandom.com/wiki/Durandel_System |
+| 2026-06-18 | Erewhon System | https://honorverse.fandom.com/wiki/Erewhon_System |
+| 2026-06-18 | Gregor System | https://honorverse.fandom.com/wiki/Gregor_System |
+| 2026-06-18 | Haven | https://honorverse.fandom.com/wiki/Haven |
+| 2026-06-18 | Haven System | https://honorverse.fandom.com/wiki/Haven_System |
+| 2026-06-18 | New Berlin System | https://honorverse.fandom.com/wiki/New_Berlin_System |
+| 2026-06-18 | Potsdam | https://honorverse.fandom.com/wiki/Potsdam |
+| 2026-06-18 | Protectorate of Grayson | https://honorverse.fandom.com/wiki/Protectorate_of_Grayson |
+| 2026-06-18 | Republic of Beowulf | https://honorverse.fandom.com/wiki/Republic_of_Beowulf |
+| 2026-06-18 | Republic of Erewhon | https://honorverse.fandom.com/wiki/Republic_of_Erewhon |
+| 2026-06-18 | Republic of Haven | https://honorverse.fandom.com/wiki/Republic_of_Haven |
+| 2026-06-18 | Solarian League | https://honorverse.fandom.com/wiki/Solarian_League |
+| 2026-11-09 | Masada (re-read for the nation record) | https://honorverse.fandom.com/wiki/Masada |
+| 2026-11-09 | Silesian Confederacy | https://honorverse.fandom.com/wiki/Silesian_Confederacy |
+| 2026-11-09 | Star Empire of Manticore | https://honorverse.fandom.com/wiki/Star_Empire_of_Manticore |
 
 ## In-text source tag legend
 

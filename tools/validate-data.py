@@ -2,9 +2,12 @@
 """Validate the authored Honorverse dataset before it's compiled.
 
 Source-data linter (stdlib only) — catches authoring mistakes early and in
-`just check`, without needing to compile the artifact. Currently checks ship
-identity: every ship resolves to a class, carries a `hull_code`, and the visible
+`just check`, without needing to compile the artifact. Checks ship identity:
+every ship resolves to a class, carries a `hull_code`, and the visible
 transponder triple `nation.class.hull` is **unique** (no double-assigned hulls).
+Checks linked nations: every built system's `star_nation_id` has an authored
+`nations/<id>.json` with a transponder code, so a system never points at a
+compiler stub (#66 -- the system scribe authors the nation alongside the system).
 Add further integrity checks here as the dataset grows.
 
 Usage: python3 tools/validate-data.py [data_dir]   (default: data)
@@ -72,6 +75,21 @@ def validate(data_dir: pathlib.Path) -> list[str]:
                 f"duplicate transponder {triple}: {sid!r} collides with {triples[triple]!r}"
             )
         triples[triple] = sid
+
+    # Linked nations: a built system's nation must be authored, not stubbed.
+    nations = {
+        json.loads(p.read_text())["id"]: p.name for p in sorted((data_dir / "nations").glob("*.json"))
+    }
+    for path in sorted((data_dir / "systems").glob("*.json")):
+        nid = json.loads(path.read_text()).get("star_nation_id")
+        if nid and nid not in nations:
+            errors.append(
+                f"system {path.name} names nation {nid!r} but nations/{nid}.json does not exist "
+                "(author it with the system -- honorverse-system-scribe step 5)"
+            )
+    for nid in nations:
+        if nid not in nation_codes:
+            errors.append(f"nation {nid!r} has no transponder code in transponder-codes.json")
 
     return errors
 

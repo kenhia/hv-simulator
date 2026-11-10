@@ -27,9 +27,10 @@ This skill lives at `.claude/skills/honorverse-system-scribe/` inside that root.
 - Updating/correcting an existing system file with new canon.
 - Filling in invented (non-canon) orbital values for an existing system.
 
-Not for: building **nation** files from scratch (similar idea, different schema)
-or non-astrographic lore. Reuse the patterns here, but the body chart is the
-focus.
+Not for: non-astrographic lore, or a nation with no system being added (that is
+a standalone data pass). The body chart is the focus — but a new system's
+**linked nation is in scope** (step 5): system and nation come in together, so a
+system never points at a compiler stub.
 
 ## Ground truth to read first
 
@@ -122,7 +123,27 @@ novel.
   22.5°]** (never ~0° = on-axis, never a repeated constant — both look unnatural).
   Choose a fresh non-round value per system (`+7.4`, `-16.2`, …); it freezes in
   data for reproducible coords. (`bearing_nudge_deg` adds a later hand-tune.)
-- If the system belongs to a star nation, add/confirm its reference in the
+- **Pull in the linked nation.** Set `star_nation_id` to the owning nation's id.
+  If `nations/<id>.json` does not exist yet, **author it now, in this pass**:
+  - Fetch the nation's own page with the same helper (`fetch_wikitext.py
+    "Silesian Confederacy"`); the system page's prose usually links it.
+  - Mirror `nations/andermani-empire.json` / `nations/masada.json` exactly:
+    `schema_version`, `kind: "star_nation"`, `id`, `name` (the canon name — the
+    id may be shorter, e.g. `silesia`), `government`, `capital_system_id`,
+    `capital_planet`, `capital_city`, `founded_pd` (an integer year, else
+    `null`), `succeeded_by`, `canon`, `source`, `wiki_pages`, `retrieved`, a
+    `lore` block (summary, head of state/government, military — only what the
+    page states), and `territory.member_systems` listing this system by
+    `system_id` with its own `canon` + `source`.
+  - **Nothing invented.** An infobox field that is blank stays `null` or is
+    left out — do not carry a fact over from a sibling nation. A fact the
+    record's flat fields can't hold (a partition between two nations, a
+    century rather than a year) goes in `lore` as prose with its source.
+  - Give it a transponder code in `transponder-codes.json` if it lacks one
+    (random-ish in `[42, 999]`, unused; never renumber an existing code).
+  - `just validate-data` fails on a built system whose nation has no record —
+    that is the check this step satisfies.
+- If the nation already exists, add/confirm the system's reference in the
   relevant `nations/*.json` (member system, terminus, naval station, or
   protectorate) by `system_id`. A station in an uninhabited system (e.g. Hancock
   Station) is referenced from the nation file and also becomes a `place` in its
@@ -146,6 +167,8 @@ parent star, habitable worlds flagged, every object has a `canon` flag and a
 - [ ] `systems/<id>-system.json` conforms to the schema and parses.
 - [ ] Every star/body/belt/place has `canon` + `source`.
 - [ ] Orbits/positions are `canon: false` unless a source gives hard numbers.
+- [ ] Linked nation exists as `nations/<id>.json` (authored now if it was a stub)
+      with a transponder code; `just validate-data` passes.
 - [ ] Nation cross-references updated by `system_id`.
 - [ ] `ATTRIBUTION.md` source table updated with page + date.
 - [ ] Lore/flavor captured and attributed.

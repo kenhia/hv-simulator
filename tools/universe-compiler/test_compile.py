@@ -60,6 +60,28 @@ def test_compiles_catalog(tmp_path) -> None:
     con.close()
 
 
+def test_built_systems_point_at_authored_nations(tmp_path) -> None:
+    """Every built system's nation is a real `nations/` record, never a stub (#66).
+
+    A compiler stub is `(id, name=id)` with no government; the scribe authors the
+    system's linked nation alongside the system so this never regresses.
+    """
+    out = tmp_path / "u.db"
+    compile_universe(DATA, DDL, out)
+    con = sqlite3.connect(out)
+    stubbed = con.execute(
+        "SELECT s.id, n.id FROM star_systems s JOIN nations n ON n.id = s.star_nation_id "
+        "WHERE n.name = n.id AND n.government IS NULL"
+    ).fetchall()
+    assert stubbed == []
+    # The last three stubs are now authored, with their canon names.
+    names = dict(con.execute("SELECT id, name FROM nations").fetchall())
+    assert names["masada"] == "Masada"
+    assert names["silesia"] == "Silesian Confederacy"
+    assert names["star-empire-of-manticore"] == "Star Empire of Manticore"
+    con.close()
+
+
 def test_transponder_modified_and_validation(tmp_path) -> None:
     """_assign_transponders derives modified from ovr_* and rejects missing codes."""
     import pytest

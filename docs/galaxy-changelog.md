@@ -9,6 +9,33 @@ Maintained by the `expand-galaxy` skill: every expansion appends an entry.
 
 ---
 
+## 2026-11-09 — The last three nation stubs authored (Sprint 041, #66)
+
+No new systems or ships: the three nations that were still **compiler stubs**
+(`name = id`, no government) are now real `nations/` records, sourced from their
+wiki pages and the canon those pages cite:
+
+- **Masada** (`masada`, code 489) — the theocracy of the exiled Faithful, capital
+  world Masada in **Endicott** (HH2); under Manticoran occupation since 1903 PD
+  (HH3, HH5). Endicott's affiliation is now a real record.
+- **Silesian Confederacy** (`silesia`, code 555) — the ~60-system confederation,
+  partitioned in 1921 PD between the Andermani Empire and the Star Kingdom
+  (HH12, Companion). Owner of the Starhauler-class freighter CMS *Starhauler*.
+  Its capital, the **Silesia System**, is referenced by id and compiler-stubbed
+  until a system file exists.
+- **Star Empire of Manticore** (`star-empire-of-manticore`, code 419) — the
+  Star Kingdom's 1921 PD successor (SK + Talbott Quadrant), capital Manticore
+  (SI1, SI2). The built Manticoran systems stay affiliated to the Star Kingdom.
+
+From now on a built system's nation must be authored, not stubbed:
+`just validate-data` fails otherwise, and the system scribe authors a missing
+nation in the same pass as the system.
+
+- **Systems** 18 — built 12 (unchanged); stubbed 6 (`silesia` new: Silesia's
+  capital, coordless like the other stubs)
+- **Nations** 11 — stubbed 0 (was 3)
+- Ship classes 15, ships 40, junctions 2, links 12 — unchanged
+
 ## 2026-08-04 — Junction nexus location (Sprint 037, contract v0.5.0)
 
 Not new worlds — a schema/data addition. `wormhole_junctions` gained an in-system
