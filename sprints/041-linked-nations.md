@@ -121,3 +121,25 @@ sprint 017, so no code moved.
 
 None filed. This was an overseen leg, so findings go to the overseer in the
 wrap-up handoff on korg #4472.
+
+## Deployed
+
+2026-11-10 04:46 UTC (2026-11-09 20:46 PST). The ship merged PR #47 as squash
+commit `734b851`; the leg then ran `just deploy` from that merged `main` on kai.
+The overseer cleared it explicitly; the repo has no `.sprint-deploy`.
+
+- `just deploy` pushed and pulled `kubsdb.encke-wahoo.ts.net:5000/hvsim:734b85138677`
+  and recreated the `hvsim` container. `remote-up.sh` asserted revision
+  `734b85138677000d7a9b7116552119df601e351b`. Health `{"status":"ok"}`; the
+  clock runs at rate 1.0 with dev controls off.
+- The new artifact is live. `GET /systems` returns 18 systems (it was 17),
+  including the new coordless `silesia` placeholder; Endicott's
+  `star_nation_id` is `masada`.
+- The UI answers. From kai, `https://kubsdb.encke-wahoo.ts.net:4667/ui/` and `/`
+  both return 200. From kubsdb, the address kwebi probes
+  (`http://192.168.1.60:4667`) returns 200 for both.
+- kwebi (on kubsdb, `127.0.0.1:5680`) shows both Honorverse tiles,
+  "Honorverse Simulator" and "hv-sim Sol", as `health.state: "up"`, status
+  200, checked at 04:46:52Z, after the restart.
+- Rollback target: the previous `:latest` image, via `just image-tags` /
+  `just rollback <tag>`.
