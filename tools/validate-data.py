@@ -8,6 +8,10 @@ transponder triple `nation.class.hull` is **unique** (no double-assigned hulls).
 Checks linked nations: every built system's `star_nation_id` has an authored
 `nations/<id>.json` with a transponder code, so a system never points at a
 compiler stub (#66 -- the system scribe authors the nation alongside the system).
+Checks attribution: every wiki page a record cites (`wiki_page` / `wiki_pages`,
+at any depth, in any `data/` JSON) appears in `ATTRIBUTION.md` -- the CC BY-SA
+source table the licence requires, which drifted 17 pages behind before this
+check existed (Sprint 041).
 Add further integrity checks here as the dataset grows.
 
 Usage: python3 tools/validate-data.py [data_dir]   (default: data)
@@ -91,7 +95,46 @@ def validate(data_dir: pathlib.Path) -> list[str]:
         if nid not in nation_codes:
             errors.append(f"nation {nid!r} has no transponder code in transponder-codes.json")
 
+    # Attribution: every cited wiki page is listed in ATTRIBUTION.md (CC BY-SA).
+    # Exact match on the table's URL column: a substring test would let
+    # `.../wiki/Haven` hide behind `.../wiki/Haven_System`.
+    listed = {
+        cell.strip()
+        for line in (data_dir / "ATTRIBUTION.md").read_text().splitlines()
+        if line.startswith("|")
+        for cell in line.strip("|").split("|")
+        if cell.strip().startswith("http")
+    }
+    for path, url in cited_wiki_pages(data_dir):
+        if url not in listed:
+            errors.append(
+                f"{path.relative_to(data_dir)} cites {url} but ATTRIBUTION.md does not list it "
+                "(add a `| <retrieved> | <page> | <url> |` row)"
+            )
+
     return errors
+
+
+def cited_wiki_pages(data_dir: pathlib.Path) -> list[tuple[pathlib.Path, str]]:
+    """Every (file, url) cited via a `wiki_page` / `wiki_pages` key, at any depth."""
+    found: list[tuple[pathlib.Path, str]] = []
+
+    def walk(path: pathlib.Path, node: object) -> None:
+        if isinstance(node, dict):
+            for key, val in node.items():
+                if key == "wiki_page" and isinstance(val, str):
+                    found.append((path, val))
+                elif key == "wiki_pages" and isinstance(val, list):
+                    found.extend((path, u) for u in val if isinstance(u, str))
+                else:
+                    walk(path, val)
+        elif isinstance(node, list):
+            for item in node:
+                walk(path, item)
+
+    for path in sorted(data_dir.rglob("*.json")):
+        walk(path, json.loads(path.read_text()))
+    return found
 
 
 def main(argv: list[str] | None = None) -> int:

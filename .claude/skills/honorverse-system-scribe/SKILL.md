@@ -149,7 +149,8 @@ novel.
   Station) is referenced from the nation file and also becomes a `place` in its
   own system file.
 - Append the source page(s) to the table in `ATTRIBUTION.md` with the retrieval
-  date.
+  date — every URL you put in a `wiki_page` / `wiki_pages` field. `just
+  validate-data` fails on a cited page the table does not list (CC BY-SA).
 
 ### 6. Validate before finishing
 

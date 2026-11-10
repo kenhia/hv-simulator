@@ -91,8 +91,18 @@ sprint 017, so no code moved.
   the CC BY-SA source table: the six nation pages, plus New Berlin, Durandel,
   Erewhon, Gregor, Haven, Sigma Draconis and Trevor's Star. I backfilled the
   rows from each record's `wiki_pages` and `retrieved` fields, and added rows
-  for the three pages read this sprint. A re-run of the comparison script shows
-  no record citing a page the table lacks.
+  for the three pages read this sprint. **The overseer ruled that this belongs
+  in the gate, not in a note** (CC BY-SA requires it, and the records already
+  carry the fields), so `validate-data` now checks it. Every `wiki_page` and
+  `wiki_pages` value at any depth in any `data/` JSON must appear in the
+  `ATTRIBUTION.md` table, and a missing one fails naming the file and page.
+  - Its first run found an 18th gap, `Nevada_class` in `ship-classes.json`
+    (sprint 012), and I added that row.
+  - It matches the table's URL column exactly, not by substring; a substring
+    test would let `.../wiki/Haven` hide behind `.../wiki/Haven_System`.
+  - Shown both ways: removing the Solarian League row fails, removing the
+    Haven row fails (the prefix case), and the real data passes.
+  - The system scribe's step 5 now says the gate enforces it.
 - **`transponder-codes.json` `_doc`** still said Beowulf was "not yet a nation
   record — see kwi #66". Beowulf has had a record since 030, so the stale
   clause is gone. No code changed; the gate still reads `data OK`.
