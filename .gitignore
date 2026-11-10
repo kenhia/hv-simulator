@@ -43,3 +43,4 @@ htmlcov/
 
 # start-sprint local marker (never commit)
 .korg-sprint-proposal
+.sprint-defaults
